@@ -4,5 +4,7 @@ public enum StatutValidation {
     EN_ATTENTE,
     VALIDE,
     REFUSE,
+    ACTIVEE,
+    SUSPENDU,
     ARCHIVE
 }

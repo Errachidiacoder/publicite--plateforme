@@ -1,19 +1,14 @@
 package com.publicity_platform.project.entity;
 
-
 import jakarta.persistence.*;
-import lombok.*;
-
 import java.util.List;
 
 @Entity
 @Table(name = "categories")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Categorie {
+
+    public Categorie() {
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,27 +27,95 @@ public class Categorie {
     private String iconeCategorie;
 
     @Column(name = "categorie_active", nullable = false)
-    @Builder.Default
     private Boolean categorieActive = true;
 
-    // ─────────────────────────────────────────────
-    // Auto-référence  1 Categorie contient 0..* SousCategories
-    // ─────────────────────────────────────────────
-
-    /** Catégorie parente (null = catégorie racine) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_parente_id")
     private Categorie categorieParente;
 
-    /** 1 Categorie → 0..* sous-catégories (composition) */
-    @OneToMany(mappedBy = "categorieParente",
-            cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "categorieParente", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Categorie> sousCategories;
-
-    // ─────────────────────────────────────────────
-    // Relation inverse  1 Categorie ← 0..* Produits
-    // ─────────────────────────────────────────────
 
     @OneToMany(mappedBy = "categorie", fetch = FetchType.LAZY)
     private List<Produit> produits;
+
+    public String getNomCategorie() {
+        return nomCategorie;
+    }
+
+    public void setNomCategorie(String nomCategorie) {
+        this.nomCategorie = nomCategorie;
+    }
+
+    public String getDescriptionCategorie() {
+        return descriptionCategorie;
+    }
+
+    public void setDescriptionCategorie(String descriptionCategorie) {
+        this.descriptionCategorie = descriptionCategorie;
+    }
+
+    public Boolean getCategorieActive() {
+        return categorieActive;
+    }
+
+    public void setCategorieActive(Boolean categorieActive) {
+        this.categorieActive = categorieActive;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public static CategorieBuilder builder() {
+        return new CategorieBuilder();
+    }
+
+    public String getIconeCategorie() {
+        return iconeCategorie;
+    }
+
+    public void setIconeCategorie(String iconeCategorie) {
+        this.iconeCategorie = iconeCategorie;
+    }
+
+    public static class CategorieBuilder {
+        private String nomCategorie;
+        private String descriptionCategorie;
+        private String iconeCategorie;
+        private Boolean categorieActive = true;
+
+        public CategorieBuilder nomCategorie(String nomCategorie) {
+            this.nomCategorie = nomCategorie;
+            return this;
+        }
+
+        public CategorieBuilder descriptionCategorie(String descriptionCategorie) {
+            this.descriptionCategorie = descriptionCategorie;
+            return this;
+        }
+
+        public CategorieBuilder iconeCategorie(String iconeCategorie) {
+            this.iconeCategorie = iconeCategorie;
+            return this;
+        }
+
+        public CategorieBuilder categorieActive(Boolean categorieActive) {
+            this.categorieActive = categorieActive;
+            return this;
+        }
+
+        public Categorie build() {
+            Categorie cat = new Categorie();
+            cat.setNomCategorie(nomCategorie);
+            cat.setDescriptionCategorie(descriptionCategorie);
+            cat.setIconeCategorie(iconeCategorie);
+            cat.setCategorieActive(categorieActive);
+            return cat;
+        }
+    }
 }

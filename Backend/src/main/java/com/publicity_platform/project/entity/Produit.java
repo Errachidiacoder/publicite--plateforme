@@ -6,19 +6,16 @@ import com.publicity_platform.project.enumm.TypeAnnonce;
 import com.publicity_platform.project.enumm.TypePrix;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "produits")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Produit {
+
+    public Produit() {
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +33,6 @@ public class Produit {
     @Column(name = "type_annonce", nullable = false)
     private TypeAnnonce typeAnnonce;
 
-    /** Null si typePrix = SUR_DEVIS */
     @Column(name = "prix_affiche")
     private Double prixAfiche;
 
@@ -48,18 +44,14 @@ public class Produit {
     @Column(name = "disponibilite")
     private Disponibilite disponibilite;
 
-    /** Cycle de vie : EN_ATTENTE → VALIDE / REFUSE → ARCHIVE */
     @Enumerated(EnumType.STRING)
     @Column(name = "statut_validation", nullable = false)
-    @Builder.Default
     private StatutValidation statutValidation = StatutValidation.EN_ATTENTE;
 
     @Column(name = "annonce_premium", nullable = false)
-    @Builder.Default
     private Boolean annoncePremium = false;
 
     @Column(name = "compteur_vues", nullable = false)
-    @Builder.Default
     private Long compteurVues = 0L;
 
     @Column(name = "date_soumission", nullable = false, updatable = false)
@@ -68,61 +60,37 @@ public class Produit {
     @Column(name = "date_publication")
     private LocalDateTime datePublication;
 
-    /** Durée choisie par l'annonceur : 3 / 6 / 12 mois */
     @Column(name = "date_expiration")
     private LocalDateTime dateExpiration;
 
     @Column(name = "ville_localisation")
     private String villeLocalisation;
 
-    /** Obligatoire si statut = REFUSE */
     @Column(name = "motif_refus_admin", columnDefinition = "TEXT")
     private String motifRefusAdmin;
 
-    // ─────────────────────────────────────────────
-    // Relations ManyToOne (côté propriétaire de la FK)
-    // ─────────────────────────────────────────────
-
-    /** 0..* Produits → 1 Utilisateur (annonceur) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "annonceur_id", nullable = false)
     private Utilisateur annonceur;
 
-    /** 0..* Produits → 1 Categorie */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_id")
     private Categorie categorie;
 
-    // ─────────────────────────────────────────────
-    // Relations OneToMany (composition)
-    // ─────────────────────────────────────────────
-
-    /** 1 Produit possède 1..* MediaAsset (composition — min 1 image) */
-    @OneToMany(mappedBy = "produit",
-            cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MediaAsset> medias;
 
-    /** 1 Produit retracé par 0..* HistoriqueValidation (composition) */
-    @OneToMany(mappedBy = "produitConcerne",
-            cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "produitConcerne", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<HistoriqueValidation> historiques;
 
-    /** 1 Produit mesuré par 0..* StatistiqueAnnonce (composition) */
-    @OneToMany(mappedBy = "produitSuivi",
-            cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "produitSuivi", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<StatistiqueAnnonce> statistiques;
 
-    /** 1 Produit consulté via 0..* HistoriqueNavigation */
     @OneToMany(mappedBy = "produitConsulte", fetch = FetchType.LAZY)
     private List<HistoriqueNavigation> navigations;
 
-    /** 1 Produit déclenche 0..* Notifications */
     @OneToMany(mappedBy = "produitSource", fetch = FetchType.LAZY)
     private List<Notification> notifications;
-
-    // ─────────────────────────────────────────────
-    // Lifecycle
-    // ─────────────────────────────────────────────
 
     @PrePersist
     protected void onCreate() {
@@ -130,21 +98,206 @@ public class Produit {
         this.statutValidation = StatutValidation.EN_ATTENTE;
     }
 
-    // ─────────────────────────────────────────────
-    // Méthodes métier
-    // ─────────────────────────────────────────────
-
     public void incrementerVues() {
         this.compteurVues++;
     }
 
     public void publier(int dureeEnMois) {
-        this.statutValidation  = StatutValidation.VALIDE;
-        this.datePublication   = LocalDateTime.now();
-        this.dateExpiration    = LocalDateTime.now().plusMonths(dureeEnMois);
+        this.statutValidation = StatutValidation.VALIDE;
+        this.datePublication = LocalDateTime.now();
+        this.dateExpiration = LocalDateTime.now().plusMonths(dureeEnMois);
     }
 
     public void archiver() {
         this.statutValidation = StatutValidation.ARCHIVE;
+    }
+
+    // Explicit Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getTitreProduit() {
+        return titreProduit;
+    }
+
+    public void setTitreProduit(String titreProduit) {
+        this.titreProduit = titreProduit;
+    }
+
+    public String getDescriptionDetaillee() {
+        return descriptionDetaillee;
+    }
+
+    public void setDescriptionDetaillee(String descriptionDetaillee) {
+        this.descriptionDetaillee = descriptionDetaillee;
+    }
+
+    public TypeAnnonce getTypeAnnonce() {
+        return typeAnnonce;
+    }
+
+    public void setTypeAnnonce(TypeAnnonce typeAnnonce) {
+        this.typeAnnonce = typeAnnonce;
+    }
+
+    public Double getPrixAfiche() {
+        return prixAfiche;
+    }
+
+    public void setPrixAfiche(Double prixAfiche) {
+        this.prixAfiche = prixAfiche;
+    }
+
+    public TypePrix getTypePrix() {
+        return typePrix;
+    }
+
+    public void setTypePrix(TypePrix typePrix) {
+        this.typePrix = typePrix;
+    }
+
+    public Disponibilite getDisponibilite() {
+        return disponibilite;
+    }
+
+    public void setDisponibilite(Disponibilite disponibilite) {
+        this.disponibilite = disponibilite;
+    }
+
+    public StatutValidation getStatutValidation() {
+        return statutValidation;
+    }
+
+    public void setStatutValidation(StatutValidation statutValidation) {
+        this.statutValidation = statutValidation;
+    }
+
+    public Boolean getAnnoncePremium() {
+        return annoncePremium;
+    }
+
+    public void setAnnoncePremium(Boolean annoncePremium) {
+        this.annoncePremium = annoncePremium;
+    }
+
+    public Long getCompteurVues() {
+        return compteurVues;
+    }
+
+    public void setCompteurVues(Long compteurVues) {
+        this.compteurVues = compteurVues;
+    }
+
+    public LocalDateTime getDateSoumission() {
+        return dateSoumission;
+    }
+
+    public void setDateSoumission(LocalDateTime dateSoumission) {
+        this.dateSoumission = dateSoumission;
+    }
+
+    public String getVilleLocalisation() {
+        return villeLocalisation;
+    }
+
+    public void setVilleLocalisation(String villeLocalisation) {
+        this.villeLocalisation = villeLocalisation;
+    }
+
+    public String getMotifRefusAdmin() {
+        return motifRefusAdmin;
+    }
+
+    public void setMotifRefusAdmin(String motifRefusAdmin) {
+        this.motifRefusAdmin = motifRefusAdmin;
+    }
+
+    public Utilisateur getAnnonceur() {
+        return annonceur;
+    }
+
+    public void setAnnonceur(Utilisateur annonceur) {
+        this.annonceur = annonceur;
+    }
+
+    public Categorie getCategorie() {
+        return categorie;
+    }
+
+    public void setCategorie(Categorie categorie) {
+        this.categorie = categorie;
+    }
+
+    public static ProduitBuilder builder() {
+        return new ProduitBuilder();
+    }
+
+    public static class ProduitBuilder {
+        private String titreProduit;
+        private String descriptionDetaillee;
+        private TypeAnnonce typeAnnonce;
+        private Double prixAfiche;
+        private TypePrix typePrix;
+        private StatutValidation statutValidation = StatutValidation.EN_ATTENTE;
+        private Utilisateur annonceur;
+        private Categorie categorie;
+
+        public ProduitBuilder titreProduit(String titreProduit) {
+            this.titreProduit = titreProduit;
+            return this;
+        }
+
+        public ProduitBuilder descriptionDetaillee(String descriptionDetaillee) {
+            this.descriptionDetaillee = descriptionDetaillee;
+            return this;
+        }
+
+        public ProduitBuilder typeAnnonce(TypeAnnonce typeAnnonce) {
+            this.typeAnnonce = typeAnnonce;
+            return this;
+        }
+
+        public ProduitBuilder prixAfiche(Double prixAfiche) {
+            this.prixAfiche = prixAfiche;
+            return this;
+        }
+
+        public ProduitBuilder typePrix(TypePrix typePrix) {
+            this.typePrix = typePrix;
+            return this;
+        }
+
+        public ProduitBuilder statutValidation(StatutValidation statutValidation) {
+            this.statutValidation = statutValidation;
+            return this;
+        }
+
+        public ProduitBuilder annonceur(Utilisateur annonceur) {
+            this.annonceur = annonceur;
+            return this;
+        }
+
+        public ProduitBuilder categorie(Categorie categorie) {
+            this.categorie = categorie;
+            return this;
+        }
+
+        public Produit build() {
+            Produit p = new Produit();
+            p.setTitreProduit(titreProduit);
+            p.setDescriptionDetaillee(descriptionDetaillee);
+            p.setTypeAnnonce(typeAnnonce);
+            p.setPrixAfiche(prixAfiche);
+            p.setTypePrix(typePrix);
+            p.setStatutValidation(statutValidation);
+            p.setAnnonceur(annonceur);
+            p.setCategorie(categorie);
+            return p;
+        }
     }
 }
