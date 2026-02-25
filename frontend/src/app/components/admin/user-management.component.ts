@@ -76,7 +76,7 @@ import { FormsModule } from '@angular/forms';
                 <span class="field-status err" *ngIf="newUser.email && !isValidEmail(newUser.email)">Format invalide</span>
                 <span class="field-status err" *ngIf="attemptedSave && !newUser.email">Requis</span>
               </div>
-              <input type="email" [(ngModel)]="newUser.email" name="email"
+              <input type="email" [(ngModel)]="newUser.email" name="email" autocomplete="off"
                      [class.invalid]="(newUser.email && !isValidEmail(newUser.email)) || (attemptedSave && !newUser.email)"
                      placeholder="jean@exemple.com" required>
             </div>
@@ -84,11 +84,12 @@ import { FormsModule } from '@angular/forms';
             <div class="field">
               <div class="label-row">
                 <label>Tél</label>
-                <span class="field-status ok"  *ngIf="newUser.telephone && isValidPhone(newUser.telephone)">&#10003;</span>
+                <span class="field-status ok" *ngIf="newUser.telephone && isValidPhone(newUser.telephone)">&#10003;</span>
                 <span class="field-status err" *ngIf="newUser.telephone && !isValidPhone(newUser.telephone)">Format invalide</span>
+                <span class="field-status err" *ngIf="attemptedSave && !newUser.telephone">Requis</span>
               </div>
               <input type="text" [(ngModel)]="newUser.telephone" name="telephone"
-                     [class.invalid]="newUser.telephone && !isValidPhone(newUser.telephone)"
+                     [class.invalid]="(newUser.telephone && !isValidPhone(newUser.telephone)) || (attemptedSave && !newUser.telephone)"
                      placeholder="+212 ...">
             </div>
 
@@ -99,17 +100,21 @@ import { FormsModule } from '@angular/forms';
                 <span class="field-status err" *ngIf="newUser.password && newUser.password.length < 10">{{ newUser.password.length }}/10 car. min</span>
                 <span class="field-status err" *ngIf="attemptedSave && !newUser.password">Requis</span>
               </div>
-              <input type="password" [(ngModel)]="newUser.password" name="password"
+              <input type="password" [(ngModel)]="newUser.password" name="password" autocomplete="new-password"
                      [class.invalid]="(newUser.password && newUser.password.length < 10) || (attemptedSave && !newUser.password)"
                      placeholder="••••••••••" required>
             </div>
             
             <div class="field span-2">
-              <label>Rôles</label>
-              <div class="role-selector-grid">
+              <div class="label-row">
+                <label>Rôles</label>
+                <span class="field-status ok" *ngIf="newUser.roles.length > 0">&#10003;</span>
+                <span class="field-status err" *ngIf="attemptedSave && newUser.roles.length === 0">Au moins 1 rôle requis</span>
+              </div>
+              <div class="role-selector-grid" [class.invalid-block]="attemptedSave && newUser.roles.length === 0">
                 <div *ngFor="let role of rolesList" class="role-checkbox">
-                  <input type="checkbox" [id]="'role-' + role.id" 
-                         [checked]="isRoleSelected(role.name)" 
+                  <input type="checkbox" [id]="'role-' + role.id"
+                         [checked]="isRoleSelected(role.name)"
                          (change)="toggleRole(role.name)">
                   <label [for]="'role-' + role.id">{{ role.name.replace('ROLE_', '') }}</label>
                 </div>
@@ -146,18 +151,26 @@ import { FormsModule } from '@angular/forms';
         <form *ngIf="view === 'roles'" (ngSubmit)="onSaveRole()" class="premium-form">
             <div class="form-grid">
               <div class="field">
-                <label>Nom du Rôle (Format technique)</label>
-                <input type="text" [(ngModel)]="newRole.name" name="roleName" 
-                       [class.invalid]="attemptedSave && !newRole.name"
+                <div class="label-row">
+                  <label>Nom du Rôle (Format technique)</label>
+                  <span class="field-status ok" *ngIf="newRole.name && newRole.name.length >= 4">&#10003;</span>
+                  <span class="field-status err" *ngIf="newRole.name && newRole.name.length < 4">{{ newRole.name.length }}/4 car. min</span>
+                  <span class="field-status err" *ngIf="attemptedRoleSave && !newRole.name">Requis</span>
+                </div>
+                <input type="text" [(ngModel)]="newRole.name" name="roleName"
+                       [class.invalid]="(newRole.name && newRole.name.length < 4) || (attemptedRoleSave && !newRole.name)"
                        placeholder="Ex: ROLE_MODERATOR" required>
-                <span class="err-hint" *ngIf="attemptedSave && !newRole.name">Nom requis</span>
               </div>
               <div class="field">
-                <label>Description du Rôle</label>
-                <input type="text" [(ngModel)]="newRole.description" name="roleDesc" 
-                       [class.invalid]="attemptedSave && !newRole.description"
+                <div class="label-row">
+                  <label>Description du Rôle</label>
+                  <span class="field-status ok" *ngIf="newRole.description && newRole.description.length >= 10">&#10003;</span>
+                  <span class="field-status err" *ngIf="newRole.description && newRole.description.length < 10">{{ newRole.description.length }}/10 car. min</span>
+                  <span class="field-status err" *ngIf="attemptedRoleSave && !newRole.description">Requise</span>
+                </div>
+                <input type="text" [(ngModel)]="newRole.description" name="roleDesc"
+                       [class.invalid]="(newRole.description && newRole.description.length < 10) || (attemptedRoleSave && !newRole.description)"
                        placeholder="Description des permissions..." required>
-                <span class="err-hint" *ngIf="attemptedSave && !newRole.description">Description requise</span>
               </div>
             </div>
             <div class="form-footer">
@@ -231,19 +244,16 @@ import { FormsModule } from '@angular/forms';
               <thead>
                 <tr>
                   <th style="width: 80px; text-align: center;">ID</th>
-                  <th>Nom Système & Détails</th>
+                  <th>Nom Système</th>
+                  <th>Description</th>
                   <th style="width: 150px;" class="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let role of rolesList">
                   <td style="text-align: center;"><code class="code-id">#{{ role.id }}</code></td>
-                  <td>
-                    <div class="role-info">
-                      <span class="role-badge-large">{{ role.name }}</span>
-                      <p class="role-desc-text">{{ role.description || 'Aucune description' }}</p>
-                    </div>
-                  </td>
+                  <td><span class="role-badge-large">{{ role.name }}</span></td>
+                  <td><p class="role-desc-text">{{ role.description || 'Aucune description' }}</p></td>
                   <td class="text-right">
                     <div class="action-row">
                       <button (click)="onEditRoleItem(role)" class="btn-icon edit">✏️</button>
@@ -412,6 +422,7 @@ import { FormsModule } from '@angular/forms';
     .role-desc-text { margin: 0; font-size: 0.8rem; color: var(--text-light); line-height: 1.4; font-weight: 500; }
 
     .role-selector-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 12px 25px; background: #fafdfd; border-radius: 20px; border: 1.5px solid var(--border); }
+    .role-selector-grid.invalid-block { border-color: #ef4444; background: #fffafb; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.05); }
     .role-checkbox { display: flex; align-items: center; gap: 8px; font-size: 0.6rem; font-weight: 950; color: #334155; padding: 3px 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; transition: 0.2s; border-radius: 12px; }
     .role-checkbox:hover { background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
     .role-checkbox input { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
@@ -482,6 +493,7 @@ export class UserManagementComponent implements OnInit {
   isEditingRole = false;
   loading = false;
   attemptedSave = false;
+  attemptedRoleSave = false;
 
   successMessage = '';
   errorMessage = '';
@@ -496,7 +508,7 @@ export class UserManagementComponent implements OnInit {
     password: '',
     roles: [] as string[],
     telephone: '',
-    compteActif: true,
+    compteActif: false,
     emailVerifie: false
   };
 
@@ -569,10 +581,11 @@ export class UserManagementComponent implements OnInit {
 
     const isNameValid = this.newUser.nomComplet && this.isValidName(this.newUser.nomComplet);
     const isEmailValid = this.newUser.email && this.isValidEmail(this.newUser.email);
-    const isPhoneValid = !this.newUser.telephone || this.isValidPhone(this.newUser.telephone);
+    const isPhoneValid = this.newUser.telephone && this.isValidPhone(this.newUser.telephone);
     const isPassValid = this.isEditing || (this.newUser.password && this.newUser.password.length >= 10);
+    const isRolesValid = this.newUser.roles.length > 0;
 
-    if (!isNameValid || !isEmailValid || !isPhoneValid || !isPassValid) {
+    if (!isNameValid || !isEmailValid || !isPhoneValid || !isPassValid || !isRolesValid) {
       this.showError("Veuillez corriger les erreurs avant d'enregistrer.");
       return;
     }
@@ -658,9 +671,13 @@ export class UserManagementComponent implements OnInit {
   }
 
   onSaveRole() {
-    this.attemptedSave = true;
-    if (!this.newRole.name || !this.newRole.description) {
-      this.showError("Le nom technique et la description sont obligatoires.");
+    this.attemptedRoleSave = true;
+    if (!this.newRole.name || this.newRole.name.length < 4) {
+      this.showError("Le nom du rôle doit contenir au moins 4 caractères.");
+      return;
+    }
+    if (!this.newRole.description || this.newRole.description.length < 10) {
+      this.showError("La description doit contenir au moins 10 caractères.");
       return;
     }
     this.loading = true;
@@ -680,7 +697,7 @@ export class UserManagementComponent implements OnInit {
       next: () => {
         clearTimeout(roleTimeout);
         this.loading = false;
-        this.attemptedSave = false;
+        this.attemptedRoleSave = false;
         this.showSuccess("La configuration du rôle a été enregistrée avec succès.");
         this.resetForms();
         this.showCreateForm = false;
@@ -739,7 +756,9 @@ export class UserManagementComponent implements OnInit {
     this.loading = false;
     this.isEditing = false;
     this.isEditingRole = false;
-    this.newUser = { id: null, nomComplet: '', email: '', password: '', roles: [], telephone: '', compteActif: true, emailVerifie: false };
+    this.attemptedSave = false;
+    this.attemptedRoleSave = false;
+    this.newUser = { id: null, nomComplet: '', email: '', password: '', roles: [], telephone: '', compteActif: false, emailVerifie: false };
     this.newRole = { id: null, name: '', description: '' };
   }
 }

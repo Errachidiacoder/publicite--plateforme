@@ -1,5 +1,6 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -51,21 +52,27 @@ public class Utilisateur implements UserDetails {
     @Column(name = "date_inscription", nullable = false, updatable = false)
     private LocalDateTime dateInscription;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "annonceur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Produit> produits;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "destinataire", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TokenReinitialisation> tokens;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "acheteur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Commande> commandes;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "adminResponsable", fetch = FetchType.LAZY)
     private List<HistoriqueValidation> historiquesEffectues;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<HistoriqueNavigation> historiquesNavigation;
 

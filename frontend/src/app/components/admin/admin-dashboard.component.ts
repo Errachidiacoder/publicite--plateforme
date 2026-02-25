@@ -12,7 +12,7 @@ import { RouterModule } from '@angular/router';
       <div class="admin-compact-wrapper">
         <header class="content-header">
           <h1>Dashboard</h1>
-        </header>
+            </header>
 
       <!-- Top Row: Minimal Stat Cards -->
       <div class="stats-grid-top">
@@ -65,7 +65,7 @@ import { RouterModule } from '@angular/router';
                  <span class="d-lab">Catégories</span>
               </div>
               <div class="detail-item">
-                 <span class="d-val">Hot</span>
+                 <span class="d-val">{{ stats.hotCategory || '...' }}</span>
                  <span class="d-lab">Tendance</span>
               </div>
            </div>
@@ -102,6 +102,41 @@ import { RouterModule } from '@angular/router';
         </div>
       </div>
 
+      <!-- Top Entities Row -->
+      <div class="entities-row">
+        <div class="card ent-card">
+           <div class="card-header-premium">
+              <h3>⭐ Top Annonces</h3>
+           </div>
+           <div class="ent-list">
+              <div *ngFor="let p of stats.topProducts" class="ent-item">
+                 <div class="ent-info">
+                    <span class="ent-title">{{ p.titreProduit }}</span>
+                    <span class="ent-sub">{{ p.villeLocalisation }}</span>
+                 </div>
+                 <div class="ent-badge">{{ p.compteurVues }} vues</div>
+              </div>
+              <div *ngIf="!stats.topProducts?.length" class="empty-mini">Aucune donnée</div>
+           </div>
+        </div>
+
+        <div class="card ent-card">
+           <div class="card-header-premium">
+              <h3>🏆 Meilleurs Annonceurs</h3>
+           </div>
+           <div class="ent-list">
+              <div *ngFor="let a of stats.topAdvertisers" class="ent-item">
+                 <div class="ent-info">
+                    <span class="ent-title">{{ a.nomComplet }}</span>
+                    <span class="ent-sub">{{ a.annonceCount }} annonces</span>
+                 </div>
+                 <div class="ent-rank">#{{ stats.topAdvertisers.indexOf(a) + 1 }}</div>
+              </div>
+              <div *ngIf="!stats.topAdvertisers?.length" class="empty-mini">Aucune donnée</div>
+           </div>
+        </div>
+      </div>
+
       <!-- Bottom Section: Chart Representation -->
       <div class="dashboard-footer-row">
         <div class="card chart-card">
@@ -110,7 +145,7 @@ import { RouterModule } from '@angular/router';
            </div>
            <div class="chart-mockup">
               <div *ngFor="let cat of stats.repartitionCategories" class="chart-bar-container">
-                 <div class="chart-bar" [style.height.%]="(cat.count / stats.produitsTotal * 100) || 5">
+                 <div class="chart-bar" [style.height.%]="((cat.count / (stats.produitsTotal || 1)) * 100) || 5">
                     <span class="bar-tooltip">{{ cat.count }}</span>
                  </div>
                  <span class="bar-label">{{ cat.nom }}</span>
@@ -130,7 +165,12 @@ import { RouterModule } from '@angular/router';
            </div>
         </div>
       </div>
+      <div class="debug-footer" *ngIf="stats.debug_info">
+         <small>⚙ {{ stats.debug_info }} | Database: {{ stats.db_empty ? 'EMPTY' : 'DATA PRESENT' }}</small>
+      </div>
+
     </div>
+  </div>
   `,
    styles: [`
     :host {
@@ -152,6 +192,9 @@ import { RouterModule } from '@angular/router';
     .content-header { margin-bottom: 30px; }
     .content-header h1 { font-size: 1.8rem; font-weight: 900; color: var(--noir); margin: 0; letter-spacing: -0.5px; }
     .content-header h1::after { content: '.'; color: var(--primary); }
+    
+    .btn-refresh { background: white; border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; }
+    .btn-refresh:hover { background: var(--primary); color: white; transform: rotate(180deg); }
 
     /* Top Stats Grid */
     .stats-grid-top {
@@ -237,6 +280,36 @@ import { RouterModule } from '@angular/router';
       gap: 25px;
     }
 
+    .entities-row {
+       display: grid;
+       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+       gap: 25px;
+       margin-bottom: 30px;
+    }
+
+    .ent-card { border-radius: 20px; }
+    .ent-list { padding: 15px 20px; }
+    .ent-item {
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       padding: 12px 15px;
+       border-bottom: 1px solid #f1f5f9;
+       transition: 0.2s;
+    }
+    .ent-item:last-child { border-bottom: none; }
+    .ent-item:hover { background: #f8fafc; transform: translateX(5px); }
+    
+    .ent-info { display: flex; flex-direction: column; }
+    .ent-title { font-weight: 700; color: #334155; font-size: 0.95rem; }
+    .ent-sub { font-size: 0.75rem; color: #94a3b8; }
+    
+    .ent-badge { background: #e0f2f1; color: #00897b; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; }
+    .ent-rank { font-weight: 900; color: #cbd5e1; font-size: 1.2rem; }
+    .empty-mini { padding: 20px; text-align: center; color: #94a3b8; font-style: italic; }
+
+    .debug-footer { margin-top: 30px; padding: 15px; background: #fffbeb; border: 1.5px dashed #fbbf24; border-radius: 12px; color: #92400e; text-align: center; }
+
     .card { background: white; border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
     .card-header-premium { padding: 25px 30px; border-bottom: 1px solid var(--border); background: #fcfdfe; }
     .card-header-premium h3 { margin: 0; font-size: 1rem; color: var(--noir); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -314,8 +387,25 @@ export class AdminDashboardComponent implements OnInit {
    }
 
    loadStats() {
-      this.adminService.getDashboardStats().subscribe(data => {
-         this.stats = data;
+      console.log('Fetching dashboard stats...');
+      this.adminService.getDashboardStats().subscribe({
+         next: (data) => {
+            console.log('Dashboard stats received:', data);
+
+            // Map old keys to new keys if necessary for compatibility
+            if (data.totalProduits && !data.produitsTotal) data.produitsTotal = data.totalProduits;
+            if (data.totalUtilisateurs && !data.utilisateursTotal) data.utilisateursTotal = data.totalUtilisateurs;
+            if (data.totalEnAttente && !data.produitsEnAttente) data.produitsEnAttente = data.totalEnAttente;
+
+            this.stats = data;
+
+            if (data.db_empty) {
+               console.warn('Backend reporting empty database or only one user (yourself).');
+            }
+         },
+         error: (err) => {
+            console.error('Error fetching dashboard stats. Check if backend is running on port 8081 and if you have the ADMIN role.', err);
+         }
       });
    }
 }

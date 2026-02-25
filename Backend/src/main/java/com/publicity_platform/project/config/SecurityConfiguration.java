@@ -42,9 +42,22 @@ public class SecurityConfiguration {
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/v1/categories/**")
                                                 .permitAll()
+                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                                                "/api/v1/media/upload")
+                                                .authenticated()
+                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                                                "/api/v1/media/files/**")
+                                                .permitAll()
+                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                                                "/api/v1/produits/submit")
+                                                .authenticated()
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/v1/produits/**")
                                                 .permitAll()
+                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                                                "/api/v1/produits/*/activate-mock")
+                                                .authenticated()
+                                                .requestMatchers("/api/v1/users/**").authenticated()
                                                 .requestMatchers("/api/v1/admin/**")
                                                 .hasAnyRole("ADJOINTADMIN", "SUPERADMIN")
                                                 .anyRequest().authenticated())
@@ -60,7 +73,7 @@ public class SecurityConfiguration {
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of("http://localhost:4200"));
+                config.setAllowedOriginPatterns(List.of("http://localhost:*"));
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                 config.setAllowedHeaders(List.of("*"));
                 config.setAllowCredentials(true);

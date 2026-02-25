@@ -2,6 +2,7 @@ package com.publicity_platform.project.service;
 
 import com.publicity_platform.project.entity.HistoriqueValidation;
 import com.publicity_platform.project.entity.Produit;
+import com.publicity_platform.project.dto.ProduitDto;
 import com.publicity_platform.project.entity.Utilisateur;
 import com.publicity_platform.project.enumm.StatutValidation;
 import com.publicity_platform.project.repository.HistoriqueValidationRepository;
@@ -32,20 +33,46 @@ public class ProduitService {
                 this.historiqueValidationRepository = historiqueValidationRepository;
         }
 
-        public List<Produit> getAllValidatedProducts() {
-                return repository.findByStatutValidation(StatutValidation.VALIDE);
+        @Transactional(readOnly = true)
+        public List<ProduitDto> getAllValidatedProducts() {
+                return repository.findByStatutValidation(StatutValidation.VALIDE).stream()
+                                .map(ProduitDto::fromEntity)
+                                .toList();
         }
 
-        public List<Produit> getAllActiveProducts() {
-                return repository.findByStatutValidation(StatutValidation.ACTIVEE);
+        @Transactional(readOnly = true)
+        public List<ProduitDto> getAllActiveProducts() {
+                return repository.findByStatutValidation(StatutValidation.ACTIVEE).stream()
+                                .map(ProduitDto::fromEntity)
+                                .toList();
         }
 
-        public List<Produit> getPendingProducts() {
-                return repository.findByStatutValidation(StatutValidation.EN_ATTENTE);
+        @Transactional(readOnly = true)
+        public List<ProduitDto> getPendingProducts() {
+                return repository.findByStatutValidation(StatutValidation.EN_ATTENTE).stream()
+                                .map(ProduitDto::fromEntity)
+                                .toList();
         }
 
-        public List<Produit> getProductsByAnnonceur(@NonNull Long annonceurId) {
-                return repository.findByAnnonceurId(annonceurId);
+        @Transactional(readOnly = true)
+        public List<ProduitDto> getProductsByAnnonceur(@NonNull Long annonceurId) {
+                return repository.findByAnnonceurId(annonceurId).stream()
+                                .map(ProduitDto::fromEntity)
+                                .toList();
+        }
+
+        @Transactional(readOnly = true)
+        public List<ProduitDto> getAllProducts() {
+                return repository.findAll().stream()
+                                .map(ProduitDto::fromEntity)
+                                .toList();
+        }
+
+        @Transactional(readOnly = true)
+        public List<ProduitDto> getProductsByStatus(StatutValidation status) {
+                return repository.findByStatutValidation(status).stream()
+                                .map(ProduitDto::fromEntity)
+                                .toList();
         }
 
         @Transactional
@@ -155,7 +182,7 @@ public class ProduitService {
                 return saved;
         }
 
-        @Transactional
+        @Transactional(readOnly = true)
         public void archiveProduct(@NonNull Long id, Utilisateur admin) {
                 Produit produit = repository.findById(id)
                                 .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
@@ -170,6 +197,53 @@ public class ProduitService {
                                 .ancienStatut(ancienStatut)
                                 .nouveauStatut(StatutValidation.ARCHIVE)
                                 .build());
+        }
+
+        @Transactional
+        public ProduitDto submitProductDto(Produit produit) {
+                return ProduitDto.fromEntity(submitProduct(produit));
+        }
+
+        @Transactional(readOnly = true)
+        public ProduitDto getProductDtoById(@NonNull Long id) {
+                return ProduitDto.fromEntity(getProductById(id));
+        }
+
+        @Transactional
+        public ProduitDto activateProductDto(@NonNull Long id) {
+                return ProduitDto.fromEntity(activateProduct(id));
+        }
+
+        @Transactional
+        public ProduitDto validateProductDto(@NonNull Long id, int durationMonths,
+                        Utilisateur admin) {
+                return ProduitDto
+                                .fromEntity(validateProduct(id, durationMonths, admin));
+        }
+
+        @Transactional
+        public ProduitDto rejectProductDto(@NonNull Long id, String reason,
+                        Utilisateur admin) {
+                return ProduitDto.fromEntity(rejectProduct(id, reason, admin));
+        }
+
+        @Transactional
+        public ProduitDto updateProduct(@NonNull Long id, Produit produit) {
+                Produit existing = getProductById(id);
+                existing.setTitreProduit(produit.getTitreProduit());
+                existing.setDescriptionDetaillee(produit.getDescriptionDetaillee());
+                existing.setPrixAfiche(produit.getPrixAfiche());
+                existing.setTypePrix(produit.getTypePrix());
+                existing.setVilleLocalisation(produit.getVilleLocalisation());
+                existing.setCategorie(produit.getCategorie());
+                existing.setDisponibilite(produit.getDisponibilite());
+                existing.setTypeAnnonce(produit.getTypeAnnonce());
+                if (produit.getImageUrl() != null) {
+                        existing.setImageUrl(produit.getImageUrl());
+                }
+                existing.setStatutValidation(StatutValidation.EN_ATTENTE);
+                Produit saved = repository.save(existing);
+                return ProduitDto.fromEntity(saved);
         }
 
         public Produit saveProduct(Produit p) {

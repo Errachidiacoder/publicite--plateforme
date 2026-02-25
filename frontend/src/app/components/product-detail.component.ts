@@ -2,140 +2,234 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProduitService } from '../services/product.service';
+import { AuthService } from '../services/auth.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
   imports: [CommonModule, RouterLink],
   template: `
-    <div class="detail-container" *ngIf="product; else loadingTpl">
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb">
-        <a routerLink="/home">Accueil</a> / 
-        <a href="#">{{ product.categorie?.nomCategorie }}</a> / 
-        <span>{{ product.titreProduit }}</span>
-      </nav>
+    <div class="detail-page" *ngIf="product; else loadingTpl">
+      <div class="container">
+        <!-- HEADER / NAVIGATION -->
+        <nav class="breadcrumb-modern">
+          <a routerLink="/home">Accueil</a>
+          <span class="sep">/</span>
+          <a href="#">{{ product.categorie?.nomCategorie }}</a>
+          <span class="sep">/</span>
+          <span class="current">{{ product.titreProduit }}</span>
+        </nav>
 
-      <div class="main-layout">
-        <!-- Gallery -->
-        <div class="gallery-side">
-          <div class="main-img-card">
-            <img [src]="selectedImg || defaultImg" [alt]="product.titreProduit">
-          </div>
-          <div class="thumbnails" *ngIf="product.mediaProduits?.length > 1">
-            <div class="thumb" *ngFor="let m of product.mediaProduits" (click)="selectedImg = m.urlMedia">
-              <img [src]="m.urlMedia" alt="Thumbnail">
+        <div class="product-layout">
+          <!-- LEFT: GALLERY -->
+          <div class="gallery-section">
+            <div class="main-stage">
+              <img [src]="selectedImg || defaultImg" [alt]="product.titreProduit" class="main-img">
+              <div class="premium-tag" *ngIf="product.annoncePremium">Annonce Premium</div>
+              <button class="favorite-btn" [class.active]="isFavorited" (click)="toggleFavorite()" title="Ajouter aux favoris">
+                <svg viewBox="0 0 24 24" [attr.fill]="isFavorited ? '#e11d48' : 'none'" [attr.stroke]="isFavorited ? '#e11d48' : 'currentColor'" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
             </div>
-          </div>
-        </div>
-
-        <!-- Info -->
-        <div class="info-side">
-          <div class="info-card">
-            <span class="badge" *ngIf="product.annoncePremium">Premium</span>
-            <h1 class="title">{{ product.titreProduit }}</h1>
-            <p class="price">{{ product.prixProduit.toLocaleString() }} DH</p>
             
-            <div class="meta-data">
-              <div class="meta-item"><span>📍 Localisation :</span> {{ product.villeLocalisation }}</div>
-              <div class="meta-item"><span>📅 Publiée le :</span> {{ formatDate(product.datePublication) }}</div>
-              <div class="meta-item"><span>👁 Vues :</span> {{ product.compteurVues }}</div>
+            <div class="thumbnails-bar" *ngIf="product.mediaProduits?.length > 1">
+              <div class="thumb" *ngFor="let m of product.mediaProduits" 
+                   [class.active]="selectedImg === m.urlMedia"
+                   (click)="selectedImg = m.urlMedia">
+                <img [src]="m.urlMedia" alt="Miniature">
+              </div>
             </div>
+          </div>
 
-            <div class="divider"></div>
+          <!-- RIGHT: INFO & ACTIONS -->
+          <div class="actions-section">
+            <div class="info-card-premium">
+              <div class="status-badge" [class.active]="product.disponibilite === 'DISPONIBLE_IMMEDIATEMENT'">
+                {{ formatDispo(product.disponibilite) }}
+              </div>
+              
+              <h1 class="product-title">{{ product.titreProduit }}</h1>
+              
+              <div class="price-box">
+                <span class="price-val">{{ (product.prixAfiche || 0).toLocaleString() }}</span>
+                <span class="currency">DH</span>
+                <span class="price-type" *ngIf="product.typePrix !== 'PRIX_FIXE'">{{ formatTypePrix(product.typePrix) }}</span>
+              </div>
 
-            <div class="description">
-              <h3>Description</h3>
-              <p>{{ product.descriptionProduit }}</p>
-            </div>
-
-            <div class="contact-box">
-              <div class="seller-info">
-                <div class="avatar">{{ product.annonceur?.nomComplet?.charAt(0) }}</div>
-                <div>
-                  <p class="seller-name">{{ product.annonceur?.nomComplet }}</p>
-                  <p class="seller-since">Membre depuis 2024</p>
+              <div class="stats-row">
+                <div class="stat-item">
+                  <span class="stat-icon">📍</span>
+                  <span>{{ product.villeLocalisation }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-icon">📅</span>
+                  <span>{{ formatDate(product.dateSoumission) }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-icon">👁️</span>
+                  <span>{{ product.compteurVues }} vues</span>
                 </div>
               </div>
-              <button class="btn-phone" (click)="showPhone = !showPhone">
-                {{ showPhone ? product.annonceur?.numeroDeTelephone || 'Non renseigné' : 'Afficher le numéro' }}
-              </button>
-              <button class="btn-msg">Envoyer un message</button>
+
+              <div class="divider"></div>
+
+              <div class="description-area">
+                <h3>À propos de cette annonce</h3>
+                <p>{{ product.descriptionDetaillee }}</p>
+              </div>
+
+              <div class="seller-card">
+                <div class="seller-header">
+                  <div class="seller-avatar">{{ product.annonceur?.nomComplet?.charAt(0) }}</div>
+                  <div class="seller-meta">
+                    <span class="seller-name">{{ product.annonceur?.nomComplet }}</span>
+                    <span class="seller-verified">✓ Vendeur vérifié</span>
+                  </div>
+                </div>
+                
+                <div class="seller-actions">
+                  <button class="btn-contact-primary" (click)="showPhone = !showPhone">
+                    <span class="icon">📞</span>
+                    {{ showPhone ? product.annonceur?.numeroDeTelephone : 'Voir le numéro' }}
+                  </button>
+                  <button class="btn-contact-secondary">
+                    <span class="icon">✉️</span>
+                    Envoyer un message
+                  </button>
+                </div>
+              </div>
+
+              <div class="security-tips">
+                <span class="tip-icon">🛡️</span>
+                <p>Ne payez jamais à l'avance et privilégiez la remise en main propre pour plus de sécurité.</p>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+      
+      <!-- MOBILE ACTION BAR (FIXED) -->
+      <div class="mobile-fixed-bar">
+        <div class="mobile-price">{{ (product.prixAfiche || 0).toLocaleString() }} DH</div>
+        <button class="btn-call-mobile" (click)="showPhone = !showPhone">Appeler</button>
       </div>
     </div>
 
     <ng-template #loadingTpl>
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Chargement des détails de l'annonce...</p>
+      <div class="loader-overlay">
+        <div class="premium-spinner"></div>
+        <p>Récupération de l'annonce d'exception...</p>
       </div>
     </ng-template>
   `,
   styles: [`
-    .detail-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; font-family: 'Inter', sans-serif; }
-    .breadcrumb { margin-bottom: 25px; font-size: 0.9rem; color: var(--text-grey); }
-    .breadcrumb a { text-decoration: none; color: inherit; }
-    .breadcrumb a:hover { color: var(--primary); }
+    :host { --primary: #4db6ac; --primary-dark: #00897b; --accent: #e11d48; --bg: #f8fafc; }
+    
+    .detail-page { background: var(--bg); min-height: 100vh; padding: 40px 0 100px; color: #1e293b; }
+    .container { max-width: 1300px; margin: 0 auto; padding: 0 30px; }
 
-    .main-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; }
+    /* BREADCRUMB */
+    .breadcrumb-modern { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; font-size: 0.9rem; font-weight: 600; }
+    .breadcrumb-modern a { color: #64748b; text-decoration: none; transition: 0.3s; }
+    .breadcrumb-modern a:hover { color: var(--primary); }
+    .breadcrumb-modern .sep { color: #cbd5e1; }
+    .breadcrumb-modern .current { color: #1e293b; }
+
+    .product-layout { display: grid; grid-template-columns: 1.4fr 1fr; gap: 50px; align-items: start; }
+
+    /* GALLERY */
+    .gallery-section { position: sticky; top: 120px; }
+    .main-stage { background: white; border-radius: 32px; height: 600px; overflow: hidden; position: relative; border: 1px solid #e2e8f0; box-shadow: 0 20px 50px rgba(0,0,0,0.04); }
+    .main-img { width: 100%; height: 100%; object-fit: contain; padding: 30px; }
     
-    .main-img-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); height: 500px; border: 1px solid var(--border); }
-    .main-img-card img { width: 100%; height: 100%; object-fit: contain; background: #f1fcfd; }
+    .premium-tag { position: absolute; top: 25px; left: 25px; background: #1e293b; color: white; padding: 8px 20px; border-radius: 50px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
     
-    .thumbnails { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-    .thumb { width: 80px; height: 80px; border-radius: 12px; overflow: hidden; border: 2px solid transparent; cursor: pointer; transition: 0.2s; background: #f1fcfd; }
-    .thumb:hover { transform: scale(1.05); border-color: var(--primary); }
+    .favorite-btn { position: absolute; top: 25px; right: 25px; width: 50px; height: 50px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.3s; color: #64748b; }
+    .favorite-btn:hover { transform: scale(1.1); color: var(--accent); }
+    .favorite-btn.active { color: var(--accent); }
+    .favorite-btn svg { width: 24px; height: 24px; transition: 0.3s; }
+
+    .thumbnails-bar { display: flex; gap: 15px; margin-top: 25px; }
+    .thumb { width: 100px; height: 100px; border-radius: 16px; background: white; border: 2px solid transparent; cursor: pointer; overflow: hidden; transition: 0.3s; }
     .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb:hover { transform: translateY(-5px); }
+    .thumb.active { border-color: var(--primary); transform: scale(1.05); }
 
-    .info-card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid var(--border); position: sticky; top: 100px; }
-    .badge { background: var(--accent); color: var(--primary-dark); padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; display: inline-block; }
-    .title { font-size: 2.25rem; font-weight: 900; color: var(--text-dark); line-height: 1.2; margin-bottom: 10px; }
-    .price { font-size: 2rem; font-weight: 900; color: var(--primary); margin-bottom: 30px; }
+    /* INFO & ACTIONS */
+    .info-card-premium { background: white; border-radius: 32px; padding: 40px; border: 1px solid #e2e8f0; box-shadow: 0 20px 50px rgba(0,0,0,0.04); }
     
-    .meta-data { display: flex; flex-direction: column; gap: 12px; margin-bottom: 30px; }
-    .meta-item { font-size: 0.95rem; color: var(--text-dark); font-weight: 500; }
-    .meta-item span { color: var(--text-grey); width: 120px; display: inline-block; }
+    .status-badge { display: inline-block; padding: 6px 15px; background: #fee2e2; color: #ef4444; border-radius: 50px; font-size: 0.75rem; font-weight: 800; margin-bottom: 20px; text-transform: uppercase; }
+    .status-badge.active { background: #dcfce7; color: #22c55e; }
 
-    .divider { height: 1px; background: var(--border); margin-bottom: 30px; }
-    
-    .description h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 15px; color: var(--text-dark); }
-    .description p { line-height: 1.7; color: var(--text-dark); font-size: 1.05rem; }
+    .product-title { font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin-bottom: 25px; letter-spacing: -1px; }
 
-    .contact-box { margin-top: 40px; background: #f1fcfd; padding: 25px; border-radius: 20px; border: 1px solid var(--border); }
-    .seller-info { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
-    .avatar { width: 50px; height: 50px; background: var(--accent); color: var(--primary-dark); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; }
-    .seller-name { font-weight: 800; color: var(--text-dark); margin: 0; }
-    .seller-since { font-size: 0.8rem; color: var(--text-grey); margin: 0; }
+    .price-box { margin-bottom: 35px; display: flex; align-items: baseline; gap: 10px; }
+    .price-val { font-size: 3.2rem; font-weight: 900; color: #1e293b; }
+    .currency { font-size: 1.5rem; font-weight: 800; color: #1e293b; margin-right: 15px; }
+    .price-type { font-size: 0.9rem; color: #64748b; font-weight: 700; background: #f1f5f9; padding: 5px 12px; border-radius: 6px; }
 
-    .btn-phone { width: 100%; background: var(--text-dark); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-bottom: 12px; transition: 0.2s; }
-    .btn-phone:hover { opacity: 0.9; }
-    .btn-msg { width: 100%; border: 2px solid var(--border); background: white; color: var(--text-dark); padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-    .btn-msg:hover { background: #f1fcfd; border-color: var(--primary); }
+    .stats-row { display: flex; gap: 25px; margin-bottom: 40px; flex-wrap: wrap; }
+    .stat-item { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem; color: #475569; }
+    .stat-icon { font-size: 1.2rem; }
 
-    .loading-state { text-align: center; padding: 100px 0; color: var(--text-grey); }
-    .spinner { border: 4px solid var(--secondary); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .divider { height: 1px; background: #f1f5f9; margin-bottom: 40px; }
 
-    @media (max-width: 900px) {
-      .main-layout { grid-template-columns: 1fr; }
-      .info-card { position: static; }
-      .main-img-card { height: 350px; }
+    .description-area { margin-bottom: 45px; }
+    .description-area h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 15px; }
+    .description-area p { line-height: 1.8; font-size: 1.1rem; color: #475569; white-space: pre-line; }
+
+    /* SELLER CARD */
+    .seller-card { background: #f8fafc; border-radius: 24px; padding: 25px; border: 1px solid #f1f5f9; }
+    .seller-header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
+    .seller-avatar { width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; }
+    .seller-meta { display: flex; flex-direction: column; }
+    .seller-name { font-size: 1.1rem; font-weight: 800; }
+    .seller-verified { font-size: 0.8rem; color: #22c55e; font-weight: 700; margin-top: 4px; }
+
+    .seller-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .btn-contact-primary { background: #1e293b; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-contact-primary:hover { background: #000; transform: translateY(-2px); }
+    .btn-contact-secondary { background: white; border: 1.5px solid #e2e8f0; color: #1e293b; padding: 15px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .btn-contact-secondary:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+    .security-tips { margin-top: 25px; display: flex; gap: 12px; color: #64748b; font-size: 0.85rem; padding: 0 10px; line-height: 1.5; }
+    .tip-icon { font-size: 1.1rem; }
+
+    /* LOADER */
+    .loader-overlay { height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+    .premium-spinner { width: 50px; height: 50px; border: 4px solid #f1f5f9; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s infinite linear; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* MOBILE ACTIONS */
+    .mobile-fixed-bar { display: none; }
+
+    @media (max-width: 1024px) {
+      .product-layout { grid-template-columns: 1fr; }
+      .gallery-section { position: relative; top: 0; }
+      .main-stage { height: 450px; }
+      .product-title { font-size: 2.2rem; }
     }
 
-
+    @media (max-width: 600px) {
+      .mobile-fixed-bar { display: flex; position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; border-top: 1px solid #e2e8f0; align-items: center; justify-content: space-between; z-index: 1000; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); }
+      .mobile-price { font-size: 1.4rem; font-weight: 900; }
+      .btn-call-mobile { background: #1e293b; color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 800; }
+    }
   `]
 })
 export class ProductDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private produitService = inject(ProduitService);
+  private authService = inject(AuthService);
+  private http = inject(HttpClient);
 
   product: any;
   selectedImg = '';
   defaultImg = 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&fit=crop';
   showPhone = false;
+  isFavorited = false;
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -143,18 +237,59 @@ export class ProductDetailComponent implements OnInit {
       this.produitService.getById(+id).subscribe({
         next: (res) => {
           this.product = res;
-          if (res.mediaProduits && res.mediaProduits.length > 0) {
+          if (res.imageUrl) {
+            this.selectedImg = res.imageUrl;
+          } else if (res.mediaProduits && res.mediaProduits.length > 0) {
             this.selectedImg = res.mediaProduits[0].urlMedia;
           }
+          this.checkIfFavorited();
         },
         error: (err) => console.error(err)
       });
     }
   }
 
-  formatDate(dateArr: any): string {
-    if (!dateArr || !Array.isArray(dateArr)) return 'N/A';
-    const date = new Date(dateArr[0], dateArr[1] - 1, dateArr[2]);
+  checkIfFavorited() {
+    if (!this.authService.isLoggedIn()) return;
+    const userId = this.authService.getUserId();
+    this.http.get<boolean>(`http://localhost:8080/api/v1/favoris/check?userId=${userId}&productId=${this.product.id}`)
+      .subscribe(res => this.isFavorited = res);
+  }
+
+  toggleFavorite() {
+    if (!this.authService.isLoggedIn()) {
+      alert("Veuillez vous connecter pour gérer vos favoris.");
+      return;
+    }
+    const userId = this.authService.getUserId();
+    this.http.post<boolean>(`http://localhost:8080/api/v1/favoris/toggle?userId=${userId}&productId=${this.product.id}`, {})
+      .subscribe(res => {
+        this.isFavorited = res;
+        // Optionnel : déclencher une notification visuelle
+      });
+  }
+
+  formatDate(dateStr: any): string {
+    if (!dateStr) return 'N/A';
+    const date = Array.isArray(dateStr) ? new Date(dateStr[0], dateStr[1] - 1, dateStr[2]) : new Date(dateStr);
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  formatDispo(dispo: string): string {
+    const map: any = {
+      'DISPONIBLE_IMMEDIATEMENT': 'Disponible Immédiatement',
+      'STOCK_LIMITE': 'Stock Limité',
+      'SUR_COMMANDE': 'Sur Commande'
+    };
+    return map[dispo] || dispo;
+  }
+
+  formatTypePrix(type: string): string {
+    const map: any = {
+      'PRIX_NEGOCIABLE': 'Négociable',
+      'GRATUIT': 'Gratuit',
+      'SUR_DEVIS': 'Sur devis'
+    };
+    return map[type] || 'Fixe';
   }
 }

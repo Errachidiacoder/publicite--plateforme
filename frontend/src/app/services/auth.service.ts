@@ -8,6 +8,7 @@ export interface AuthResponse {
     role: string;
     nomComplet: string;
     email: string;
+    id: number;
 }
 
 const STORAGE_KEY = 'pub_auth';
@@ -43,6 +44,7 @@ export class AuthService {
             role: res.role,
             nomComplet: res.nomComplet,
             email: res.email,
+            userId: res.id,
             // decode roles array from JWT payload for multi-role support
             roles: this.decodeRolesFromToken(res.token)
         };
@@ -72,6 +74,10 @@ export class AuthService {
 
     getEmail(): string {
         return this.getSession()?.email ?? '';
+    }
+
+    getUserId(): number | null {
+        return this.getSession()?.userId ?? null;
     }
 
     isLoggedIn(): boolean {

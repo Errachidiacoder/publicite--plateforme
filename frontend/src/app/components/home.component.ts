@@ -5,11 +5,12 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { CategorieService } from '../services/category.service';
 import { ProduitService } from '../services/product.service';
+import { WishlistService } from '../services/wishlist.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <!-- TOP UTILITY BAR (DARK) -->
     <div class="top-utility-bar">
@@ -20,16 +21,19 @@ import { ProduitService } from '../services/product.service';
         <div class="top-right">
           <!-- ICONS FROM USER REQUEST -->
           <div class="icon-group">
-            <a routerLink="/login" class="utility-item" title="Mon Compte">
+            <a routerLink="/profile" class="utility-item" title="Mon Profil" *ngIf="isLoggedIn()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </a>
+            <a routerLink="/login" class="utility-item" title="Connexion" *ngIf="!isLoggedIn()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </a>
             <div class="utility-item" title="Panier">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
               <span class="count">0</span>
             </div>
-            <div class="utility-item" title="Favoris">
+            <div class="utility-item" title="Favoris" routerLink="/wishlist">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              <span class="count">0</span>
+              <span class="count">{{ wishlistService.favoritesCount$ | async }}</span>
             </div>
             <div class="utility-item" title="Support">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="12" cy="10" r="2"/></svg>
@@ -56,6 +60,8 @@ import { ProduitService } from '../services/product.service';
 
         <div class="user-controls">
           <a routerLink="/admin/dashboard" class="btn-admin" *ngIf="isLoggedIn() && isAdmin()">⚙ Dashboard Admin</a>
+          <a routerLink="/my-ads" class="btn-my-ads" *ngIf="isLoggedIn()">📁 Mes Annonces</a>
+          <a routerLink="/profile" class="btn-profile" *ngIf="isLoggedIn()">👤 Mon Profil</a>
           <a routerLink="/submit-product" class="btn-publish">Publier une annonce ✚</a>
           <button class="u-logout" *ngIf="isLoggedIn()" (click)="logout()" title="Déconnexion">🔓 Se déconnecter</button>
         </div>
@@ -161,8 +167,8 @@ import { ProduitService } from '../services/product.service';
             <div class="p-img-box" (click)="goToDetail(p.id)">
               <img [src]="p.img" [alt]="p.name">
               <div class="p-badge" *ngIf="p.badge">{{ p.badge }}</div>
-              <button class="wishlist-btn" (click)="$event.stopPropagation()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <button class="wishlist-btn" (click)="toggleWishlist($event, p.id)" [class.active]="isFavorited(p.id)">
+                <svg viewBox="0 0 24 24" [attr.fill]="isFavorited(p.id) ? '#f44336' : 'none'" [attr.stroke]="isFavorited(p.id) ? '#f44336' : 'currentColor'" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
               </button>
               <div class="p-quick-view">Aperçu rapide</div>
             </div>
@@ -244,6 +250,10 @@ import { ProduitService } from '../services/product.service';
     .btn-publish:hover { background: var(--primary); transform: translateY(-2px); }
     .btn-admin { background: white; color: var(--teal); border: 2px solid var(--teal); padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
     .btn-admin:hover { background: var(--teal); color: white; transform: translateY(-2px); }
+    .btn-my-ads { background: #f0fdfa; color: #00897b; border: 1.5px solid #4db6ac; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
+    .btn-my-ads:hover { background: #e0f2f1; transform: translateY(-2px); }
+    .btn-profile { background: white; color: #455a64; border: 1.5px solid #cfd8dc; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
+    .btn-profile:hover { background: #f8fafc; transform: translateY(-2px); }
     .u-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
 
 
@@ -364,6 +374,7 @@ export class HomeComponent implements OnInit {
   private authService = inject(AuthService);
   private catService = inject(CategorieService);
   private produitService = inject(ProduitService);
+  public wishlistService = inject(WishlistService);
   private router = inject(Router);
 
   searchQuery = '';
@@ -384,6 +395,31 @@ export class HomeComponent implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    this.wishlistService.updateCount();
+    this.loadFavs();
+  }
+
+  favIds: Set<number> = new Set();
+  loadFavs() {
+    if (this.isLoggedIn()) {
+      this.wishlistService.getFavorites().subscribe(favs => {
+        this.favIds = new Set(favs.map(f => f.id));
+      });
+    }
+  }
+
+  isFavorited(id: number) { return this.favIds.has(id); }
+
+  toggleWishlist(event: Event, id: number) {
+    event.stopPropagation();
+    if (!this.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.wishlistService.toggleFavorite(id).subscribe(added => {
+      if (added) this.favIds.add(id);
+      else this.favIds.delete(id);
+    });
   }
 
   loadData() {
@@ -401,7 +437,7 @@ export class HomeComponent implements OnInit {
           price: (p.prixAfiche || 0).toLocaleString() + ' DH',
           location: p.villeLocalisation,
           categorie: p.categorie?.nomCategorie || 'Divers',
-          img: p.mediaProduits && p.mediaProduits.length > 0 ? p.mediaProduits[0].urlMedia : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&fit=crop',
+          img: p.imageUrl ? p.imageUrl : (p.mediaProduits && p.mediaProduits.length > 0 ? p.mediaProduits[0].urlMedia : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&fit=crop'),
           badge: p.annoncePremium ? 'TOP' : null
         }));
         this.filteredProducts = [...this.allProducts];

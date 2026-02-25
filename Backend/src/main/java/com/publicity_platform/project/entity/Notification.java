@@ -1,5 +1,6 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -108,11 +109,12 @@ public class Notification {
     // ─────────────────────────────────────────────
 
     /** 0..* Notifications → 1 Utilisateur destinataire */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "destinataire_id", nullable = false)
     private Utilisateur destinataire;
 
-    /** 0..* Notifications ← 1 Produit source (optionnel) */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_source_id")
     private Produit produitSource;

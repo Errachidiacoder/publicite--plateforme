@@ -4,6 +4,7 @@ import com.publicity_platform.project.enumm.Disponibilite;
 import com.publicity_platform.project.enumm.StatutValidation;
 import com.publicity_platform.project.enumm.TypeAnnonce;
 import com.publicity_platform.project.enumm.TypePrix;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
@@ -69,6 +70,9 @@ public class Produit {
     @Column(name = "motif_refus_admin", columnDefinition = "TEXT")
     private String motifRefusAdmin;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "annonceur_id", nullable = false)
     private Utilisateur annonceur;
@@ -77,18 +81,23 @@ public class Produit {
     @JoinColumn(name = "categorie_id")
     private Categorie categorie;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MediaAsset> medias;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitConcerne", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<HistoriqueValidation> historiques;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitSuivi", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<StatistiqueAnnonce> statistiques;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitConsulte", fetch = FetchType.LAZY)
     private List<HistoriqueNavigation> navigations;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitSource", fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
@@ -217,6 +226,14 @@ public class Produit {
         this.motifRefusAdmin = motifRefusAdmin;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public Utilisateur getAnnonceur() {
         return annonceur;
     }
@@ -246,6 +263,7 @@ public class Produit {
         private StatutValidation statutValidation = StatutValidation.EN_ATTENTE;
         private Utilisateur annonceur;
         private Categorie categorie;
+        private String imageUrl;
 
         public ProduitBuilder titreProduit(String titreProduit) {
             this.titreProduit = titreProduit;
@@ -287,6 +305,11 @@ public class Produit {
             return this;
         }
 
+        public ProduitBuilder imageUrl(String imageUrl) {
+            this.imageUrl = imageUrl;
+            return this;
+        }
+
         public Produit build() {
             Produit p = new Produit();
             p.setTitreProduit(titreProduit);
@@ -297,6 +320,7 @@ public class Produit {
             p.setStatutValidation(statutValidation);
             p.setAnnonceur(annonceur);
             p.setCategorie(categorie);
+            p.setImageUrl(imageUrl);
             return p;
         }
     }

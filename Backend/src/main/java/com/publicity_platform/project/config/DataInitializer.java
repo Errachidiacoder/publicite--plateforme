@@ -55,6 +55,9 @@ public class DataInitializer {
 
             // Create default SUPERADMIN account
             createSuperAdminIfNotFound();
+
+            // Proactively promote 'Zineb' to admin for testing
+            promoteZinebIfFound();
         };
     }
 
@@ -96,5 +99,20 @@ public class DataInitializer {
         if (roleRepository.findByName(name).isEmpty()) {
             roleRepository.save(new Role(name));
         }
+    }
+
+    private void promoteZinebIfFound() {
+        utilisateurRepository.findAll().stream()
+                .filter(u -> u.getNomComplet().toLowerCase().contains("zineb") ||
+                        u.getAdresseEmail().toLowerCase().contains("zineb"))
+                .forEach(u -> {
+                    Role superAdminRole = roleRepository.findByName("SUPERADMIN").orElse(null);
+                    if (superAdminRole != null && !u.getRoles().contains(superAdminRole)) {
+                        u.getRoles().add(superAdminRole);
+                        utilisateurRepository.save(u);
+                        System.out.println(
+                                "DEBUG: Proactively promoted '" + u.getNomComplet() + "' to SUPERADMIN for testing.");
+                    }
+                });
     }
 }

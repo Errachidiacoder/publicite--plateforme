@@ -1,6 +1,8 @@
 package com.publicity_platform.project.controller;
 
 import com.publicity_platform.project.entity.Produit;
+import com.publicity_platform.project.dto.ProduitDto;
+import com.publicity_platform.project.dto.UtilisateurDto;
 
 import com.publicity_platform.project.entity.Role;
 import com.publicity_platform.project.entity.Utilisateur;
@@ -20,6 +22,8 @@ import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDateTime;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -62,51 +66,104 @@ public class AdminController {
     // ============================
 
     @GetMapping("/dashboard/stats")
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getDashboardStats() {
+        System.out.println("DEBUG: Calculating Dashboard Stats...");
         Map<String, Object> stats = new HashMap<>();
+
         long total = produitRepository.count();
         long pending = produitRepository.countByStatutValidation(StatutValidation.EN_ATTENTE);
         long validated = produitRepository.countByStatutValidation(StatutValidation.VALIDE);
         long active = produitRepository.countByStatutValidation(StatutValidation.ACTIVEE);
         long refused = produitRepository.countByStatutValidation(StatutValidation.REFUSE);
-        long usersCount = utilisateurRepository.count();
 
-        stats.put("totalProduits", total);
+        List<Produit> allProducts = produitRepository.findAll();
+        long totalVues = allProducts.stream()
+                .mapToLong(p -> p.getCompteurVues() != null ? p.getCompteurVues() : 0L)
+                .sum();
+
+        List<Utilisateur> allUsers = utilisateurRepository.findAll();
+        long usersCount = allUsers.size();
+
+        long advertisersCount = allUsers.stream()
+                .filter(u -> u.getRoles().stream()
+                        .anyMatch(r -> r.getName().equals("ANNONCEUR") || r.getName().equals("ROLE_ANNONCEUR")))
+                .count();
+
+        long adminsCount = allUsers.stream()
+                .filter(u -> u.getRoles().stream()
+                        .anyMatch(r -> r.getName().equals("SUPERADMIN") || r.getName().equals("ROLE_SUPERADMIN") ||
+                                r.getName().equals("ADJOINTADMIN") || r.getName().equals("ROLE_ADJOINTADMIN")))
+                .count();
+
+        System.out.println("DEBUG: Stats calculated - Total Products: " + total + ", Users: " + usersCount);
+
+        stats.put("produitsTotal", total);
+        stats.put("totalProduits", total); // Redondance pour compatibilité
         stats.put("produitsEnAttente", pending);
+        stats.put("totalEnAttente", pending);
         stats.put("produitsValides", validated);
         stats.put("produitsActifs", active);
         stats.put("produitsRefuses", refused);
-        stats.put("totalUtilisateurs", usersCount);
+        stats.put("totalVues", totalVues);
 
-        // Répartition par catégorie
+        stats.put("utilisateursTotal", usersCount);
+        stats.put("totalUtilisateurs", usersCount); // Redondance
+        stats.put("utilisateursAnnonceurs", advertisersCount);
+        stats.put("utilisateursAdmins", adminsCount);
+
+        List<Categorie> allCats = categorieRepository.findAll();
+        stats.put("categoriesCount", (long) allCats.size());
+        stats.put("totalLogs", historiqueValidationRepository.count());
+
+        stats.put("debug_info", "Backend v2.1 - " + LocalDateTime.now());
+        stats.put("db_empty", (total == 0 && usersCount <= 1));
+
+        // Répartition par catégorie + Recherche de la catégorie "Hot"
         List<Map<String, Object>> categoryDistribution = new ArrayList<>();
-        categorieRepository.findAll().forEach(cat -> {
-            long count = produitRepository.countByCategorie(cat);
+        String hotCatName = "Aucune";
+        long maxCatVues = -1;
+
+        for (Categorie cat : allCats) {
+            List<Produit> catProds = allProducts.stream()
+                    .filter(p -> p.getCategorie() != null && p.getCategorie().getId().equals(cat.getId()))
+                    .toList();
+            long count = catProds.size();
+            long catVues = catProds.stream().mapToLong(p -> p.getCompteurVues() != null ? p.getCompteurVues() : 0L)
+                    .sum();
+
+            if (catVues > maxCatVues && count > 0) {
+                maxCatVues = catVues;
+                hotCatName = cat.getNomCategorie();
+            }
+
             if (count > 0) {
                 Map<String, Object> item = new HashMap<>();
-                item.put("name", cat.getNomCategorie());
+                item.put("nom", cat.getNomCategorie());
                 item.put("count", count);
                 categoryDistribution.add(item);
             }
-        });
-        stats.put("categoryDistribution", categoryDistribution);
+        }
+        stats.put("repartitionCategories", categoryDistribution);
+        stats.put("hotCategory", hotCatName);
 
-        // Top 5 produits les plus consultés
-        stats.put("topProducts", produitRepository.findTop5ByOrderByCompteurVuesDesc());
+        // Top 5 produits (Utilisation de DTO pour éviter les cycles de sérialisation)
+        List<ProduitDto> topProducts = produitRepository.findTop5ByOrderByCompteurVuesDesc().stream()
+                .map(ProduitDto::fromEntity)
+                .toList();
+        stats.put("topProducts", topProducts);
 
-        // Top 5 annonceurs actifs
-        List<Utilisateur> topAdvertisers = utilisateurRepository.findAll().stream()
+        // Top 5 annonceurs
+        List<Map<String, Object>> advertisersSummary = allUsers.stream()
                 .filter(u -> u.getProduits() != null && !u.getProduits().isEmpty())
                 .sorted((u1, u2) -> Integer.compare(u2.getProduits().size(), u1.getProduits().size()))
                 .limit(5)
-                .toList();
-
-        List<Map<String, Object>> advertisersSummary = topAdvertisers.stream().map(u -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("nomComplet", u.getNomComplet());
-            map.put("annonceCount", u.getProduits().size());
-            return map;
-        }).toList();
+                .map(u -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("nomComplet", u.getNomComplet());
+                    map.put("annonceCount", u.getProduits().size());
+                    return map;
+                }).toList();
         stats.put("topAdvertisers", advertisersSummary);
 
         return ResponseEntity.ok(stats);
@@ -117,38 +174,38 @@ public class AdminController {
     // ============================
 
     @GetMapping("/products")
-    public ResponseEntity<List<Produit>> getAllProducts(
+    public ResponseEntity<List<ProduitDto>> getAllProducts(
             @RequestParam(required = false) String statut) {
         if (statut != null) {
             try {
                 StatutValidation sv = StatutValidation.valueOf(statut.toUpperCase());
-                return ResponseEntity.ok(produitRepository.findByStatutValidation(sv));
+                return ResponseEntity.ok(produitService.getProductsByStatus(sv));
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().build();
             }
         }
-        return ResponseEntity.ok(produitRepository.findAll());
+        return ResponseEntity.ok(produitService.getAllProducts());
     }
 
     @GetMapping("/pending-products")
-    public ResponseEntity<List<Produit>> getPendingProducts() {
+    public ResponseEntity<List<ProduitDto>> getPendingProducts() {
         return ResponseEntity.ok(produitService.getPendingProducts());
     }
 
     @PostMapping("/products/{id}/validate")
-    public ResponseEntity<Produit> validate(@PathVariable @NonNull Long id,
+    public ResponseEntity<ProduitDto> validate(@PathVariable @NonNull Long id,
             @RequestBody Map<String, Integer> body,
             @AuthenticationPrincipal Utilisateur admin) {
         int duration = body.getOrDefault("durationMonths", 12);
-        return ResponseEntity.ok(produitService.validateProduct(id, duration, admin));
+        return ResponseEntity.ok(produitService.validateProductDto(id, duration, admin));
     }
 
     @PostMapping("/products/{id}/reject")
-    public ResponseEntity<Produit> reject(@PathVariable @NonNull Long id,
+    public ResponseEntity<ProduitDto> reject(@PathVariable @NonNull Long id,
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal Utilisateur admin) {
         String reason = body.getOrDefault("reason", "Non conforme aux conditions");
-        return ResponseEntity.ok(produitService.rejectProduct(id, reason, admin));
+        return ResponseEntity.ok(produitService.rejectProductDto(id, reason, admin));
     }
 
     @DeleteMapping("/products/{id}")
@@ -165,7 +222,8 @@ public class AdminController {
     }
 
     @PutMapping("/products/{id}")
-    public ResponseEntity<Produit> updateProduct(@PathVariable @NonNull Long id, @RequestBody Map<String, Object> body,
+    public ResponseEntity<ProduitDto> updateProduct(@PathVariable @NonNull Long id,
+            @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal Utilisateur admin) {
         Produit p = produitService.getProductById(id);
         if (body.containsKey("titreProduit"))
@@ -185,7 +243,7 @@ public class AdminController {
                 .commentaireAdmin("Modification des informations de l'annonce")
                 .build());
 
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(ProduitDto.fromEntity(saved));
     }
 
     // ============================
@@ -304,9 +362,9 @@ public class AdminController {
     }
 
     @GetMapping("/users/{id}/products")
-    public ResponseEntity<List<Produit>> getUserProducts(@PathVariable @NonNull Long id) {
-
-        return ResponseEntity.ok(produitRepository.findByAnnonceurId(id));
+    public ResponseEntity<List<ProduitDto>> getUserProducts(
+            @PathVariable @NonNull Long id) {
+        return ResponseEntity.ok(produitService.getProductsByAnnonceur(id));
     }
 
     @GetMapping("/logs")
@@ -369,7 +427,6 @@ public class AdminController {
     }
 
     @PostMapping("/categories")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<Object> createAdminCategorie(@RequestBody Map<String, Object> body) {
         if (body.containsKey("seed") && (Boolean) body.get("seed")) {
             seedDefaultCategories();

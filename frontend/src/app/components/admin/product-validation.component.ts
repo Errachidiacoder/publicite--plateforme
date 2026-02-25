@@ -51,7 +51,10 @@ import { AdminService } from '../../services/admin.service';
                 <td class="text-center"><code class="code-id">#{{ prod.id }}</code></td>
                 <td>
                   <div class="product-cell">
-                    <div class="p-thumb">{{ prod.titreProduit?.charAt(0) }}</div>
+                    <div class="p-thumb">
+                      <img *ngIf="prod.imageUrl" [src]="prod.imageUrl" alt="Thumb">
+                      <span *ngIf="!prod.imageUrl">{{ prod.titreProduit?.charAt(0) }}</span>
+                    </div>
                     <div class="p-meta">
                       <span class="p-name">{{ prod.titreProduit }}</span>
                       <span class="p-loc">{{ prod.villeLocalisation }}</span>
@@ -61,7 +64,7 @@ import { AdminService } from '../../services/admin.service';
                 <td>
                   <div class="user-info">
                     <strong>{{ prod.annonceur?.nomComplet }}</strong>
-                    <span class="email-sub">{{ prod.annonceur?.email }}</span>
+                    <span class="email-sub">{{ prod.annonceur?.adresseEmail }}</span>
                   </div>
                 </td>
                 <td>{{ prod.dateSoumission | date:'dd/MM/yyyy' }}</td>
@@ -74,6 +77,16 @@ import { AdminService } from '../../services/admin.service';
                   <div class="action-group">
                     <button (click)="viewDetail(prod)" class="icon-btn info" title="Détails">👁️</button>
                     <button (click)="onEdit(prod)" class="icon-btn warning" title="Modifier">✏️</button>
+
+                    <!-- Actions pour EN_ATTENTE -->
+                    <ng-container *ngIf="prod.statutValidation === 'EN_ATTENTE'">
+                      <button (click)="onValidate(prod.id)" class="text-btn success" [disabled]="loadingId === prod.id">
+                        <span>Valider</span>
+                      </button>
+                      <button (click)="onReject(prod.id)" class="text-btn danger" [disabled]="loadingId === prod.id">
+                        <span>Refuser</span>
+                      </button>
+                    </ng-container>
                     
                     <ng-container *ngIf="prod.statutValidation === 'VALIDE'">
                       <button (click)="onSimulatePayment(prod.id)" class="text-btn primary" [disabled]="loadingId === prod.id">
@@ -82,7 +95,7 @@ import { AdminService } from '../../services/admin.service';
                       </button>
                     </ng-container>
 
-                    <ng-container *ngIf="prod.statutValidation === 'ACTIVEE' || prod.statutValidation === 'VALIDE'">
+                    <ng-container *ngIf="prod.statutValidation === 'ACTIVEE' || prod.statutValidation === 'VALIDE' || prod.statutValidation === 'REFUSE'">
                       <button (click)="onArchive(prod.id)" class="icon-btn archive" title="Archiver" [disabled]="loadingId === prod.id">📦</button>
                     </ng-container>
 
@@ -106,6 +119,9 @@ import { AdminService } from '../../services/admin.service';
                 <button class="close-modal" (click)="selectedProduct = null">&times;</button>
             </header>
             <div class="modal-body">
+                <div class="product-image-preview-admin" *ngIf="selectedProduct.imageUrl">
+                    <img [src]="selectedProduct.imageUrl" alt="Preview">
+                </div>
                 <div class="detail-section">
                     <label>Informations Générales</label>
                     <div class="detail-grid">
@@ -165,7 +181,6 @@ import { AdminService } from '../../services/admin.service';
           </div>
         </div>
         </div>
-      </div>
     </div>
   `,
   styles: [`
@@ -243,7 +258,8 @@ import { AdminService } from '../../services/admin.service';
     .premium-table td:last-child { border-right: none; }
     
     .product-cell { display: flex; align-items: center; gap: 12px; }
-    .p-thumb { width: 38px; height: 38px; background: var(--accent); color: var(--primary-dark); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; }
+    .p-thumb { width: 44px; height: 44px; background: var(--accent); color: var(--primary-dark); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; overflow: hidden; }
+    .p-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .p-meta { display: flex; flex-direction: column; }
     .p-name { font-weight: 800; font-size: 0.85rem; color: var(--text); }
     .p-loc { font-size: 0.7rem; color: var(--text-light); }
@@ -287,6 +303,8 @@ import { AdminService } from '../../services/admin.service';
     .close-modal:hover { background: #eee; transform: rotate(90deg); }
 
     .modal-body { padding: 30px; display: flex; flex-direction: column; gap: 25px; max-height: 60vh; overflow-y: auto; }
+    .product-image-preview-admin { width: 100%; height: 250px; border-radius: 20px; overflow: hidden; margin-bottom: 20px; border: 1px solid var(--border); }
+    .product-image-preview-admin img { width: 100%; height: 100%; object-fit: cover; }
     .detail-section label { display: block; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-light); margin-bottom: 10px; letter-spacing: 1px; }
     .detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; background: #f9fafb; padding: 20px; border-radius: 16px; }
     .grid-item { display: flex; flex-direction: column; gap: 4px; }

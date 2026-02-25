@@ -62,6 +62,7 @@ public class AuthenticationService {
                                 .role(primaryRole)
                                 .nomComplet(savedUser.getNomComplet())
                                 .email(savedUser.getAdresseEmail())
+                                .id(savedUser.getId())
                                 .build();
         }
 
@@ -81,6 +82,7 @@ public class AuthenticationService {
                                 .role(primaryRole)
                                 .nomComplet(user.getNomComplet())
                                 .email(user.getAdresseEmail())
+                                .id(user.getId())
                                 .build();
         }
 

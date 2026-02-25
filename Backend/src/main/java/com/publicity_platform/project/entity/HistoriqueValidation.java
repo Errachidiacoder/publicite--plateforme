@@ -1,6 +1,7 @@
 package com.publicity_platform.project.entity;
 
 import com.publicity_platform.project.enumm.StatutValidation;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -113,11 +114,12 @@ public class HistoriqueValidation {
     // ─────────────────────────────────────────────
 
     /** 0..* HistoriqueValidation → 1 Utilisateur (admin) */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_responsable_id")
     private Utilisateur adminResponsable;
 
-    /** 0..* HistoriqueValidation → 1 Produit (composition) */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_concerne_id", nullable = false)
     private Produit produitConcerne;

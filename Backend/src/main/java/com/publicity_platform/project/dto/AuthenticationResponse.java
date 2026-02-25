@@ -5,15 +5,17 @@ public class AuthenticationResponse {
     private String role;
     private String nomComplet;
     private String email;
+    private Long id;
 
     public AuthenticationResponse() {
     }
 
-    public AuthenticationResponse(String token, String role, String nomComplet, String email) {
+    public AuthenticationResponse(String token, String role, String nomComplet, String email, Long id) {
         this.token = token;
         this.role = role;
         this.nomComplet = nomComplet;
         this.email = email;
+        this.id = id;
     }
 
     public static AuthenticationResponseBuilder builder() {
@@ -25,6 +27,7 @@ public class AuthenticationResponse {
         private String role;
         private String nomComplet;
         private String email;
+        private Long id;
 
         public AuthenticationResponseBuilder token(String token) {
             this.token = token;
@@ -46,8 +49,13 @@ public class AuthenticationResponse {
             return this;
         }
 
+        public AuthenticationResponseBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
         public AuthenticationResponse build() {
-            return new AuthenticationResponse(token, role, nomComplet, email);
+            return new AuthenticationResponse(token, role, nomComplet, email, id);
         }
     }
 
@@ -81,5 +89,13 @@ public class AuthenticationResponse {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }

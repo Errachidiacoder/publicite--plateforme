@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -71,9 +72,11 @@ import { AuthService } from '../../services/auth.service';
           </div>
           <div class="bar-right">
             <div class="icon-actions">
-                <div class="badge-icon">
+                <div class="badge-icon" (click)="router.navigate(['/admin/products'])">
                     <span class="icon">🔔</span>
-                    <span class="badge warning">2</span>
+                    <span class="badge warning" *ngIf="(notifService.unreadCount$ | async) ?? 0 > 0">
+                      {{ notifService.unreadCount$ | async }}
+                    </span>
                 </div>
                 <div class="badge-icon">
                     <span class="icon">❓</span>
@@ -343,7 +346,8 @@ import { AuthService } from '../../services/auth.service';
 })
 export class AdminLayoutComponent {
   private authService = inject(AuthService);
-  private router = inject(Router);
+  public router = inject(Router);
+  public notifService = inject(NotificationService);
 
   isCollapsed = false;
   userName = this.authService.getNomComplet() || 'Admin';
