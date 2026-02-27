@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 @Component({
@@ -9,340 +9,216 @@ import { AuthService } from '../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="auth-page">
-      <div class="auth-wrapper">
-        <div class="auth-panel left-panel">
-          <div class="brand-area">
-            <div class="brand-logo">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#00838f" stroke="#00838f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="#00838f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="#00838f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <h1>PubPlatform</h1>
-            <p>Rejoignez des milliers d'annonceurs qui font confiance à notre plateforme pour diffuser leurs publicités.</p>
+    <div class="auth-page-v2">
+      <div class="login-box">
+        <h2 class="title">REGISTER</h2>
+        
+        <div class="status-banner error" *ngIf="errorMsg">{{ errorMsg }}</div>
+        <div class="status-banner success" *ngIf="successMsg">{{ successMsg }}</div>
+
+        <form (ngSubmit)="onRegister()" #regForm="ngForm">
+          <div class="input-container">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" [(ngModel)]="regData.nomComplet" name="nomComplet" placeholder="Nom complet" required [disabled]="loading">
           </div>
-          <div class="features">
-            <div class="feature-item">
-              <span class="feature-icon">✓</span>
-              <span>Inscription gratuite et rapide</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">✓</span>
-              <span>Validation sous 24 heures</span>
-            </div>
-            <div class="feature-item">
-              <span class="feature-icon">✓</span>
-              <span>Support dédié disponible</span>
-            </div>
+
+          <div class="input-container">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" [(ngModel)]="regData.email" name="email" placeholder="Email" required [disabled]="loading">
           </div>
+
+          <div class="input-container">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <input type="tel" [(ngModel)]="regData.telephone" name="telephone" placeholder="Téléphone" required [disabled]="loading">
+          </div>
+          
+          <div class="input-container">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" [(ngModel)]="regData.password" name="password" placeholder="Mot de passe" required minlength="6" [disabled]="loading">
+          </div>
+
+          <div class="input-container">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" [(ngModel)]="confirmPassword" name="confirmPassword" placeholder="Confirmer mot de passe" required [disabled]="loading">
+          </div>
+
+          <button type="submit" class="btn-login" [disabled]="loading">
+            <span *ngIf="!loading">SIGN UP</span>
+            <span *ngIf="loading" class="spinner"></span>
+          </button>
+        </form>
+
+        <div class="social-text">Or sign up with</div>
+        
+        <div class="social-btns">
+          <button (click)="onSocialLogin('facebook')" class="social-btn fb">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            Facebook
+          </button>
+          <button (click)="onSocialLogin('google')" class="social-btn google">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636C.732 21 0 20.268 0 19.364V5.457c0-.904.732-1.636 1.636-1.636h3.819l6.545 4.91 6.545-4.91h3.819c.904 0 1.636.732 1.636 1.636z"/></svg>
+            Gmail
+          </button>
         </div>
 
-        <div class="auth-panel right-panel">
-          <div class="auth-form-container">
-            <h2>Créer un compte</h2>
-            <p class="subtitle">Commencez à publier vos annonces dès aujourd'hui</p>
-
-            <div class="error-banner" *ngIf="errorMsg">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              {{ errorMsg }}
-            </div>
-
-            <div class="success-banner" *ngIf="successMsg">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              {{ successMsg }}
-            </div>
-
-            <form (ngSubmit)="onRegister()" #regForm="ngForm">
-              <div class="form-group">
-                <label for="nomComplet">Nom complet</label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <input id="nomComplet" type="text" [(ngModel)]="regData.nomComplet" name="nomComplet" placeholder="Ex: Jean Dupont" required [disabled]="loading">
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="email">Adresse email</label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                  <input id="email" type="email" [(ngModel)]="regData.email" name="email" placeholder="nom@entreprise.com" required [disabled]="loading">
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="telephone">Numéro de téléphone</label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  <input id="telephone" type="tel" [(ngModel)]="regData.telephone" name="telephone" placeholder="06 00 00 00 00" required [disabled]="loading">
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="password">Mot de passe</label>
-                <div class="input-wrapper">
-                  <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  <input id="password" type="password" [(ngModel)]="regData.password" name="password" placeholder="Minimum 6 caractères" required minlength="6" [disabled]="loading">
-                </div>
-              </div>
-
-              <button type="submit" class="btn-submit" [disabled]="loading || !regForm.form.valid">
-                <span *ngIf="!loading">Créer mon compte</span>
-                <span *ngIf="loading" class="loading-spinner">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-                  Création en cours...
-                </span>
-              </button>
-            </form>
-
-            <div class="auth-divider">
-              <span>Vous avez déjà un compte ?</span>
-            </div>
-            <a routerLink="/login" class="btn-secondary">Se connecter</a>
-          </div>
+        <div class="footer">
+          Already a member? <a routerLink="/login">Login now</a>
         </div>
+      </div>
+      <!-- Wave background -->
+      <div class="wave-bg">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+          <path fill="rgba(255,255,255,0.15)" fill-opacity="1" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,250.7C960,235,1056,181,1152,165.3C1248,149,1344,171,1392,181.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
       </div>
     </div>
   `,
   styles: [`
-    .auth-page {
+    .auth-page-v2 {
       min-height: 100vh;
       display: flex;
-      align-items: stretch;
+      align-items: flex-start;
+      justify-content: center;
+      background: linear-gradient(135deg, #00796b 0%, #4db6ac 100%);
       margin: -40px -24px;
-      background: #f5f5f5;
+      padding: 60px 20px 20px;
+      position: relative;
+      overflow: hidden;
     }
-    .auth-wrapper {
-      display: flex;
+    .auth-page-v2::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: radial-gradient(#ffffff 1px, transparent 1px);
+      background-size: 20px 20px;
+      opacity: 0.1;
+      z-index: 1;
+    }
+    .wave-bg {
+      position: absolute;
+      bottom: 0;
+      left: 0;
       width: 100%;
+      line-height: 0;
+      z-index: 1;
     }
-    .auth-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .left-panel {
-      background: linear-gradient(160deg, #00838f 0%, #005662 100%);
-      color: white;
-      padding: 80px 60px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .brand-area {
-      margin-bottom: 60px;
-    }
-    .brand-logo {
-      background: white;
-      width: 80px;
-      height: 80px;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    }
-    .left-panel h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      color: white;
-      margin-bottom: 16px;
-    }
-    .left-panel p {
-      font-size: 1.1rem;
-      opacity: 0.85;
-      line-height: 1.8;
-    }
-    .features {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .feature-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 1rem;
-      opacity: 0.9;
-    }
-    .feature-icon {
-      background: rgba(255,255,255,0.2);
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-    .right-panel {
-      background: #eeeeee;
-      padding: 80px 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .auth-form-container {
-      width: 100%;
-      max-width: 420px;
-    }
-    h2 {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #263238;
-      margin-bottom: 8px;
-    }
-    .subtitle {
-      color: #546e7a;
-      margin-bottom: 36px;
-      font-size: 1rem;
-    }
-    .error-banner {
-      background: #fce4ec;
-      border: 1px solid #ef9a9a;
-      color: #b71c1c;
-      padding: 14px 18px;
-      border-radius: 10px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    .success-banner {
-      background: #e8f5e9;
-      border: 1px solid #a5d6a7;
-      color: #1b5e20;
-      padding: 14px 18px;
-      border-radius: 10px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-    .form-group {
-      margin-bottom: 18px;
-    }
-    label {
+    .wave-bg svg {
+      position: relative;
       display: block;
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #37474f;
-      margin-bottom: 8px;
+      width: calc(100% + 1.3px);
+      height: 200px;
     }
-    .input-wrapper {
+
+    .login-box {
+      z-index: 10;
+      background: #fff;
+      padding: 35px 30px;
+      border-radius: 4px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+      width: 360px;
+      max-width: 100%;
+      text-align: center;
+    }
+    .title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #333;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+    }
+    
+    .input-container {
+      background: #f2f2f2;
+      border-radius: 2px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      transition: 0.3s;
+    }
+    .input-container .icon { width: 18px; color: #999; }
+    .input-container input {
+      background: transparent;
+      border: none;
+      padding: 14px 12px;
+      width: 100%;
+      font-size: 0.85rem;
+      outline: none;
+      color: #333;
+    }
+
+    .btn-login {
+      width: 100%;
+      background: #4db6ac;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: 0.3s;
+      letter-spacing: 1px;
+      margin-top: 15px;
+      margin-bottom: 25px;
+    }
+    .btn-login:hover:not(:disabled) { background: #00796b; }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .social-text {
+      color: #999;
+      font-size: 0.8rem;
+      margin-bottom: 20px;
       position: relative;
     }
-    .input-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #90a4ae;
+    .social-btns {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 40px;
     }
-    .input-wrapper input {
-      width: 100%;
-      padding: 14px 14px 14px 46px;
-      border: 2px solid #cfd8dc;
-      border-radius: 10px;
-      background: #f5f5f5;
-      font-size: 1rem;
-      color: #263238;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-      box-sizing: border-box;
-    }
-    .input-wrapper input:focus {
-      outline: none;
-      border-color: #00838f;
-      background: white;
-      box-shadow: 0 0 0 4px rgba(0,131,143,0.12);
-    }
-    .input-wrapper input:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .btn-submit {
-      width: 100%;
-      padding: 16px;
-      background: #00838f;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
+    .social-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #eee;
+      background: #fff;
+      font-size: 0.75rem;
       font-weight: 700;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
-      box-shadow: 0 4px 12px rgba(0,131,143,0.3);
-    }
-    .btn-submit:hover:not(:disabled) {
-      background: #005662;
-      box-shadow: 0 6px 16px rgba(0,131,143,0.4);
-      transform: translateY(-1px);
-    }
-    .btn-submit:active:not(:disabled) {
-      transform: translateY(0);
-    }
-    .btn-submit:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-    }
-    .loading-spinner {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-    }
-    .spin {
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    .auth-divider {
-      text-align: center;
-      color: #90a4ae;
-      margin: 24px 0 16px;
-      font-size: 0.9rem;
-    }
-    .btn-secondary {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      background: white;
-      color: #00838f;
-      border: 2px solid #00838f;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
+      gap: 8px;
+      color: #333;
       cursor: pointer;
-      text-decoration: none;
-      text-align: center;
-      transition: all 0.2s;
-      box-sizing: border-box;
+      transition: 0.3s;
     }
-    .btn-secondary:hover {
-      background: #00838f;
-      color: white;
+    .social-btn:hover { background: #f9f9f9; border-color: #4db6ac; color: #4db6ac; }
+    .social-btn.fb { color: #3b5998; }
+    .social-btn.google { color: #db4437; }
+
+    .footer { font-size: 0.8rem; color: #999; }
+    .footer a { color: #4db6ac; text-decoration: none; font-weight: 700; }
+    .footer a:hover { text-decoration: underline; }
+
+    .status-banner { padding: 12px; border-radius: 2px; font-size: 0.8rem; font-weight: 600; margin-bottom: 20px; text-align: left; }
+    .status-banner.error { background: #ffebee; color: #c62828; }
+    .status-banner.success { background: #e8f5e9; color: #2e7d32; }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
     }
-    @media (max-width: 768px) {
-      .auth-page { margin: -40px -12px; }
-      .left-panel { display: none; }
-      .right-panel { padding: 40px 24px; }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   `]
 })
 export class RegisterComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   regData = {
     nomComplet: '',
@@ -350,14 +226,75 @@ export class RegisterComponent {
     telephone: '',
     password: ''
   };
+  confirmPassword = '';
   loading = false;
   errorMsg = '';
   successMsg = '';
 
+  ngOnInit() {
+    // Check if redirecting back from social login
+    this.route.queryParams.subscribe(params => {
+      if (params['token']) {
+        const authData = {
+          token: params['token'],
+          email: params['email'],
+          nomComplet: params['name'],
+          role: params['role'],
+          id: +params['id']
+        };
+        (this.authService as any).saveSession(authData);
+        this.successMsg = 'Connexion sociale réussie ! Redirection...';
+        setTimeout(() => this.router.navigate(['/home']), 1000);
+      }
+    });
+  }
+
+  onSocialLogin(provider: string) {
+    this.loading = true;
+    this.errorMsg = '';
+    this.successMsg = `Inscription avec ${provider === 'google' ? 'Gmail' : 'Facebook'} en cours...`;
+
+    // Simulation delay
+    setTimeout(() => {
+      const demoAuthData = {
+        token: 'eyJhbGciOiJIUzI1NiJ9.demo-token',
+        email: provider === 'google' ? 'new.google@gmail.com' : 'new.fb@facebook.com',
+        nomComplet: provider === 'google' ? 'New Google User' : 'New Facebook User',
+        role: 'VISITEUR',
+        id: 888,
+        roles: ['ROLE_VISITEUR']
+      };
+
+      localStorage.setItem('pub_auth', JSON.stringify(demoAuthData));
+
+      this.successMsg = 'Compte créé avec succès via social login !';
+      this.loading = false;
+      setTimeout(() => this.router.navigate(['/home']), 1000);
+    }, 1500);
+  }
+
   onRegister() {
     if (this.loading) return;
+
     this.errorMsg = '';
     this.successMsg = '';
+
+    // Frontend validation
+    if (!this.regData.nomComplet || !this.regData.email || !this.regData.telephone || !this.regData.password || !this.confirmPassword) {
+      this.errorMsg = 'Veuillez remplir tous les champs.';
+      return;
+    }
+
+    if (this.regData.password.length < 6) {
+      this.errorMsg = 'Le mot de passe doit contenir au moins 6 caractères.';
+      return;
+    }
+
+    if (this.regData.password !== this.confirmPassword) {
+      this.errorMsg = 'Les mots de passe ne correspondent pas.';
+      return;
+    }
+
     this.loading = true;
 
     this.authService.register(this.regData).subscribe({

@@ -4,408 +4,286 @@ import { AdminService } from '../../services/admin.service';
 import { RouterModule } from '@angular/router';
 
 @Component({
-   selector: 'app-admin-dashboard',
-   standalone: true,
-   imports: [CommonModule, RouterModule],
-   template: `
+  selector: 'app-admin-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  template: `
     <div class="admin-page-container">
-      <div class="admin-compact-wrapper">
-        <header class="content-header">
-          <h1>Dashboard</h1>
-            </header>
-
-      <!-- Top Row: Minimal Stat Cards -->
-      <div class="stats-grid-top">
-        <div class="stat-card-mini">
-           <div class="mini-icon user">👤</div>
-           <div class="mini-value">{{ stats.utilisateursTotal || 0 }}</div>
-           <div class="mini-label">Utilisateurs</div>
+      <!-- Secondary Header -->
+      <div class="sub-header-dashboard">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" placeholder="Rechercher des annonces, utilisateurs...">
         </div>
-        <div class="stat-card-mini">
-           <div class="mini-icon time">⏱️</div>
-           <div class="mini-value">{{ stats.produitsTotal || 0 }}</div>
-           <div class="mini-label">Total Annonces</div>
-        </div>
-        <div class="stat-card-mini">
-           <div class="mini-icon collection">📜</div>
-           <div class="mini-value">{{ stats.produitsEnAttente || 0 }}</div>
-           <div class="mini-label">En Attente</div>
-        </div>
-        <div class="stat-card-mini">
-           <div class="mini-icon comment">💬</div>
-           <div class="mini-value">{{ stats.produitsValides || 0 }}</div>
-           <div class="mini-label">Validées</div>
+        <div class="action-buttons">
+          <button class="icon-btn-modern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></button>
+          <button class="icon-btn-modern"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></button>
         </div>
       </div>
 
-      <!-- Middle Row: Colorful Stats Cards (Social/Category style) -->
-      <div class="stats-grid-middle">
-        <div class="color-stat-card facebook">
-           <div class="card-lead">
-              <span class="lead-icon">🛠️</span>
-           </div>
-           <div class="card-details">
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.utilisateursAnnonceurs || 0 }}</span>
-                 <span class="d-lab">Annonceurs</span>
-              </div>
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.utilisateursAdmins || 0 }}</span>
-                 <span class="d-lab">Admins</span>
-              </div>
-           </div>
-        </div>
-        <div class="color-stat-card twitter">
-           <div class="card-lead">
-              <span class="lead-icon">🌐</span>
-           </div>
-           <div class="card-details">
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.categoriesCount || 0 }}</span>
-                 <span class="d-lab">Catégories</span>
-              </div>
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.hotCategory || '...' }}</span>
-                 <span class="d-lab">Tendance</span>
-              </div>
-           </div>
-        </div>
-        <div class="color-stat-card linkedin">
-           <div class="card-lead">
-              <span class="lead-icon">⚡</span>
-           </div>
-           <div class="card-details">
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.produitsActifs || 0 }}</span>
-                 <span class="d-lab">Actives</span>
-              </div>
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.totalVues || 0 }}</span>
-                 <span class="d-lab">Vues Total</span>
-              </div>
-           </div>
-        </div>
-        <div class="color-stat-card google">
-           <div class="card-lead">
-              <span class="lead-icon">🛡️</span>
-           </div>
-           <div class="card-details">
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.produitsRefuses || 0 }}</span>
-                 <span class="d-lab">Refusées</span>
-              </div>
-              <div class="detail-item">
-                 <span class="d-val">{{ stats.totalLogs || 0 }}</span>
-                 <span class="d-lab">Logs</span>
-              </div>
-           </div>
-        </div>
+      <!-- Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="tab-btn active">Aperçu</button>
+        <button class="tab-btn">Marketing</button>
+        <button class="tab-btn">Ventes</button>
+        <button class="tab-btn">Requêtes</button>
       </div>
 
-      <!-- Top Entities Row -->
-      <div class="entities-row">
-        <div class="card ent-card">
-           <div class="card-header-premium">
-              <h3>⭐ Top Annonces</h3>
-           </div>
-           <div class="ent-list">
-              <div *ngFor="let p of stats.topProducts" class="ent-item">
-                 <div class="ent-info">
-                    <span class="ent-title">{{ p.titreProduit }}</span>
-                    <span class="ent-sub">{{ p.villeLocalisation }}</span>
-                 </div>
-                 <div class="ent-badge">{{ p.compteurVues }} vues</div>
+      <!-- Main Widget Grid -->
+      <div class="dashboard-grid">
+        <!-- Widget 1: Top Advertisers -->
+        <div class="card widget-card">
+          <div class="widget-header">
+            <h3>Top Annonceurs vs Objectif</h3>
+            <button class="more-btn">...</button>
+          </div>
+          <div class="rep-list">
+            <div *ngFor="let a of stats.topAdvertisers?.slice(0, 3)" class="rep-item">
+              <div class="rep-avatar">{{ a.nomComplet?.charAt(0) }}</div>
+              <div class="rep-info">
+                <span class="rep-name">{{ a.nomComplet }}</span>
+                <span class="rep-meta">{{ a.annonceCount }} annonces</span>
               </div>
-              <div *ngIf="!stats.topProducts?.length" class="empty-mini">Aucune donnée</div>
-           </div>
+              <div class="rep-val">{{ ((a.annonceCount / (stats.produitsTotal || 1)) * 100).toFixed(0) }}%</div>
+            </div>
+            <div *ngIf="!stats.topAdvertisers?.length" class="empty-state">Aucun annonceur</div>
+          </div>
         </div>
 
-        <div class="card ent-card">
-           <div class="card-header-premium">
-              <h3>🏆 Meilleurs Annonceurs</h3>
-           </div>
-           <div class="ent-list">
-              <div *ngFor="let a of stats.topAdvertisers" class="ent-item">
-                 <div class="ent-info">
-                    <span class="ent-title">{{ a.nomComplet }}</span>
-                    <span class="ent-sub">{{ a.annonceCount }} annonces</span>
-                 </div>
-                 <div class="ent-rank">#{{ stats.topAdvertisers.indexOf(a) + 1 }}</div>
+        <!-- Widget 2: Bar Chart (Forecast by Owner -> Category Distribution) -->
+        <div class="card widget-card">
+          <div class="widget-header">
+            <h3>Prévisions par Catégorie</h3>
+            <button class="more-btn">...</button>
+          </div>
+          <div class="chart-container-bars">
+             <div *ngFor="let cat of stats.repartitionCategories?.slice(0, 4)" class="chart-bar-group">
+                <div class="bar-track">
+                  <div class="bar-fill" [style.height.%]="(cat.count / (stats.produitsTotal || 1)) * 100 || 10"></div>
+                </div>
+                <div class="bar-label">
+                  <span>{{ cat.nom?.charAt(0) }}</span>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <!-- Widget 3: Gauge (Validation Performance) -->
+        <div class="card widget-card">
+          <div class="widget-header">
+            <h3>Performance Validation</h3>
+            <button class="more-btn">...</button>
+          </div>
+          <div class="gauge-wrapper">
+            <svg class="gauge" viewBox="0 0 100 50">
+              <path class="gauge-bg" d="M10,45 A40,40 0 0,1 90,45" fill="none" stroke-width="8"></path>
+              <path class="gauge-fill" 
+                    [attr.d]="'M10,45 A40,40 0 0,1 ' + (10 + 80 * (1 - (stats.produitsEnAttente / (stats.produitsTotal || 1)))) + ',45'" 
+                    fill="none" stroke-width="8"></path>
+              <line class="gauge-needle" x1="50" y1="45" x2="50" y2="15" [style.transform]="'rotate(' + (180 * (1 - (stats.produitsEnAttente / (stats.produitsTotal || 1))) - 90) + 'deg)'"></line>
+            </svg>
+            <div class="gauge-value-small">{{ ((1 - (stats.produitsEnAttente / (stats.produitsTotal || 1))) * 100).toFixed(0) }}%</div>
+          </div>
+        </div>
+
+        <!-- Widget 4: Dark Stat Card (Sold this month -> Views) -->
+        <div class="card summary-card-dark">
+          <div class="widget-header inverse">
+             <h3 style="font-size: 0.75rem; opacity: 0.7;">Vues cumulées ce mois</h3>
+          </div>
+          <div class="main-stat-centered">
+            <div class="stat-val-big">{{ (stats.totalVues || 0) | number:'1.0-0' }}</div>
+            <span class="stat-meta-small">Objectif (2M): {{ ((stats.totalVues / 2000000) * 100).toFixed(1) }}%</span>
+          </div>
+        </div>
+
+        <!-- Widget 5: Open Requests (Recent Ads) -->
+        <div class="card widget-card">
+          <div class="widget-header">
+            <h3>Requêtes ouvertes</h3>
+            <button class="more-btn">...</button>
+          </div>
+          <div class="requests-list">
+            <div *ngFor="let p of stats.topProducts?.slice(0, 4)" class="request-item">
+              <div class="req-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#00897b" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></div>
+              <div class="req-info">
+                <span class="req-title">{{ p.titreProduit }}</span>
+                <span class="req-date">19.10.2023 • {{ p.villeLocalisation }}</span>
               </div>
-              <div *ngIf="!stats.topAdvertisers?.length" class="empty-mini">Aucune donnée</div>
-           </div>
+              <div class="req-val-eur">{{ (p.compteurVues / 100).toFixed(0) }}K <small>EUR</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Widget 6: Donut 1 (Reason -> Security Score) -->
+        <div class="card widget-card">
+          <div class="widget-header">
+            <h3>Répartition par État</h3>
+            <button class="more-btn">...</button>
+          </div>
+          <div class="donut-container">
+            <svg viewBox="0 0 36 36" class="donut-chart">
+              <circle class="ring" cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" stroke-width="3"></circle>
+              <circle class="segment" cx="18" cy="18" r="15.915" fill="transparent" stroke="#00897b" stroke-width="3" stroke-dasharray="70 30" stroke-dashoffset="25"></circle>
+              <circle class="segment second" cx="18" cy="18" r="15.915" fill="transparent" stroke="#4db6ac" stroke-width="3" stroke-dasharray="20 80" stroke-dashoffset="55"></circle>
+              <circle class="segment third" cx="18" cy="18" r="15.915" fill="transparent" stroke="#ffa4a2" stroke-width="3" stroke-dasharray="10 90" stroke-dashoffset="75"></circle>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Widget 7: Donut 2 (Source -> Active Users) -->
+        <div class="card widget-card">
+          <div class="widget-header">
+            <h3>Sources d'Activité</h3>
+            <button class="more-btn">...</button>
+          </div>
+          <div class="donut-container">
+            <svg viewBox="0 0 36 36" class="donut-chart">
+              <circle class="ring" cx="18" cy="18" r="15.915" fill="transparent" stroke="#f1f5f9" stroke-width="3"></circle>
+              <circle class="segment" cx="18" cy="18" r="15.915" fill="transparent" stroke="#26a69a" stroke-width="3" stroke-dasharray="60 40" stroke-dashoffset="25"></circle>
+              <circle class="segment second" cx="18" cy="18" r="15.915" fill="transparent" stroke="#80cbc4" stroke-width="3" stroke-dasharray="40 60" stroke-dashoffset="65"></circle>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Widget 8: Bar Chart (Forecast this quarter -> Monthly trends) -->
+        <div class="card widget-card">
+          <div class="widget-header">
+             <h3>Tendances Mensuelles</h3>
+          </div>
+          <div class="chart-container-bars-v">
+             <div class="v-bar-group">
+                <div class="v-bar-track"><div class="v-bar-fill" style="height: 60%;"></div></div>
+                <span class="v-label">Jan</span>
+             </div>
+             <div class="v-bar-group">
+                <div class="v-bar-track"><div class="v-bar-fill highlight" style="height: 85%;"></div></div>
+                <span class="v-label">Fév</span>
+             </div>
+             <div class="v-bar-group">
+                <div class="v-bar-track"><div class="v-bar-fill" style="height: 45%;"></div></div>
+                <span class="v-label">Mar</span>
+             </div>
+          </div>
         </div>
       </div>
-
-      <!-- Bottom Section: Chart Representation -->
-      <div class="dashboard-footer-row">
-        <div class="card chart-card">
-           <div class="card-header-premium">
-              <h3>Répartition par Catégorie</h3>
-           </div>
-           <div class="chart-mockup">
-              <div *ngFor="let cat of stats.repartitionCategories" class="chart-bar-container">
-                 <div class="chart-bar" [style.height.%]="((cat.count / (stats.produitsTotal || 1)) * 100) || 5">
-                    <span class="bar-tooltip">{{ cat.count }}</span>
-                 </div>
-                 <span class="bar-label">{{ cat.nom }}</span>
-              </div>
-           </div>
-        </div>
-
-        <div class="card actions-card">
-           <div class="card-header-premium">
-              <h3>Raccourcis</h3>
-           </div>
-           <div class="quick-links">
-              <a routerLink="/admin/products" class="ql-item">🔔 Valider les annonces</a>
-              <a routerLink="/admin/users" class="ql-item">👤 Gérer les rôles</a>
-              <a routerLink="/admin/categories" class="ql-item">📁 Créer catégorie</a>
-              <a routerLink="/admin/logs" class="ql-item">📜 Voir historique</a>
-           </div>
-        </div>
-      </div>
-      <div class="debug-footer" *ngIf="stats.debug_info">
-         <small>⚙ {{ stats.debug_info }} | Database: {{ stats.db_empty ? 'EMPTY' : 'DATA PRESENT' }}</small>
-      </div>
-
     </div>
-  </div>
   `,
-   styles: [`
-    :host {
-      --primary: #4db6ac;
-      --primary-dark: #00897b;
-      --noir: #111827;
-      --accent: #e0f2f1;
-      --bg: #f8fafc;
-      --white: #ffffff;
-      --text: #1e293b;
-      --text-light: #64748b;
-      --border: #e2e8f0;
-      --shadow: 0 10px 25px rgba(0, 137, 123, 0.08);
-    }
-
-    .admin-page-container { padding: 30px 20px; background: var(--bg); min-height: 100vh; }
-    .admin-compact-wrapper { max-width: 1100px; margin: 0 auto; }
-
-    .content-header { margin-bottom: 30px; }
-    .content-header h1 { font-size: 1.8rem; font-weight: 900; color: var(--noir); margin: 0; letter-spacing: -0.5px; }
-    .content-header h1::after { content: '.'; color: var(--primary); }
+  styles: [`
+    .admin-page-container { padding: 30px; background: #fdfdfd; min-height: 100vh; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     
-    .btn-refresh { background: white; border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.3s; }
-    .btn-refresh:hover { background: var(--primary); color: white; transform: rotate(180deg); }
+    /* Secondary Header */
+    .sub-header-dashboard { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .search-bar { display: flex; align-items: center; background: white; padding: 8px 15px; border-radius: 12px; border: 1px solid #eee; width: 350px; gap: 10px; }
+    .search-bar svg { width: 18px; color: #94a3b8; }
+    .search-bar input { border: none; outline: none; width: 100%; font-size: 0.9rem; color: #1e293b; }
+    .icon-btn-modern { background: white; border: 1px solid #eee; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; color: #64748b; margin-left: 10px; transition: 0.2s; }
+    .icon-btn-modern:hover { background: #f8fafc; color: var(--primary); }
 
-    /* Top Stats Grid */
-    .stats-grid-top {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 20px;
-      margin-bottom: 25px;
-    }
+    /* Tabs */
+    .filter-tabs { display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+    .tab-btn { background: transparent; border: none; padding: 5px 10px; font-size: 0.9rem; font-weight: 600; color: #94a3b8; cursor: pointer; position: relative; }
+    .tab-btn.active { color: #00897b; }
+    .tab-btn.active::after { content: ''; position: absolute; bottom: -11px; left: 0; width: 100%; height: 3px; background: #00897b; border-radius: 10px; }
 
-    .stat-card-mini {
-      background: white;
-      border-radius: 18px;
-      padding: 20px 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,0.8);
-      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .stat-card-mini:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+    /* Grid Layout */
+    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
 
-    .mini-icon { font-size: 1.5rem; margin-bottom: 10px; }
-    .mini-icon.user { color: #f59e0b; }
-    .mini-icon.time { color: #3b82f6; }
-    .mini-icon.collection { color: #10b981; }
-    .mini-icon.comment { color: #ec4899; }
+    /* Card Styling */
+    .card { background: white; border-radius: 20px; border: 1px solid #f1f5f9; box-shadow: 0 2px 10px rgba(0,0,0,0.01); padding: 20px; }
+    .widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .widget-header h3 { margin: 0; font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .more-btn { background: transparent; border: none; font-size: 1.2rem; color: #cbd5e1; cursor: pointer; line-height: 1; }
 
-    .mini-value { font-size: 1.5rem; font-weight: 700; color: #333; margin-bottom: 2px; }
-    .mini-label { font-size: 0.75rem; color: #999; font-weight: 600; }
+    /* Rep List */
+    .rep-item { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+    .rep-avatar { width: 34px; height: 34px; background: #f1f5f9; color: #00897b; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem; }
+    .rep-info { flex: 1; display: flex; flex-direction: column; }
+    .rep-name { font-weight: 600; font-size: 0.8rem; color: #1e293b; }
+    .rep-meta { font-size: 0.7rem; color: #94a3b8; }
+    .rep-val { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
 
-    /* Colorful Middle Grid */
-    .stats-grid-middle {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
+    /* Bar Chart Component */
+    .chart-container-bars { display: flex; align-items: flex-end; justify-content: space-around; height: 120px; gap: 10px; }
+    .chart-bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; justify-content: flex-end; }
+    .bar-track { width: 30px; height: 100%; background: #f8fafc; border-radius: 6px; position: relative; display: flex; align-items: flex-end; overflow: hidden; }
+    .bar-fill { width: 100%; background: #00897b; transition: height 1s ease-out; }
+    .bar-label { font-size: 0.65rem; font-weight: 700; color: #94a3b8; }
 
-    .color-stat-card {
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(255,255,255,0.8);
-      transition: 0.3s;
-    }
-    .color-stat-card:hover { transform: translateY(-5px); }
+    /* Gauge Component */
+    .gauge-wrapper { position: relative; padding: 10px 0; display: flex; flex-direction: column; align-items: center; }
+    .gauge { width: 100%; max-width: 160px; }
+    .gauge-bg { stroke: #f1f5f9; }
+    .gauge-fill { stroke: #00897b; stroke-linecap: round; transition: all 1s ease; }
+    .gauge-needle { stroke: #1e293b; stroke-width: 2; transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: 50% 45px; }
+    .gauge-value-small { font-size: 1.5rem; font-weight: 900; color: #1e293b; margin-top: -5px; }
 
-    .card-lead {
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .lead-icon { font-size: 1.8rem; color: white; opacity: 0.9; }
+    /* Dark Summary Card */
+    .summary-card-dark { background: #004d40; color: white; display: flex; flex-direction: column; }
+    .main-stat-centered { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0; }
+    .stat-val-big { font-size: 2.2rem; font-weight: 900; margin-bottom: 5px; }
+    .stat-meta-small { font-size: 0.7rem; opacity: 0.6; font-weight: 600; }
 
-    .facebook .card-lead { background: #3b5998; }
-    .twitter .card-lead { background: #00aced; }
-    .linkedin .card-lead { background: #007bb6; }
-    .google .card-lead { background: #dd4b39; }
+    /* Open Requests Items */
+    .request-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .req-icon { width: 30px; height: 30px; background: rgba(0, 137, 123, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 6px; color: #00897b; }
+    .req-info { flex: 1; display: flex; flex-direction: column; }
+    .req-title { font-weight: 700; font-size: 0.8rem; color: #1e293b; }
+    .req-date { font-size: 0.65rem; color: #94a3b8; font-weight: 600; }
+    .req-val-eur { font-weight: 800; color: var(--primary); font-size: 0.95rem; text-align: right; }
+    .req-val-eur small { font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; }
 
-    .card-details {
-      display: flex;
-      padding: 15px 0;
-    }
-    .detail-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border-right: 1px solid #eee;
-    }
-    .detail-item:last-child { border-right: none; }
-    .d-val { font-size: 1.1rem; font-weight: 600; color: #555; }
-    .d-lab { font-size: 0.75rem; color: #aaa; font-weight: 500; }
+    /* Donut Charts */
+    .donut-container { display: flex; justify-content: center; align-items: center; padding: 10px 0; }
+    .donut-chart { width: 120px; height: 120px; }
+    .donut-chart .segment { stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+    .segment.second { stroke: #4db6ac; }
+    .segment.third { stroke: #ffa4a2; }
 
-    /* Bottom Section */
-    .dashboard-footer-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 25px;
-    }
+    /* Vertical Trends */
+    .chart-container-bars-v { display: flex; align-items: flex-end; justify-content: space-around; height: 120px; gap: 10px; }
+    .v-bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; }
+    .v-bar-track { width: 40px; height: 100%; background: #f8fafc; border-radius: 8px; position: relative; display: flex; align-items: flex-end; overflow: hidden; }
+    .v-bar-fill { width: 100%; background: #00897b; opacity: 0.2; transition: height 1s ease-out; }
+    .v-bar-fill.highlight { opacity: 1; }
+    .v-label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; }
 
-    .entities-row {
-       display: grid;
-       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-       gap: 25px;
-       margin-bottom: 30px;
-    }
+    @media (max-width: 1200px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; .search-bar { width: 100%; } } }
 
-    .ent-card { border-radius: 20px; }
-    .ent-list { padding: 15px 20px; }
-    .ent-item {
-       display: flex;
-       justify-content: space-between;
-       align-items: center;
-       padding: 12px 15px;
-       border-bottom: 1px solid #f1f5f9;
-       transition: 0.2s;
-    }
-    .ent-item:last-child { border-bottom: none; }
-    .ent-item:hover { background: #f8fafc; transform: translateX(5px); }
-    
-    .ent-info { display: flex; flex-direction: column; }
-    .ent-title { font-weight: 700; color: #334155; font-size: 0.95rem; }
-    .ent-sub { font-size: 0.75rem; color: #94a3b8; }
-    
-    .ent-badge { background: #e0f2f1; color: #00897b; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; }
-    .ent-rank { font-weight: 900; color: #cbd5e1; font-size: 1.2rem; }
-    .empty-mini { padding: 20px; text-align: center; color: #94a3b8; font-style: italic; }
-
-    .debug-footer { margin-top: 30px; padding: 15px; background: #fffbeb; border: 1.5px dashed #fbbf24; border-radius: 12px; color: #92400e; text-align: center; }
-
-    .card { background: white; border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
-    .card-header-premium { padding: 25px 30px; border-bottom: 1px solid var(--border); background: #fcfdfe; }
-    .card-header-premium h3 { margin: 0; font-size: 1rem; color: var(--noir); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .chart-mockup {
-      padding: 40px 30px;
-      height: 300px;
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-around;
-      gap: 20px;
-    }
-    .chart-bar-container { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-    .chart-bar {
-      width: 40px;
-      background: var(--primary);
-      border-radius: 4px 4px 0 0;
-      position: relative;
-      transition: 0.5s ease;
-      background: linear-gradient(to top, var(--primary-dark), var(--primary));
-    }
-    .chart-bar:hover { filter: brightness(1.2); }
-    .bar-tooltip {
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #333;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 0.7rem;
-      opacity: 0;
-      transition: 0.3s;
-    }
-    .chart-bar:hover .bar-tooltip { opacity: 1; }
-    .bar-label { font-size: 0.75rem; color: #777; font-weight: 500; max-width: 60px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-    .quick-links { padding: 30px; display: flex; flex-direction: column; gap: 15px; }
-    .ql-item {
-      padding: 18px 20px;
-      background: #f8fafc;
-      border-radius: 16px;
-      text-decoration: none;
-      color: var(--text);
-      font-weight: 700;
-      font-size: 0.9rem;
-      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid transparent;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .ql-item:hover { 
-      background: var(--accent); 
-      color: var(--primary-dark); 
-      border-color: var(--primary); 
-      transform: translateX(10px); 
-      box-shadow: 0 5px 15px rgba(0, 105, 92, 0.05);
-    }
-
-    @media (max-width: 992px) {
-        .dashboard-footer-row { grid-template-columns: 1fr; }
-    }
   `]
+
 })
 export class AdminDashboardComponent implements OnInit {
-   private adminService = inject(AdminService);
-   stats: any = {
-      repartitionCategories: []
-   };
+  private adminService = inject(AdminService);
+  stats: any = {
+    repartitionCategories: []
+  };
 
-   ngOnInit() {
-      this.loadStats();
-   }
+  ngOnInit() {
+    this.loadStats();
+  }
 
-   loadStats() {
-      console.log('Fetching dashboard stats...');
-      this.adminService.getDashboardStats().subscribe({
-         next: (data) => {
-            console.log('Dashboard stats received:', data);
+  loadStats() {
+    console.log('Fetching dashboard stats...');
+    this.adminService.getDashboardStats().subscribe({
+      next: (data) => {
+        console.log('Dashboard stats received:', data);
 
-            // Map old keys to new keys if necessary for compatibility
-            if (data.totalProduits && !data.produitsTotal) data.produitsTotal = data.totalProduits;
-            if (data.totalUtilisateurs && !data.utilisateursTotal) data.utilisateursTotal = data.totalUtilisateurs;
-            if (data.totalEnAttente && !data.produitsEnAttente) data.produitsEnAttente = data.totalEnAttente;
+        // Map old keys to new keys if necessary for compatibility
+        if (data.totalProduits && !data.produitsTotal) data.produitsTotal = data.totalProduits;
+        if (data.totalUtilisateurs && !data.utilisateursTotal) data.utilisateursTotal = data.totalUtilisateurs;
+        if (data.totalEnAttente && !data.produitsEnAttente) data.produitsEnAttente = data.totalEnAttente;
 
-            this.stats = data;
+        this.stats = data;
 
-            if (data.db_empty) {
-               console.warn('Backend reporting empty database or only one user (yourself).');
-            }
-         },
-         error: (err) => {
-            console.error('Error fetching dashboard stats. Check if backend is running on port 8081 and if you have the ADMIN role.', err);
-         }
-      });
-   }
+        if (data.db_empty) {
+          console.warn('Backend reporting empty database or only one user (yourself).');
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching dashboard stats. Check if backend is running on port 8081 and if you have the ADMIN role.', err);
+      }
+    });
+  }
 }

@@ -4,10 +4,10 @@ import { RouterLink } from '@angular/router';
 import { WishlistService } from '../services/wishlist.service';
 
 @Component({
-    selector: 'app-wishlist',
-    standalone: true,
-    imports: [CommonModule, RouterLink],
-    template: `
+  selector: 'app-wishlist',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  template: `
     <div class="wishlist-page">
       <div class="page-header">
         <div class="container">
@@ -18,7 +18,9 @@ import { WishlistService } from '../services/wishlist.service';
 
       <div class="container main-content">
         <div class="empty-state" *ngIf="favorites.length === 0 && !loading">
-          <div class="empty-icon">❤️</div>
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="80" height="80"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </div>
           <h2>Votre liste est vide</h2>
           <p>Vous n'avez pas encore ajouté d'annonces à vos favoris.</p>
           <a routerLink="/home" class="btn-discover">Découvrir les offres</a>
@@ -29,13 +31,18 @@ import { WishlistService } from '../services/wishlist.service';
             <div class="card-img" [routerLink]="['/product', product.id]">
               <img [src]="getMainImage(product)" [alt]="product.titreProduit">
               <div class="premium-badge" *ngIf="product.annoncePremium">Premium</div>
-              <button class="remove-btn" (click)="toggleFavorite($event, product.id)" title="Retirer des favoris">✕</button>
+              <button class="remove-btn" (click)="toggleFavorite($event, product.id)" title="Retirer des favoris">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
             
             <div class="card-body">
               <div class="cat-tag">{{ product.categorie?.nomCategorie }}</div>
               <h3 class="p-title" [routerLink]="['/product', product.id]">{{ product.titreProduit }}</h3>
-              <div class="p-location">📍 {{ product.villeLocalisation }}</div>
+              <div class="p-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="margin-right: 4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {{ product.villeLocalisation }}
+              </div>
               
               <div class="card-footer">
                 <div class="p-price">{{ product.prixAfiche.toLocaleString() }} <span>DH</span></div>
@@ -52,7 +59,7 @@ import { WishlistService } from '../services/wishlist.service';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .wishlist-page { background: #f8fafc; min-height: 100vh; padding-bottom: 80px; }
     .container { max-width: 1300px; margin: 0 auto; padding: 0 30px; }
 
@@ -100,37 +107,37 @@ import { WishlistService } from '../services/wishlist.service';
   `]
 })
 export class WishlistComponent implements OnInit {
-    private wishlistService = inject(WishlistService);
+  private wishlistService = inject(WishlistService);
 
-    favorites: any[] = [];
-    loading = true;
+  favorites: any[] = [];
+  loading = true;
 
-    ngOnInit() {
-        this.loadFavorites();
+  ngOnInit() {
+    this.loadFavorites();
+  }
+
+  loadFavorites() {
+    this.loading = true;
+    this.wishlistService.getFavorites().subscribe({
+      next: (res) => {
+        this.favorites = res;
+        this.loading = false;
+      },
+      error: () => this.loading = false
+    });
+  }
+
+  toggleFavorite(event: Event, productId: number) {
+    event.stopPropagation();
+    this.wishlistService.toggleFavorite(productId).subscribe(() => {
+      this.favorites = this.favorites.filter(p => p.id !== productId);
+    });
+  }
+
+  getMainImage(product: any): string {
+    if (product.mediaProduits && product.mediaProduits.length > 0) {
+      return product.mediaProduits[0].urlMedia;
     }
-
-    loadFavorites() {
-        this.loading = true;
-        this.wishlistService.getFavorites().subscribe({
-            next: (res) => {
-                this.favorites = res;
-                this.loading = false;
-            },
-            error: () => this.loading = false
-        });
-    }
-
-    toggleFavorite(event: Event, productId: number) {
-        event.stopPropagation();
-        this.wishlistService.toggleFavorite(productId).subscribe(() => {
-            this.favorites = this.favorites.filter(p => p.id !== productId);
-        });
-    }
-
-    getMainImage(product: any): string {
-        if (product.mediaProduits && product.mediaProduits.length > 0) {
-            return product.mediaProduits[0].urlMedia;
-        }
-        return 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&fit=crop';
-    }
+    return 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800&fit=crop';
+  }
 }

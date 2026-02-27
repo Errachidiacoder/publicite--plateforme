@@ -230,7 +230,7 @@ import { AdminService } from '../../services/admin.service';
     @keyframes spin { to { transform: rotate(360deg); } }
     .text-btn { display: flex; align-items: center; gap: 6px; }
 
-    .admin-page-container { padding: 30px 20px; background: var(--bg); min-height: 100vh; }
+    .admin-page-container { padding: 40px 50px; background: var(--bg); min-height: 100vh; }
     .admin-compact-wrapper { max-width: 1100px; margin: 0 auto; }
     
     .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }

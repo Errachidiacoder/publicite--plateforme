@@ -19,10 +19,15 @@ import { Router } from '@angular/router';
         </div>
         <div class="actions-group">
           <button class="btn-refresh" (click)="loadMyAds()" [class.spinning]="isRefreshing" title="Actualiser">
-            <span class="refresh-icon">🔄</span>
+            <span class="refresh-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            </span>
           </button>
           <button class="btn-create" (click)="router.navigate(['/submit-product'])">
-            <span class="plus-icon">+</span> Nouvelle Annonce
+            <span class="plus-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </span> 
+            Nouvelle Annonce
           </button>
         </div>
       </header>
@@ -42,19 +47,32 @@ import { Router } from '@angular/router';
             <p class="price-tag">{{ ad.prixAfiche ? (ad.prixAfiche | number:'1.0-0') + ' DH' : 'Prix sur demande' }}</p>
             
             <div class="card-info">
-              <span class="info-item"><i class="icon">📍</i> {{ ad.villeLocalisation || 'Maroc' }}</span>
-              <span class="info-item"><i class="icon">📅</i> {{ ad.dateSoumission | date:'dd MMM yyyy' }}</span>
+              <span class="info-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {{ ad.villeLocalisation || 'Maroc' }}
+              </span>
+              <span class="info-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                {{ ad.dateSoumission | date:'dd MMM yyyy' }}
+              </span>
             </div>
           </div>
 
           <div class="card-footer">
             <div class="action-buttons">
-              <button class="btn-action edit" (click)="editAd(ad)" title="Modifier">✏️</button>
-              <button class="btn-action archive" *ngIf="ad.statutValidation !== 'ARCHIVE'" (click)="archiveAd(ad)" title="Archiver">📦</button>
-              <button class="btn-action delete" (click)="deleteAd(ad)" title="Supprimer">🗑️</button>
+              <button class="btn-action edit" (click)="editAd(ad)" title="Modifier">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+              </button>
+              <button class="btn-action archive" *ngIf="ad.statutValidation !== 'ARCHIVE'" (click)="archiveAd(ad)" title="Archiver">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+              </button>
+              <button class="btn-action delete" (click)="deleteAd(ad)" title="Supprimer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
             </div>
             <button class="btn-launch" *ngIf="ad.statutValidation === 'VALIDE'" (click)="payAd(ad.id)">
-              Payer & Activer 🚀
+              Payer & Activer
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="margin-left: 8px;"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
             </button>
           </div>
         </div>
@@ -63,7 +81,9 @@ import { Router } from '@angular/router';
       <div class="empty-state-premium" *ngIf="ads.length === 0">
         <div class="empty-visual">
           <div class="circle-ring"></div>
-          <span class="empty-icon">📁</span>
+          <span class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          </span>
         </div>
         <h3>Aucune annonce trouvée</h3>
         <p>Il est temps de donner de la visibilité à vos produits.</p>

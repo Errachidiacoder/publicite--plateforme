@@ -22,7 +22,10 @@ import { CategorieService } from '../services/category.service';
         <!-- Success/Error Messages -->
         <div class="toast-container" *ngIf="message">
           <div class="toast" [class.success]="isSuccess" [class.error]="!isSuccess">
-            <div class="toast-icon">{{ isSuccess ? '✓' : '✕' }}</div>
+            <div class="toast-icon">
+              <svg *ngIf="isSuccess" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <svg *ngIf="!isSuccess" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </div>
             <div class="toast-content">{{ message }}</div>
           </div>
         </div>
@@ -39,20 +42,28 @@ import { CategorieService } from '../services/category.service';
               <label class="section-label">Quel type d'annonce souhaitez-vous publier ?</label>
               <div class="type-selector">
                 <div class="type-card" [class.active]="product.typeAnnonce === 'PRODUIT_PHYSIQUE'" (click)="product.typeAnnonce = 'PRODUIT_PHYSIQUE'">
-                  <div class="type-icon">📦</div>
+                  <div class="type-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
+                  </div>
                   <div class="type-info">
                     <strong>Produit Physique</strong>
                     <span>Articles, Équipements, Mode...</span>
                   </div>
-                  <div class="check-mark">✓</div>
+                  <div class="check-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
                 </div>
                 <div class="type-card" [class.active]="product.typeAnnonce === 'SERVICE_PROFESSIONNEL'" (click)="product.typeAnnonce = 'SERVICE_PROFESSIONNEL'">
-                  <div class="type-icon">🛠️</div>
+                  <div class="type-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                  </div>
                   <div class="type-info">
                     <strong>Service Professionnel</strong>
                     <span>Expertise, Maintenance, Conseil...</span>
                   </div>
-                  <div class="check-mark">✓</div>
+                  <div class="check-mark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
                 </div>
               </div>
             </div>
@@ -62,7 +73,9 @@ import { CategorieService } from '../services/category.service';
               <div class="field full-width">
                 <div class="label-row">
                   <label>Titre de l'Annonce</label>
-                  <span class="status ok" *ngIf="product.titreProduit && product.titreProduit.length >= 5">&#10003;</span>
+                  <span class="status ok" *ngIf="product.titreProduit && product.titreProduit.length >= 5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
                   <span class="status err" *ngIf="attemptedSubmit && !product.titreProduit">Requis</span>
                   <span class="status err" *ngIf="product.titreProduit && product.titreProduit.length < 5">Trop court (5 min)</span>
                 </div>
@@ -75,7 +88,9 @@ import { CategorieService } from '../services/category.service';
               <div class="field">
                 <div class="label-row">
                   <label>Catégorie</label>
-                  <span class="status ok" *ngIf="product.categorieId">&#10003;</span>
+                  <span class="status ok" *ngIf="product.categorieId">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
                   <span class="status err" *ngIf="attemptedSubmit && !product.categorieId">Requis</span>
                 </div>
                 <select [(ngModel)]="product.categorieId" name="categorieId" required
@@ -89,7 +104,9 @@ import { CategorieService } from '../services/category.service';
               <div class="field">
                 <div class="label-row">
                   <label>Ville / Localisation</label>
-                  <span class="status ok" *ngIf="product.villeLocalisation">&#10003;</span>
+                  <span class="status ok" *ngIf="product.villeLocalisation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
                   <span class="status err" *ngIf="attemptedSubmit && !product.villeLocalisation">Requis</span>
                 </div>
                 <input type="text" [(ngModel)]="product.villeLocalisation" name="ville" required 
@@ -114,7 +131,9 @@ import { CategorieService } from '../services/category.service';
               <div class="field">
                 <div class="label-row">
                   <label>Type de Prix</label>
-                  <span class="status ok" *ngIf="product.typePrix">&#10003;</span>
+                  <span class="status ok" *ngIf="product.typePrix">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </span>
                 </div>
                 <select [(ngModel)]="product.typePrix" name="typePrix" required>
                   <option value="PRIX_FIXE">Prix Fixe</option>
@@ -144,7 +163,9 @@ import { CategorieService } from '../services/category.service';
                 <div class="field full-width">
                   <div class="label-row">
                     <label>Description Détaillée</label>
-                    <span class="status ok" *ngIf="product.descriptionDetaillee && product.descriptionDetaillee.length >= 20">&#10003;</span>
+                    <span class="status ok" *ngIf="product.descriptionDetaillee && product.descriptionDetaillee.length >= 20">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
                     <span class="status err" *ngIf="attemptedSubmit && !product.descriptionDetaillee">Requis</span>
                     <span class="status err" *ngIf="product.descriptionDetaillee && product.descriptionDetaillee.length < 20">Plus de détails (20 min)</span>
                   </div>
@@ -164,7 +185,9 @@ import { CategorieService } from '../services/category.service';
                     <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" hidden>
                     
                     <div class="upload-placeholder" *ngIf="!imagePreview">
-                      <div class="upload-icon">📸</div>
+                      <div class="upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                      </div>
                       <div class="upload-text">
                         <strong>Cliquez pour charger une photo</strong>
                         <span>JPG, PNG ou WEBP (Max. 5MB)</span>

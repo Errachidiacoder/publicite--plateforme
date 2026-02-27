@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
@@ -19,30 +19,45 @@ import { WishlistService } from '../services/wishlist.service';
           <span>📢 Votre plateforme n°1 de publicité digitale</span>
         </div>
         <div class="top-right">
-          <!-- ICONS FROM USER REQUEST -->
-          <div class="icon-group">
-            <a routerLink="/profile" class="utility-item" title="Mon Profil" *ngIf="isLoggedIn()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </a>
-            <a routerLink="/login" class="utility-item" title="Connexion" *ngIf="!isLoggedIn()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </a>
-            <div class="utility-item" title="Panier">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-              <span class="count">0</span>
-            </div>
-            <div class="utility-item" title="Favoris" routerLink="/wishlist">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-              <span class="count">{{ wishlistService.favoritesCount$ | async }}</span>
-            </div>
+            <!-- ICONS FROM USER REQUEST -->
             <div class="utility-item" title="Support">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="12" cy="10" r="2"/></svg>
             </div>
             <div class="utility-item" title="Langue">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             </div>
+            <div class="utility-item" title="Favoris" routerLink="/wishlist">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <span class="count">{{ wishlistService.favoritesCount$ | async }}</span>
+            </div>
+            <div class="utility-item" title="Panier">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              <span class="count">0</span>
+            </div>
+
+            <!-- ACCOUNT DROPDOWN -->
+            <div class="account-dropdown-wrapper" *ngIf="isLoggedIn()">
+               <div class="utility-item account-toggle-utility" (click)="toggleAccountDropdown($event)" [class.active]="showAccountDropdown" title="Mon Compte">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+               </div>
+               
+               <div class="dropdown-menu utility-dropdown" [class.show]="showAccountDropdown">
+                 <a routerLink="/profile" class="dropdown-item" (click)="showAccountDropdown = false">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Mon Profil
+                 </a>
+                 <hr>
+                 <button class="dropdown-item logout-item" (click)="logout(); showAccountDropdown = false">
+                   <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                   Se déconnecter
+                 </button>
+               </div>
+            </div>
+
+            <a routerLink="/login" class="utility-item" title="Connexion" *ngIf="!isLoggedIn()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </a>
           </div>
-        </div>
       </div>
     </div>
 
@@ -59,11 +74,21 @@ import { WishlistService } from '../services/wishlist.service';
         </div>
 
         <div class="user-controls">
-          <a routerLink="/admin/dashboard" class="btn-admin" *ngIf="isLoggedIn() && isAdmin()">⚙ Dashboard Admin</a>
-          <a routerLink="/my-ads" class="btn-my-ads" *ngIf="isLoggedIn()">📁 Mes Annonces</a>
-          <a routerLink="/profile" class="btn-profile" *ngIf="isLoggedIn()">👤 Mon Profil</a>
-          <a routerLink="/submit-product" class="btn-publish">Publier une annonce ✚</a>
-          <button class="u-logout" *ngIf="isLoggedIn()" (click)="logout()" title="Déconnexion">🔓 Se déconnecter</button>
+          <a routerLink="/admin/dashboard" class="btn-admin" *ngIf="isLoggedIn() && isAdmin()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Dashboard Admin
+          </a>
+          <a routerLink="/my-ads" class="btn-my-ads" *ngIf="isLoggedIn()">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            Mes Annonces
+          </a>
+          
+
+
+          <a routerLink="/submit-product" class="btn-publish">
+            Publier une annonce
+            <svg class="btn-icon right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </a>
         </div>
       </div>
     </header>
@@ -143,7 +168,9 @@ import { WishlistService } from '../services/wishlist.service';
       <section class="flash-sale">
         <div class="flash-header">
           <div class="flash-title">
-            <span class="flash-icon">⚡</span>
+            <div class="flash-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
             <h2>VENTES FLASH</h2>
             <div class="timer">
               <span>02</span>:<span>45</span>:<span>12</span>
@@ -226,8 +253,8 @@ import { WishlistService } from '../services/wishlist.service';
     .top-utility-bar { background: #80cbc4; color: #263238; padding: 10px 40px; font-size: 0.8rem; border-bottom: 1px solid rgba(0,0,0,0.05); }
     .top-bar-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
     .top-left span { font-weight: 700; opacity: 0.9; }
+    .top-right { display: flex; align-items: center; gap: 20px; }
     
-    .icon-group { display: flex; align-items: center; gap: 20px; }
     .utility-item { display: flex; align-items: center; gap: 5px; cursor: pointer; color: #263238; text-decoration: none; position: relative; transition: 0.3s; }
     .utility-item:hover { opacity: 0.6; transform: scale(1.1); }
     .utility-item svg { width: 18px; height: 18px; }
@@ -245,16 +272,80 @@ import { WishlistService } from '../services/wishlist.service';
     .search-container input { flex: 1; border: none; background: transparent; padding: 8px 15px; font-size: 0.9rem; color: var(--text); outline: none; }
     .search-icon-btn { background: var(--teal); color: white; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    .user-controls { display: flex; gap: 15px; align-items: center; }
-    .btn-publish { background: var(--text); color: white; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
-    .btn-publish:hover { background: var(--primary); transform: translateY(-2px); }
-    .btn-admin { background: white; color: var(--teal); border: 2px solid var(--teal); padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
+    .btn-icon { width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    .btn-icon.right { margin-right: 0; margin-left: 6px; }
+
+    .user-controls { display: flex; gap: 10px; align-items: center; }
+    .btn-publish { background: var(--text); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 0.75rem; transition: 0.3s; white-space: nowrap; }
+    .btn-publish:hover { background: var(--teal); transform: translateY(-2px); }
+    .btn-admin { background: white; color: var(--teal); border: 1.5px solid var(--teal); padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 0.75rem; transition: 0.3s; white-space: nowrap; }
     .btn-admin:hover { background: var(--teal); color: white; transform: translateY(-2px); }
-    .btn-my-ads { background: #f0fdfa; color: #00897b; border: 1.5px solid #4db6ac; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
+    .btn-my-ads { background: #f0fdfa; color: #00897b; border: 1.5px solid #4db6ac; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 0.75rem; transition: 0.3s; white-space: nowrap; }
     .btn-my-ads:hover { background: #e0f2f1; transform: translateY(-2px); }
-    .btn-profile { background: white; color: #455a64; border: 1.5px solid #cfd8dc; padding: 8px 18px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.3s; }
+    .btn-profile { background: white; color: #455a64; border: 1.5px solid #cfd8dc; padding: 5px 12px; border-radius: 6px; text-decoration: none; font-weight: 700; font-size: 0.75rem; transition: 0.3s; white-space: nowrap; }
     .btn-profile:hover { background: #f8fafc; transform: translateY(-2px); }
-    .u-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+    .u-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+
+    .account-dropdown-wrapper { position: relative; }
+    .account-toggle-utility { 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+      cursor: pointer; 
+      transition: 0.3s;
+      padding: 6px;
+      border-radius: 50%;
+    }
+    .account-toggle-utility:hover, .account-toggle-utility.active { background: rgba(0,0,0,0.05); }
+    .utility-label { font-size: 0.8rem; font-weight: 500; }
+    .chevron-icon-mini { width: 10px; height: 10px; transition: 0.3s; opacity: 0.7; }
+    .chevron-icon-mini.rotated { transform: rotate(180deg); opacity: 1; }
+
+    .dropdown-menu { 
+      position: absolute; 
+      top: calc(100% + 12px); 
+      right: 0; 
+      background: white; 
+      border: 1px solid var(--border); 
+      border-radius: 12px; 
+      box-shadow: 0 15px 35px rgba(0,0,0,0.12); 
+      min-width: 190px; 
+      display: none; 
+      z-index: 2000; 
+      padding: 8px 0;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .utility-dropdown { top: calc(100% + 8px); }
+    .dropdown-menu.show { display: flex; animation: fadeInScale 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .dropdown-item { 
+      padding: 10px 15px; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      text-decoration: none; 
+      color: #455a64; 
+      font-size: 0.8rem; 
+      font-weight: 600; 
+      border: none; 
+      background: transparent; 
+      width: 100%; 
+      text-align: left; 
+      cursor: pointer; 
+      transition: 0.2s;
+    }
+    .dropdown-item:hover { background: #f1fcfd; color: var(--teal); }
+    .dropdown-item .btn-icon { margin-right: 0; color: #90a4ae; }
+    .dropdown-item:hover .btn-icon { color: var(--teal); }
+    .dropdown-menu hr { border: none; border-top: 1px solid #f1f5f9; margin: 4px 0; }
+    .logout-item { color: #ef5350; }
+    .logout-item:hover { background: #fff5f5; color: #d32f2f; }
+    .logout-item:hover .btn-icon { color: #d32f2f; }
 
 
     /* PREMIUM HERO GRID (STYLE SHEIN EXACT) */
@@ -312,7 +403,7 @@ import { WishlistService } from '../services/wishlist.service';
     .flash-sale { margin-bottom: 40px; background: #fff8f8; padding: 20px; border-radius: 12px; border: 1px solid #ffebee; }
     .flash-header { display: flex; justify-content: space-between; align-items: center; }
     .flash-title { display: flex; align-items: center; gap: 15px; }
-    .flash-icon { font-size: 1.5rem; animation: pulse 1s infinite; }
+    .flash-icon { width: 24px; height: 24px; color: #d32f2f; animation: pulse 1s infinite; display: flex; align-items: center; }
     .flash-title h2 { font-weight: 900; font-size: 1.4rem; color: #d32f2f; margin: 0; }
     .timer { display: flex; gap: 5px; align-items: center; font-weight: 900; font-size: 1.1rem; }
     .timer span { background: #263238; color: white; padding: 4px 8px; border-radius: 4px; min-width: 35px; text-align: center; }
@@ -379,10 +470,21 @@ export class HomeComponent implements OnInit {
 
   searchQuery = '';
   selectedCategory = '';
+  showAccountDropdown = false;
   categories: any[] = [];
   allProducts: any[] = [];
   filteredProducts: any[] = [];
   loading = true;
+
+  toggleAccountDropdown(event: Event) {
+    event.stopPropagation();
+    this.showAccountDropdown = !this.showAccountDropdown;
+  }
+
+  @HostListener('document:click')
+  closeDropdown() {
+    this.showAccountDropdown = false;
+  }
 
   mockCategories = [
     { nomCategorie: 'Immobilier', svgIcon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },

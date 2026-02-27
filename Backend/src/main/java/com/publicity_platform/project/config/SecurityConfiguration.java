@@ -24,11 +24,14 @@ public class SecurityConfiguration {
 
         private final JwtAuthenticationFilter jwtAuthFilter;
         private final AuthenticationProvider authenticationProvider;
+        private final com.publicity_platform.project.security.OAuth2LoginSuccessHandler oauth2SuccessHandler;
 
         public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
-                        AuthenticationProvider authenticationProvider) {
+                        AuthenticationProvider authenticationProvider,
+                        com.publicity_platform.project.security.OAuth2LoginSuccessHandler oauth2SuccessHandler) {
                 this.jwtAuthFilter = jwtAuthFilter;
                 this.authenticationProvider = authenticationProvider;
+                this.oauth2SuccessHandler = oauth2SuccessHandler;
         }
 
         @Bean
@@ -65,6 +68,8 @@ public class SecurityConfiguration {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authenticationProvider(authenticationProvider)
                                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                                .oauth2Login(oauth2 -> oauth2
+                                                .successHandler(oauth2SuccessHandler))
                                 .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
                 return http.build();

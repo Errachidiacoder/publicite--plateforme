@@ -26,33 +26,47 @@ import { NotificationService } from '../../services/notification.service';
         <nav class="sidebar-nav">
           <div class="nav-section">Général</div>
           <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-item">
-            <span class="icon">📊</span>
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </span>
             <span class="label">Tableau de bord</span>
           </a>
           <a routerLink="/admin/products" routerLinkActive="active" class="nav-item">
-            <span class="icon">📦</span>
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            </span>
             <span class="label">Annonces</span>
           </a>
           <a routerLink="/admin/users" routerLinkActive="active" class="nav-item">
-            <span class="icon">🛡️</span>
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </span>
             <span class="label">Utilisateurs</span>
           </a>
           <a routerLink="/admin/categories" routerLinkActive="active" class="nav-item">
-            <span class="icon">📁</span>
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            </span>
             <span class="label">Catégories</span>
           </a>
           <a routerLink="/admin/logs" routerLinkActive="active" class="nav-item">
-            <span class="icon">📜</span>
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </span>
             <span class="label">Journal d'activité</span>
           </a>
           
           <div class="nav-section">Système</div>
           <a routerLink="/home" class="nav-item">
-            <span class="icon">🏠</span>
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </span>
             <span class="label">Retour au site</span>
           </a>
           <button (click)="logout()" class="nav-item logout-btn">
-            <span class="icon">🔓</span>
+            <span class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </span>
             <span class="label">Déconnexion</span>
           </button>
         </nav>
@@ -73,16 +87,22 @@ import { NotificationService } from '../../services/notification.service';
           <div class="bar-right">
             <div class="icon-actions">
                 <div class="badge-icon" (click)="router.navigate(['/admin/products'])">
-                    <span class="icon">🔔</span>
+                    <span class="icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    </span>
                     <span class="badge warning" *ngIf="(notifService.unreadCount$ | async) ?? 0 > 0">
                       {{ notifService.unreadCount$ | async }}
                     </span>
                 </div>
                 <div class="badge-icon">
-                    <span class="icon">❓</span>
+                    <span class="icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </span>
                 </div>
                 <div class="badge-icon">
-                    <span class="icon">📧</span>
+                    <span class="icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                    </span>
                     <span class="badge danger">3</span>
                 </div>
             </div>
@@ -102,15 +122,16 @@ import { NotificationService } from '../../services/notification.service';
   `,
   styles: [`
     :host {
-      --sidebar-width: 260px;
+      --sidebar-width: 250px;
       --sidebar-collapsed-width: 80px;
-      --topbar-height: 70px;
-      --primary: #4db6ac;
-      --primary-dark: #00897b;
-      --noir: #111827;
+      --topbar-height: 64px;
+      --primary: #00897b;
+      --primary-dark: #004d40;
+      --noir: #1e293b;
       --accent: #e0f2f1;
       --bg: #f8fafc;
       --text-white: #ffffff;
+      --text-dark: #1e293b; 
       --text-grey: #94a3b8;
       --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -124,8 +145,8 @@ import { NotificationService } from '../../services/notification.service';
     /* SIDEBAR */
     .sidebar {
       width: var(--sidebar-width);
-      background: var(--primary-dark);
-      color: var(--text-white);
+      background: #004d40 !important; /* Dark teal from new reference */
+      color: rgba(255,255,255,0.7) !important;
       display: flex;
       flex-direction: column;
       position: fixed;
@@ -133,15 +154,15 @@ import { NotificationService } from '../../services/notification.service';
       z-index: 100;
       transition: var(--transition);
       overflow-x: hidden;
+      border-right: none;
     }
 
     .user-profile {
-      padding: 20px 15px;
+      padding: 24px 20px;
       display: flex;
       align-items: center;
       gap: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     .avatar-container {
@@ -149,27 +170,28 @@ import { NotificationService } from '../../services/notification.service';
     }
 
     .avatar {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       background: rgba(255,255,255,0.1);
-      border-radius: 50%;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.2rem;
       font-weight: 800;
-      border: 2px solid var(--primary);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
     }
 
     .status-dot {
       width: 12px;
       height: 12px;
       background: #4caf50;
-      border: 2px solid var(--primary-dark);
+      border: 2px solid #004d40;
       border-radius: 50%;
       position: absolute;
-      bottom: 2px;
-      right: 2px;
+      bottom: -2px;
+      right: -2px;
     }
 
     .user-info {
@@ -177,57 +199,58 @@ import { NotificationService } from '../../services/notification.service';
         flex-direction: column;
     }
 
-    .user-info .name { font-weight: 800; font-size: 0.9rem; color: #f8fafc; }
-    .user-info .status-label { font-size: 0.7rem; color: #2dd4bf; font-weight: 700; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
-    .user-info .status-label::before { content: ''; width: 6px; height: 6px; background: #2dd4bf; border-radius: 50%; display: inline-block; }
+    .user-info .name { font-weight: 700; font-size: 0.95rem; color: white; }
+    .user-info .status-label { font-size: 0.75rem; color: rgba(255,255,255,0.6); font-weight: 500; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+    .user-info .status-label::before { content: ''; width: 6px; height: 6px; background: #4caf50; border-radius: 50%; display: inline-block; }
 
     .nav-section {
-      padding: 15px 20px 8px;
+      padding: 15px 25px 10px;
       font-size: 0.7rem;
       font-weight: 800;
-      color: var(--text-grey);
+      color: rgba(255,255,255,0.4);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
     }
 
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 20px;
-      color: var(--text-grey);
+      gap: 15px;
+      padding: 12px 25px;
+      margin: 2px 0;
+      color: rgba(255,255,255,0.7);
       text-decoration: none;
       font-weight: 600;
       font-size: 0.85rem;
-      transition: 0.2s;
-      border-left: 4px solid transparent;
+      transition: all 0.2s;
       cursor: pointer;
       background: transparent;
+      border: none;
       width: 100%;
-      text-align: left;
-      border-top: none;
-      border-right: none;
-      border-bottom: none;
     }
 
     .nav-item:hover {
       background: rgba(255,255,255,0.05);
-      color: var(--text-white);
-    }
-
-    .nav-item.active {
-      background: rgba(77, 182, 172, 0.15);
       color: white;
-      border-left-color: var(--primary);
-      box-shadow: inset 5px 0 15px rgba(0,0,0,0.05);
+    }
+    
+    .nav-item.active {
+      background: rgba(255,255,255,0.1);
+      color: white !important;
+      font-weight: 700;
+      border-left: 4px solid #4db6ac;
     }
 
-    .nav-item .icon { font-size: 1.1rem; }
+    .nav-item .icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; opacity: 0.8; }
+    .nav-item.active .icon { opacity: 1; color: #4db6ac; }
 
     .logout-btn {
         margin-top: auto;
-        color: #ef5350;
+        color: #ffa4a2;
+        padding-bottom: 25px;
     }
+
+    .logout-btn:hover { color: #ef5350; background: rgba(239, 83, 80, 0.05); }
 
     /* MAIN CONTENT AREA */
     .main-container {
@@ -245,8 +268,8 @@ import { NotificationService } from '../../services/notification.service';
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 40px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+      padding: 0 25px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
       position: sticky;
       top: 0;
       z-index: 90;
@@ -298,6 +321,8 @@ import { NotificationService } from '../../services/notification.service';
       color: var(--text-grey);
       cursor: pointer;
     }
+    .badge-icon .icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+    .badge-icon .icon svg { width: 100%; height: 100%; }
     .badge {
       position: absolute;
       top: 5px;

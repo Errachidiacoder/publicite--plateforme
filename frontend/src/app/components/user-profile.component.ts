@@ -5,10 +5,10 @@ import { UserService, UserDto } from '../services/user.service';
 import { AuthService } from '../services/auth.service';
 
 @Component({
-    selector: 'app-user-profile',
-    standalone: true,
-    imports: [CommonModule, FormsModule],
-    template: `
+  selector: 'app-user-profile',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
     <div class="profile-page">
       <div class="hero-section">
         <h1>Mon <span>Profil</span></h1>
@@ -19,7 +19,9 @@ import { AuthService } from '../services/auth.service';
         <!-- Personal Info Section -->
         <div class="profile-card info-card">
           <div class="card-header">
-            <div class="icon">👤</div>
+            <div class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
             <h2>Informations Personnelles</h2>
           </div>
           
@@ -50,7 +52,9 @@ import { AuthService } from '../services/auth.service';
         <!-- Password Change Section -->
         <div class="profile-card password-card">
           <div class="card-header">
-            <div class="icon">🔑</div>
+            <div class="icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
             <h2>Sécurité</h2>
           </div>
           <p class="subtitle">Changer votre mot de passe</p>
@@ -88,7 +92,7 @@ import { AuthService } from '../services/auth.service';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .profile-page { padding: 40px; max-width: 1200px; margin: 0 auto; }
     
     .hero-section { margin-bottom: 40px; text-align: center; }
@@ -129,63 +133,63 @@ import { AuthService } from '../services/auth.service';
   `]
 })
 export class UserProfileComponent implements OnInit {
-    private userService = inject(UserService);
-    private authService = inject(AuthService);
+  private userService = inject(UserService);
+  private authService = inject(AuthService);
 
-    profile: UserDto = { id: 0, nomComplet: '', adresseEmail: '', numeroDeTelephone: '', dateInscription: '' };
-    passwords = { oldPassword: '', newPassword: '', confirm: '' };
+  profile: UserDto = { id: 0, nomComplet: '', adresseEmail: '', numeroDeTelephone: '', dateInscription: '' };
+  passwords = { oldPassword: '', newPassword: '', confirm: '' };
 
-    loading = false;
-    passLoading = false;
-    showSuccess = false;
-    errorMsg = '';
+  loading = false;
+  passLoading = false;
+  showSuccess = false;
+  errorMsg = '';
 
-    ngOnInit() {
-        const userId = this.authService.getUserId();
-        if (userId) {
-            this.userService.getProfile(userId).subscribe(p => this.profile = p);
-        }
+  ngOnInit() {
+    const userId = this.authService.getUserId();
+    if (userId) {
+      this.userService.getProfile(userId).subscribe(p => this.profile = p);
+    }
+  }
+
+  saveProfile() {
+    this.loading = true;
+    this.errorMsg = '';
+    this.userService.updateProfile(this.profile.id, this.profile).subscribe({
+      next: (updated) => {
+        this.profile = updated;
+        this.loading = false;
+        this.triggerSuccess();
+      },
+      error: () => {
+        this.loading = false;
+        this.errorMsg = "Erreur lors de la mise à jour du profil.";
+      }
+    });
+  }
+
+  changePassword() {
+    if (this.passwords.newPassword !== this.passwords.confirm) {
+      this.errorMsg = "Les nouveaux mots de passe ne correspondent pas.";
+      return;
     }
 
-    saveProfile() {
-        this.loading = true;
-        this.errorMsg = '';
-        this.userService.updateProfile(this.profile.id, this.profile).subscribe({
-            next: (updated) => {
-                this.profile = updated;
-                this.loading = false;
-                this.triggerSuccess();
-            },
-            error: () => {
-                this.loading = false;
-                this.errorMsg = "Erreur lors de la mise à jour du profil.";
-            }
-        });
-    }
+    this.passLoading = true;
+    this.errorMsg = '';
+    this.userService.changePassword(this.profile.id, this.passwords).subscribe({
+      next: () => {
+        this.passLoading = false;
+        this.passwords = { oldPassword: '', newPassword: '', confirm: '' };
+        this.triggerSuccess();
+      },
+      error: (err) => {
+        this.passLoading = false;
+        this.errorMsg = err.error?.message || "Erreur lors du changement de mot de passe.";
+      }
+    });
+  }
 
-    changePassword() {
-        if (this.passwords.newPassword !== this.passwords.confirm) {
-            this.errorMsg = "Les nouveaux mots de passe ne correspondent pas.";
-            return;
-        }
-
-        this.passLoading = true;
-        this.errorMsg = '';
-        this.userService.changePassword(this.profile.id, this.passwords).subscribe({
-            next: () => {
-                this.passLoading = false;
-                this.passwords = { oldPassword: '', newPassword: '', confirm: '' };
-                this.triggerSuccess();
-            },
-            error: (err) => {
-                this.passLoading = false;
-                this.errorMsg = err.error?.message || "Erreur lors du changement de mot de passe.";
-            }
-        });
-    }
-
-    triggerSuccess() {
-        this.showSuccess = true;
-        setTimeout(() => this.showSuccess = false, 3000);
-    }
+  triggerSuccess() {
+    this.showSuccess = true;
+    setTimeout(() => this.showSuccess = false, 3000);
+  }
 }

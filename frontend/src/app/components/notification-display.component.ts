@@ -4,13 +4,15 @@ import { NotificationService, Notification } from '../services/notification.serv
 import { Router } from '@angular/router';
 
 @Component({
-    selector: 'app-notification-display',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-notification-display',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="notification-overlay" *ngIf="latestNotification && show">
       <div class="notification-toast" [class.new]="isNew">
-        <div class="notif-icon">🔔</div>
+        <div class="notif-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </div>
         <div class="notif-content">
           <h4 class="notif-subject">{{ latestNotification.sujetNotification }}</h4>
           <p class="notif-body">{{ latestNotification.corpsMessage }}</p>
@@ -22,7 +24,7 @@ import { Router } from '@angular/router';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .notification-overlay {
       position: fixed;
       top: 20px;
@@ -67,42 +69,42 @@ import { Router } from '@angular/router';
   `]
 })
 export class NotificationDisplayComponent implements OnInit {
-    private notifService = inject(NotificationService);
-    private router = inject(Router);
+  private notifService = inject(NotificationService);
+  private router = inject(Router);
 
-    latestNotification: Notification | null = null;
-    show = false;
-    isNew = false;
+  latestNotification: Notification | null = null;
+  show = false;
+  isNew = false;
 
-    ngOnInit() {
-        this.notifService.notifications$.subscribe(notifs => {
-            const unread = notifs.filter(n => !n.notificationLue);
-            if (unread.length > 0) {
-                const newest = unread[0];
-                if (!this.latestNotification || this.latestNotification.id !== newest.id) {
-                    this.latestNotification = newest;
-                    this.show = true;
-                    this.isNew = true;
-                    setTimeout(() => this.isNew = false, 2000);
-                }
-            }
-        });
-    }
-
-    close() {
-        if (this.latestNotification) {
-            this.notifService.markAsRead(this.latestNotification.id).subscribe();
+  ngOnInit() {
+    this.notifService.notifications$.subscribe(notifs => {
+      const unread = notifs.filter(n => !n.notificationLue);
+      if (unread.length > 0) {
+        const newest = unread[0];
+        if (!this.latestNotification || this.latestNotification.id !== newest.id) {
+          this.latestNotification = newest;
+          this.show = true;
+          this.isNew = true;
+          setTimeout(() => this.isNew = false, 2000);
         }
-        this.show = false;
-    }
+      }
+    });
+  }
 
-    goToPayment() {
-        // Navigate to a payment simulation page
-        if (this.latestNotification?.produitSource?.id) {
-            this.router.navigate(['/payment', this.latestNotification.produitSource.id]);
-        } else {
-            this.router.navigate(['/my-ads']); // Fallback
-        }
-        this.close();
+  close() {
+    if (this.latestNotification) {
+      this.notifService.markAsRead(this.latestNotification.id).subscribe();
     }
+    this.show = false;
+  }
+
+  goToPayment() {
+    // Navigate to a payment simulation page
+    if (this.latestNotification?.produitSource?.id) {
+      this.router.navigate(['/payment', this.latestNotification.produitSource.id]);
+    } else {
+      this.router.navigate(['/my-ads']); // Fallback
+    }
+    this.close();
+  }
 }
