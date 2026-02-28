@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
     List<MediaAsset> findByProduitId(Long produitId);
+
+    List<MediaAsset> findByProduitIdOrderByOrdreAffichageAsc(Long produitId);
 }

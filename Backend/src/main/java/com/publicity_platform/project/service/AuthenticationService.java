@@ -37,20 +37,31 @@ public class AuthenticationService {
         }
 
         public AuthenticationResponse register(RegisterRequest request) {
-                // New users get VISITEUR role by default
-                // They become ANNONCEUR only after submitting and paying for an ad
-                Role defaultRole = roleRepository.findByName("VISITEUR")
-                                .orElseGet(() -> roleRepository.save(new Role("VISITEUR")));
+                // Déterminer le rôle selon le type d'activité
+                final String roleName;
+                if (request.getTypeActivite() != null && !request.getTypeActivite().isBlank()) {
+                        roleName = request.getTypeActivite();
+                } else {
+                        roleName = "CLIENT";
+                }
+
+                Role assignedRole = roleRepository.findByName(roleName)
+                                .orElseGet(() -> roleRepository.save(new Role(roleName)));
 
                 Utilisateur user = Utilisateur.builder()
                                 .nomComplet(request.getNomComplet())
                                 .adresseEmail(request.getEmail())
                                 .motDePasseHache(passwordEncoder.encode(request.getPassword()))
                                 .numeroDeTelephone(request.getTelephone())
-                                .roles(Set.of(defaultRole))
+                                .roles(Set.of(assignedRole))
                                 .compteActif(true)
                                 .emailVerifie(false)
                                 .build();
+
+                // Ajouter la ville si fournie
+                if (request.getVille() != null && !request.getVille().isBlank()) {
+                        user.setVille(request.getVille());
+                }
 
                 @SuppressWarnings("null")
                 Utilisateur savedUser = repository.save(user);
@@ -85,8 +96,9 @@ public class AuthenticationService {
         }
 
         /**
-         * Returns the most privileged role the user has.
-         * Priority: SUPERADMIN > ADJOINTADMIN > ANNONCEUR > CLIENT > VISITEUR
+         * Retourne le rôle le plus privilégié.
+         * Priorité : SUPERADMIN > ADJOINTADMIN > SARL > MAGASIN > COOPERATIVE >
+         * AUTO_ENTREPRENEUR > LIVREUR > STOCKEUR > ANNONCEUR > CLIENT > VISITEUR
          */
         private String getPrimaryRole(Utilisateur user) {
                 Set<Role> roles = user.getRoles();
@@ -94,6 +106,18 @@ public class AuthenticationService {
                         return "SUPERADMIN";
                 if (roles.stream().anyMatch(r -> r.getName().equals("ADJOINTADMIN")))
                         return "ADJOINTADMIN";
+                if (roles.stream().anyMatch(r -> r.getName().equals("SARL")))
+                        return "SARL";
+                if (roles.stream().anyMatch(r -> r.getName().equals("MAGASIN")))
+                        return "MAGASIN";
+                if (roles.stream().anyMatch(r -> r.getName().equals("COOPERATIVE")))
+                        return "COOPERATIVE";
+                if (roles.stream().anyMatch(r -> r.getName().equals("AUTO_ENTREPRENEUR")))
+                        return "AUTO_ENTREPRENEUR";
+                if (roles.stream().anyMatch(r -> r.getName().equals("LIVREUR")))
+                        return "LIVREUR";
+                if (roles.stream().anyMatch(r -> r.getName().equals("STOCKEUR")))
+                        return "STOCKEUR";
                 if (roles.stream().anyMatch(r -> r.getName().equals("ANNONCEUR")))
                         return "ANNONCEUR";
                 if (roles.stream().anyMatch(r -> r.getName().equals("CLIENT")))
