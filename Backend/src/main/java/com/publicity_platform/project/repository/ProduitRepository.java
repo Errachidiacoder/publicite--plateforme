@@ -12,6 +12,8 @@ import java.util.List;
 public interface ProduitRepository extends JpaRepository<Produit, Long> {
     List<Produit> findByStatutValidation(StatutValidation statut);
 
+    List<Produit> findByStatutValidationIn(List<StatutValidation> statuts);
+
     long countByStatutValidation(StatutValidation statut);
 
     List<Produit> findByAnnonceurId(Long annonceurId);

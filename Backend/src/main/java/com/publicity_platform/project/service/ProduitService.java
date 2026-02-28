@@ -36,8 +36,10 @@ public class ProduitService {
                 return repository.findByStatutValidation(StatutValidation.VALIDE);
         }
 
+        /** Returns all public products (VALIDE or ACTIVEE) for the marketplace. */
         public List<Produit> getAllActiveProducts() {
-                return repository.findByStatutValidation(StatutValidation.ACTIVEE);
+                return repository.findByStatutValidationIn(
+                                java.util.List.of(StatutValidation.VALIDE, StatutValidation.ACTIVEE));
         }
 
         public List<Produit> getPendingProducts() {
@@ -50,7 +52,8 @@ public class ProduitService {
 
         @Transactional
         public Produit submitProduct(Produit produit) {
-                produit.setStatutValidation(StatutValidation.EN_ATTENTE);
+                produit.setStatutValidation(StatutValidation.ACTIVEE);
+                produit.setDatePublication(java.time.LocalDateTime.now());
                 Produit saved = repository.save(produit);
 
                 // Notifier les administrateurs
@@ -63,8 +66,8 @@ public class ProduitService {
                 for (Utilisateur admin : admins) {
                         notificationService.createNotification(
                                         admin,
-                                        "Nouvelle annonce à valider",
-                                        "L'annonce '" + saved.getTitreProduit() + "' a été soumise par "
+                                        "Nouveau produit publié",
+                                        "Le produit '" + saved.getTitreProduit() + "' a été publié par "
                                                         + saved.getAnnonceur().getNomComplet(),
                                         "NOUVELLE_ANNONCE",
                                         saved);

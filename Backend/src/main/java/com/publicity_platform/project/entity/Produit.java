@@ -1,5 +1,7 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.publicity_platform.project.enumm.Disponibilite;
 import com.publicity_platform.project.enumm.StatutValidation;
 import com.publicity_platform.project.enumm.TypeAnnonce;
@@ -69,33 +71,70 @@ public class Produit {
     @Column(name = "motif_refus_admin", columnDefinition = "TEXT")
     private String motifRefusAdmin;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "annonceur_id", nullable = false)
     private Utilisateur annonceur;
 
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_id")
     private Categorie categorie;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<MediaAsset> medias;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitConcerne", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<HistoriqueValidation> historiques;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitSuivi", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<StatistiqueAnnonce> statistiques;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitConsulte", fetch = FetchType.LAZY)
     private List<HistoriqueNavigation> navigations;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "produitSource", fetch = FetchType.LAZY)
     private List<Notification> notifications;
+
+    // ─── Champs SouqBladi ───────────────────────
+
+    @Column(name = "quantite_stock")
+    private Integer quantiteStock = 0;
+
+    @Column(name = "prix_promo")
+    private Double prixPromo;
+
+    @Column(name = "nombre_ventes")
+    private Long nombreVentes = 0L;
+
+    @Column(name = "nombre_avis")
+    private Integer nombreAvis = 0;
+
+    @Column(name = "note_moyenne")
+    private Double noteMoyenne = 0.0;
+
+    // ─── Relations SouqBladi ────────────────────
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "boutique_id")
+    private Boutique boutique;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Avis> avis;
 
     @PrePersist
     protected void onCreate() {
         this.dateSoumission = LocalDateTime.now();
-        this.statutValidation = StatutValidation.EN_ATTENTE;
+        if (this.statutValidation == null) {
+            this.statutValidation = StatutValidation.EN_ATTENTE;
+        }
     }
 
     public void incrementerVues() {
@@ -299,5 +338,87 @@ public class Produit {
             p.setCategorie(categorie);
             return p;
         }
+    }
+
+    // ─── Getters & Setters SouqBladi ───────────
+
+    public Integer getQuantiteStock() {
+        return quantiteStock;
+    }
+
+    public void setQuantiteStock(Integer quantiteStock) {
+        this.quantiteStock = quantiteStock;
+    }
+
+    public Double getPrixPromo() {
+        return prixPromo;
+    }
+
+    public void setPrixPromo(Double prixPromo) {
+        this.prixPromo = prixPromo;
+    }
+
+    public Long getNombreVentes() {
+        return nombreVentes;
+    }
+
+    public void setNombreVentes(Long nombreVentes) {
+        this.nombreVentes = nombreVentes;
+    }
+
+    public Integer getNombreAvis() {
+        return nombreAvis;
+    }
+
+    public void setNombreAvis(Integer nombreAvis) {
+        this.nombreAvis = nombreAvis;
+    }
+
+    public Double getNoteMoyenne() {
+        return noteMoyenne;
+    }
+
+    public void setNoteMoyenne(Double noteMoyenne) {
+        this.noteMoyenne = noteMoyenne;
+    }
+
+    public Boutique getBoutique() {
+        return boutique;
+    }
+
+    public void setBoutique(Boutique boutique) {
+        this.boutique = boutique;
+    }
+
+    public List<Avis> getAvis() {
+        return avis;
+    }
+
+    public void setAvis(List<Avis> avis) {
+        this.avis = avis;
+    }
+
+    public List<MediaAsset> getMedias() {
+        return medias;
+    }
+
+    public void setMedias(List<MediaAsset> medias) {
+        this.medias = medias;
+    }
+
+    public LocalDateTime getDatePublication() {
+        return datePublication;
+    }
+
+    public void setDatePublication(LocalDateTime datePublication) {
+        this.datePublication = datePublication;
+    }
+
+    public LocalDateTime getDateExpiration() {
+        return dateExpiration;
+    }
+
+    public void setDateExpiration(LocalDateTime dateExpiration) {
+        this.dateExpiration = dateExpiration;
     }
 }
