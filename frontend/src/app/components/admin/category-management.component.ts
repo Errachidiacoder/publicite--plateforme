@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 import { FormsModule } from '@angular/forms';
@@ -10,153 +10,127 @@ import { FormsModule } from '@angular/forms';
   template: `
     <div class="admin-page-container">
       <div class="admin-compact-wrapper">
-        <header class="content-header">
-          <h1>Gestion des Catégories</h1>
-        <div class="header-actions">
-           <button class="btn-seed" (click)="onSeed()" *ngIf="categories.length === 0" [disabled]="loading">
-             <span>🚀 Initialiser les données</span>
-           </button>
-           <button class="btn-create" (click)="toggleForm()">
-             {{ showForm ? 'Annuler' : '✚ Nouvelle Catégorie' }}
-           </button>
-        </div>
-      </header>
+        <div style="height: 20px;"></div>
 
-      <!-- Floating Toasts -->
-      <div class="toast-container">
-        <div class="toast success" *ngIf="successMessage" (click)="successMessage = ''">
-          <div class="toast-icon">✓</div>
-          <div class="toast-content">
-            <span class="toast-title">Succès</span>
-            <span class="toast-text">{{ successMessage }}</span>
-          </div>
-        </div>
-        <div class="toast error" *ngIf="errorMessage" (click)="errorMessage = ''">
-          <div class="toast-icon">✕</div>
-          <div class="toast-content">
-            <span class="toast-title">Erreur</span>
-            <span class="toast-text">{{ errorMessage }}</span>
-          </div>
-        </div>
-      </div>
+      <!-- ... Toasts ... -->
 
-      <!-- FORM -->
+      <!-- FORMS -->
       <div class="card form-card" *ngIf="showForm">
         <header class="card-header">
-           <h3>{{ isEditing ? 'Modifier la catégorie' : 'Créer une catégorie' }}</h3>
+           <h3>{{ isEditing ? "Modifier la catégorie" : "Créer une catégorie" }}</h3>
         </header>
         <form (ngSubmit)="saveCategory()" class="premium-form">
           <div class="form-grid">
             <div class="field">
-              <label>Nom de la catégorie</label>
-              <input type="text" [(ngModel)]="newCategory.nomCategorie" name="nom" required 
-                     [class.invalid]="attemptedSave && !newCategory.nomCategorie"
-                     placeholder="ex: Mode, Électronique...">
-              <span class="err-hint" *ngIf="attemptedSave && !newCategory.nomCategorie">Le nom est obligatoire</span>
+              <div class="label-row">
+                <label>Nom de la catégorie</label>
+                <span class="field-status ok" *ngIf="newCategory.nomCategorie">&#10003;</span>
+                <span class="field-status err" *ngIf="attemptedSave && !newCategory.nomCategorie">Requis</span>
+              </div>
+              <input type="text" [(ngModel)]="newCategory.nomCategorie" name="nom" 
+                     [class.invalid]="attemptedSave && !newCategory.nomCategorie" 
+                     placeholder="Ex: Électronique" required>
             </div>
+            
             <div class="field">
-              <label>Code Icône (Emoji ou SVG)</label>
-              <input type="text" [(ngModel)]="newCategory.iconeCategorie" name="icone" placeholder="ex: 👗, 📱, 🚗">
+              <div class="label-row">
+                <label>Icône (Emoji)</label>
+                <span class="field-status ok" *ngIf="newCategory.iconeCategorie">&#10003;</span>
+              </div>
+              <input type="text" [(ngModel)]="newCategory.iconeCategorie" name="icone" placeholder="Ex: 📱">
             </div>
+
             <div class="field">
-              <label>Image de Couverture (URL)</label>
-              <input type="text" [(ngModel)]="newCategory.urlImageCouverture" name="urlImage" placeholder="https://...">
+                <label>Catégorie Parente</label>
+                <select [(ngModel)]="newCategory.categorieParenteId" name="parent">
+                    <option [ngValue]="null">Aucune (Racine)</option>
+                    <option *ngFor="let c of categories" [ngValue]="c.id" [hidden]="c.id === newCategory.id">{{ c.nomCategorie }}</option>
+                </select>
             </div>
+
             <div class="field">
-              <label>Catégorie Parente</label>
-              <select [(ngModel)]="newCategory.categorieParenteId" name="parenteId">
-                <option [ngValue]="null">--- Aucune (Catégorie Racine) ---</option>
-                <option *ngFor="let c of categories" [value]="c.id" [hidden]="c.id === newCategory.id">
-                  {{ c.nomCategorie }}
-                </option>
-              </select>
-            </div>
-            <div class="field full-width">
-              <label>Description</label>
-              <textarea [(ngModel)]="newCategory.descriptionCategorie" name="desc" rows="3" placeholder="Description courte..."></textarea>
-            </div>
-            <div class="field">
-               <label>Statut Activation</label>
-               <div class="status-toggle" [class.active]="newCategory.categorieActive" (click)="newCategory.categorieActive = !newCategory.categorieActive">
-                  <div class="toggle-track">
-                    <div class="toggle-thumb"></div>
+              <label>Statut</label>
+              <div class="premium-switches">
+                <div class="switch-item">
+                  <span class="switch-label">Active</span>
+                  <div class="status-toggle" [class.active]="newCategory.categorieActive" (click)="newCategory.categorieActive = !newCategory.categorieActive">
+                    <div class="toggle-track"><div class="toggle-thumb"></div></div>
                   </div>
-                  <span>{{ newCategory.categorieActive ? 'Active' : 'Inactive' }}</span>
-               </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="field span-2">
+              <div class="label-row">
+                <label>Description</label>
+                <span class="field-status ok" *ngIf="newCategory.descriptionCategorie">&#10003;</span>
+              </div>
+              <input type="text" [(ngModel)]="newCategory.descriptionCategorie" name="desc" placeholder="Brève description...">
             </div>
           </div>
-          <div class="form-actions">
-            <button type="submit" class="btn-submit" [disabled]="loading">
+          <div class="form-footer">
+            <button type="submit" class="btn-primary" [disabled]="loading">
                <div class="spinner" *ngIf="loading"></div>
-               <span>{{ loading ? 'Traitement...' : (isEditing ? 'Mettre à jour' : 'Enregistrer la catégorie') }}</span>
+               <span>{{ loading ? 'Traitement...' : 'Enregistrer' }}</span>
             </button>
           </div>
         </form>
       </div>
 
-      <!-- User Confirmation Modal -->
-      <div *ngIf="confirmDialog.visible" class="modal-overlay" (click)="confirmDialog.visible = false">
-        <div class="modal-premium confirm-modal" (click)="$event.stopPropagation()">
-          <div class="modal-body text-center">
-            <div class="confirm-icon">📁</div>
-            <h3>Confirmation</h3>
-            <p>{{ confirmDialog.message }}</p>
-            <div class="confirm-actions">
-              <button class="btn-secondary" (click)="confirmDialog.visible = false">Annuler</button>
-              <button class="btn-danger" (click)="onConfirm()">Confirmer l'opération</button>
+    <div class="admin-page-content" *ngIf="!showForm">
+      <div class="card table-card" style="padding: 30px;">
+        <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 25px;">
+            <div class="table-title-area" style="display:flex; align-items:center; gap:20px;">
+                <div>
+                  <h2 style="margin:0; font-size:1.4rem; font-weight:700; color:#1A202C;">Catégories</h2>
+                </div>
             </div>
-          </div>
+            <div class="table-tools" style="display:flex; align-items:center; gap:25px; margin-left: auto;">
+                <div class="search-input-wrapper">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E7E7E" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Search">
+                </div>
+                <button class="btn-seed" (click)='onSeed()' *ngIf="categories.length === 0" [disabled]="loading" style="margin:0; padding: 8px 16px; font-size: 0.75rem;">
+                   🚀 Initialiser
+                </button>
+                <button class="btn-create-luxe" (click)="toggleForm()" style="padding: 10px 20px; font-size: 0.8rem; margin:0; border-radius:12px;">
+                   {{ showForm ? 'Annuler' : '✚ Nouveau' }}
+                </button>
+            </div>
         </div>
-      </div>
 
-      <!-- LIST -->
-      <div class="card table-card">
         <div class="table-responsive">
           <table class="premium-table">
             <thead>
               <tr>
-                <th width="70" class="text-center">ID</th>
-                <th width="60">Icône</th>
-                <th width="80">Couverture</th>
-                <th>Détails de la Catégorie</th>
-                <th width="150">Parent / Hiérarchie</th>
-                <th width="100">Statut</th>
-                <th class="text-right">Actions</th>
+                <th class="text-center">Icône</th>
+                <th class="text-center">Nom</th>
+                <th class="text-center">Description</th>
+                <th class="text-center">Hiérarchie</th>
+                <th class="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-               <tr *ngFor="let cat of categories">
-                <td class="text-center"><code class="code-id">#{{ cat.id }}</code></td>
-                <td>
-                  <div class="cat-icon-mini">{{ cat.iconeCategorie || '📁' }}</div>
+              <tr *ngFor="let cat of categories">
+                <td class="text-center">
+                  <div class="table-avatar" style="width:28px; height:28px; font-size:1rem; margin:0 auto;">{{ cat.iconeCategorie || '📁' }}</div>
                 </td>
-                <td>
-                  <div class="cat-cover-mini">
-                    <img *ngIf="cat.urlImageCouverture" [src]="cat.urlImageCouverture" alt="Cover">
-                    <div *ngIf="!cat.urlImageCouverture" class="no-img">∅</div>
-                  </div>
-                </td>
-                <td>
-                  <div class="cat-main-info">
-                    <span class="cat-name">{{ cat.nomCategorie }}</span>
-                    <p class="cat-desc-full" *ngIf="cat.descriptionCategorie">{{ cat.descriptionCategorie }}</p>
-                  </div>
-                </td>
-                <td>
-                  <span class="parent-name-tag" *ngIf="cat.categorieParenteId">
-                     <i class="parent-arrow">↳</i> {{ getParentName(cat.categorieParenteId) }}
+                <td class="text-center"><span class="u-name" style="font-size:0.75rem;">{{ cat.nomCategorie }}</span></td>
+                <td class="text-center"><span style="color:#718096; font-size:0.7rem;" *ngIf="cat.descriptionCategorie">{{ cat.descriptionCategorie | slice:0:30 }}...</span></td>
+                <td class="text-center">
+                  <span class="parent-name-tag" style="font-size:0.6rem; padding:2px 8px;" *ngIf="cat.parentCategorie?.nomCategorie">
+                    {{ cat.parentCategorie.nomCategorie }}
                   </span>
-                  <span class="root-tag" *ngIf="!cat.categorieParenteId">Racine</span>
+                  <span class="root-tag" style="font-size:0.6rem;" *ngIf="!cat.parentCategorie?.nomCategorie">Racine</span>
                 </td>
-                <td>
-                   <span class="status-pill-bordered" [class.activee]="cat.categorieActive" [class.archive]="!cat.categorieActive">
-                      {{ cat.categorieActive ? 'Active' : 'Inactive' }}
-                   </span>
-                </td>
-                <td class="text-right">
-                  <div class="action-row">
-                    <button class="btn-icon edit" (click)="editCategory(cat)" title="Modifier">✏️</button>
-                    <button class="btn-icon delete" (click)="deleteCategory(cat.id)" title="Supprimer">🗑️</button>
+                <td class="text-center">
+                  <div class="action-row" style="justify-content:center; gap:10px;">
+                    <button class="icon-btn-reference success" (click)="editCategory(cat)" title="Modifier">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="icon-btn-reference danger" (click)="deleteCategory(cat.id!)" title="Supprimer">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -173,10 +147,10 @@ import { FormsModule } from '@angular/forms';
   `,
   styles: [`
     :host {
-      --primary: #4db6ac;
-      --primary-dark: #00897b;
+      --primary: #00ccff;
+      --primary-dark: #0099cc;
       --noir: #111827;
-      --accent: #e0f2f1;
+      --accent: #e0f7ff;
       --bg: #f8fafc;
       --white: #ffffff;
       --text: #1e293b;
@@ -189,65 +163,72 @@ import { FormsModule } from '@angular/forms';
     .btn-seed { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 10px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; margin-right: 15px; }
     .btn-seed:hover { background: #dcfce7; transform: scale(1.05); }
 
-    .admin-page-container { padding: 30px 20px; background: var(--bg); min-height: 100vh; }
-    .admin-compact-wrapper { max-width: 1100px; margin: 0 auto; }
-    .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .content-header h1 { font-size: 1.8rem; font-weight: 900; color: var(--noir); letter-spacing: -0.5px; }
+    .form-card { margin-bottom: 40px; animation: expand 0.4s ease; max-width: 850px; margin-left: auto; margin-right: auto; border: 1px solid rgba(77, 182, 172, 0.1); }
+    @keyframes expand { from { transform: scale(0.98); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
-    .header-actions { display: flex; align-items: center; gap: 15px; justify-content: flex-end; }
-
-    /* Pro Toasts */
-    .toast-container { position: fixed; top: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
-    .toast { display: flex; align-items: center; gap: 15px; background: white; padding: 16px 25px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.12); border-left: 6px solid; animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; min-width: 320px; text-align: left; }
-    .toast.success { border-left-color: #10b981; }
-    .toast.error { border-left-color: var(--danger); }
-    .toast-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; flex-shrink: 0; font-size: 1rem; }
-    .toast.success .toast-icon { background: #10b981; }
-    .toast.error .toast-icon { background: var(--danger); }
-    .toast-content { display: flex; flex-direction: column; }
-    .toast-title { font-weight: 800; font-size: 0.9rem; color: var(--text); }
-    .toast-text { font-size: 0.8rem; color: var(--text-light); }
-    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-    .card { background: white; border-radius: 30px; box-shadow: var(--shadow); border: 1px solid var(--white); overflow: hidden; transition: 0.3s; }
-    .form-card { margin-bottom: 30px; animation: expand 0.4s ease; max-width: 850px; margin-left: auto; margin-right: auto; }
-    @keyframes expand { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    
-    .card-header { padding: 15px 25px; border-bottom: 1px solid var(--border); }
-    .card-header h3 { margin: 0; font-size: 1rem; font-weight: 800; }
+    .card-header { padding: 15px 25px; border-bottom: 1px solid var(--border); background: linear-gradient(to right, #fafdfd, white); }
+    .card-header h3 { margin: 0; font-size: 1rem; font-weight: 1000; color: #1e293b; }
 
     .premium-form { padding: 20px 35px; }
-    .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px 30px; }
-    .field { display: flex; flex-direction: column; gap: 2px; }
-    .field label { font-size: 0.58rem; font-weight: 1000; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 10px; }
-    .field input, .field textarea, .field select { padding: 6px 14px; border-radius: 30px; border: 1.5px solid var(--border); background: #fafdfd; font-size: 0.7rem; transition: 0.3s; width: 100%; height: 28px; }
-    .field textarea { height: auto; border-radius: 15px; }
-    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--primary); outline: none; background: white; }
-    .field input.invalid { border-color: #ef4444; background: #fffafb; }
-    .field .err-hint { font-size: 0.6rem; color: var(--danger); font-weight: 800; text-transform: none; margin-top: 1px; padding-left: 10px; }
-    .full-width { grid-column: 1 / -1; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px 30px; }
+    .span-2 { grid-column: span 2; }
+    @media (max-width: 800px) { .span-2 { grid-column: span 1; } .form-grid { grid-template-columns: 1fr; } }
+    
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.65rem; font-weight: 1000; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px; padding-left: 12px; }
+    .field input, .field select, .premium-switches { 
+      padding: 0 20px; 
+      border-radius: 30px; 
+      border: 1.5px solid var(--border); 
+      background: #fafdfd; 
+      font-size: 0.75rem; 
+      transition: 0.2s; 
+      width: 100%; 
+      height: 42px; 
+      box-sizing: border-box;
+    }
+    .field input { border-right: 3px solid transparent; }
+    .field input:focus, .field select:focus { border-color: var(--primary); outline: none; background: white; border-right-color: var(--primary); box-shadow: 0 4px 10px rgba(0, 204, 255, 0.05); }
+    .field input.invalid { border-color: #ef4444; background: #fffafb; border-right-color: #ef4444; }
+
+    .label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+    .field-status { font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+    .field-status.ok { color: #0099cc; background: #e0f7ff; }
+    .field-status.err { color: #ef4444; background: #fff1f2; }
+
+    .form-footer { margin-top: 30px; padding: 20px 35px; background: #fafdfd; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+    .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 35px; border-radius: 40px; font-weight: 900; font-size: 0.85rem; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(0, 204, 255, 0.2); text-transform: uppercase; letter-spacing: 1.5px; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(0, 204, 255, 0.3); }
+    
+    .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .premium-switches { display: flex; gap: 20px; align-items: center; padding: 0 25px; border: 1.5px solid var(--border) !important; }
+    .switch-item { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: space-between; }
+    .switch-label { font-size: 0.65rem; font-weight: 1000; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
 
     .status-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; }
     .toggle-track { width: 44px; height: 24px; background: #eaedf0; border-radius: 20px; position: relative; transition: 0.3s; border: 1px solid #ddd; }
     .toggle-thumb { width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 3px; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .active .toggle-track { background: var(--primary); border-color: var(--primary-dark); }
     .active .toggle-thumb { left: calc(100% - 21px); }
-    .status-toggle span { font-size: 0.75rem; font-weight: 800; color: var(--text-light); }
-    .active span { color: var(--primary-dark); }
 
-    .form-actions { margin-top: 20px; display: flex; justify-content: flex-end; }
-    .btn-submit { background: var(--primary); color: white; border: none; padding: 8px 25px; border-radius: 50px; font-weight: 800; font-size: 0.75rem; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0, 105, 92, 0.15); display: flex; align-items: center; gap: 8px; }
-    .btn-submit:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 105, 92, 0.35); filter: brightness(1.1); }
-    .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .admin-page-container { padding: 30px 20px; background: var(--bg); min-height: 100vh; }
+    .admin-compact-wrapper { max-width: 1100px; margin: 0 auto; }
+    
+    .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .content-header h1 { font-size: 1.8rem; font-weight: 900; color: var(--noir); letter-spacing: -1px; }
 
-    .table-card { border-radius: 20px; overflow: hidden; }
-    .table-responsive { overflow-x: auto; }
-    .premium-table { width: 100%; border-collapse: collapse; text-align: left; border: 1.5px solid var(--border); font-size: 0.8rem; }
-    .premium-table th { background: #f8fafc; padding: 10px 18px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 1px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); }
-    .premium-table th:last-child { border-right: none; }
-    .premium-table td { padding: 10px 18px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid var(--border); vertical-align: middle; }
-    .premium-table td:last-child { border-right: none; }
+    .card { background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #EDF2F7; overflow: hidden; transition: 0.3s; }
+    .table-card { border-radius: 24px !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important; border: 1px solid #E2E8F0 !important; }
+
+    .table-responsive { border-radius: 16px; overflow: hidden; border: 1px solid #EDF2F7; }
+    .premium-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.70rem; }
+    .premium-table th { background: #F8FAFC; padding: 14px 16px; text-align: center; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: #64748B; border-bottom: 1px solid #EDF2F7; }
+    .premium-table td { padding: 12px 16px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; text-align: center; background: white; transition: background 0.2s; }
+    .premium-table tr:hover td { background: #F9FBFF; }
+    .premium-table tr:last-child td { border-bottom: none; }
+    .text-center { text-align: center !important; }
     
     .cat-icon-mini { width: 34px; height: 34px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .cat-cover-mini { width: 44px; height: 32px; border-radius: 6px; overflow: hidden; background: #eee; border: 1px solid var(--border); }
@@ -262,20 +243,21 @@ import { FormsModule } from '@angular/forms';
     .root-tag { font-size: 0.7rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
     .status-pill-bordered { padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; border: 1.5px solid transparent; }
-    .status-pill-bordered.activee { border-color: var(--primary); color: var(--primary-dark); background: #f0fdfa; }
+    .status-pill-bordered.activee { border-color: var(--primary); color: var(--primary-dark); background: #e0f7ff; }
     .status-pill-bordered.archive { border-color: #e2e8f0; color: #64748b; background: #f8fafc; }
     .code-id { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
 
-    .action-row { display: flex; gap: 8px; justify-content: flex-end; }
-    .btn-icon { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #eee; background: white; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-    .btn-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-color: var(--primary); }
-    .btn-icon.delete:hover { background: #fef2f2; border-color: var(--danger); color: var(--danger); }
-    .text-right { text-align: right; }
+    .action-row { display: flex; gap: 10px; justify-content: center; }
+    .icon-btn-reference { background: transparent; border: none; padding: 2px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .icon-btn-reference:hover { transform: scale(1.1); filter: brightness(0.8); }
+    .icon-btn-reference.success { color: #0099cc; }
+    .icon-btn-reference.danger { color: #ef4444; }
+    .text-center { text-align: center; }
 
     .empty-state { padding: 80px 40px; text-align: center; color: var(--text-light); font-weight: 600; }
 
-    .btn-create { background: var(--noir); color: white; border: none; padding: 14px 28px; border-radius: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
-    .btn-create:hover { background: var(--primary); transform: translateY(-3px); }
+    .btn-create-luxe { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(0, 204, 255, 0.25); }
+    .btn-create-luxe:hover { transform: translateY(-3px); background: var(--primary-dark); box-shadow: 0 12px 25px rgba(0, 204, 255, 0.35); }
 
     /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
@@ -290,6 +272,7 @@ import { FormsModule } from '@angular/forms';
 })
 export class CategoryManagementComponent implements OnInit {
   private adminService = inject(AdminService);
+  private cdr = inject(ChangeDetectorRef);
   categories: any[] = [];
   showForm = false;
   isEditing = false;
@@ -334,6 +317,7 @@ export class CategoryManagementComponent implements OnInit {
   loadCategories() {
     this.adminService.getCategories().subscribe(data => {
       this.categories = data;
+      this.cdr.detectChanges();
     });
   }
 

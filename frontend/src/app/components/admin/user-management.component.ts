@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 import { FormsModule } from '@angular/forms';
@@ -10,22 +10,7 @@ import { FormsModule } from '@angular/forms';
   template: `
     <div class="admin-page-container">
       <div class="admin-compact-wrapper">
-        <header class="content-header">
-            <h1>Gestion des <span>Utilisateurs</span></h1>
-          <div class="header-actions">
-             <div class="view-switcher-premium">
-                <button [class.active]="view === 'users'" (click)="view = 'users'">
-                  <span class="btn-lbl">Utilisateurs</span>
-                </button>
-                <button [class.active]="view === 'roles'" (click)="view = 'roles'">
-                  <span class="btn-lbl">Rôles API</span>
-                </button>
-             </div>
-             <button class="btn-create-luxe" (click)="toggleForm()">
-              {{ showCreateForm ? 'Annuler' : '✚ Nouveau' }}
-            </button>
-          </div>
-      </header>
+        <div style="height: 20px;"></div>
 
       <!-- Floating Toasts -->
       <div class="toast-container">
@@ -182,53 +167,79 @@ import { FormsModule } from '@angular/forms';
         </form>
       </div>
 
-      <!-- USERS TABLE -->
-      <div class="card table-card" *ngIf="view === 'users'">
+    <div class="admin-page-content" *ngIf="isView('users') && !showCreateForm">
+      <div class="card table-card" style="padding: 30px;">
+        <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 25px;">
+            <div class="table-title-area">
+                <h2 style="margin:0; font-size:1.4rem; font-weight:700; color:#1A202C;">Utilisateurs</h2>
+            </div>
+            <div class="table-tools" style="display:flex; align-items:center; gap:25px; margin-left: auto;">
+                <!-- VIEW SWITCHER AS PREMIUM TABS -->
+                <div class="premium-filter-tabs" style="margin-left: auto;">
+                    <button [class.active]="isView('users')" (click)="setView('users')" class="filter-tab">Utilisateurs</button>
+                    <button [class.active]="isView('roles')" (click)="setView('roles')" class="filter-tab">Rôles API</button>
+                </div>
+                <div class="search-input-wrapper">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E7E7E" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Search">
+                </div>
+                <button class="btn-create-luxe" (click)="toggleForm()" style="padding: 10px 20px; font-size: 0.8rem; margin:0; border-radius:12px;">
+                   {{ showCreateForm ? 'Annuler' : '✚ Nouveau' }}
+                </button>
+            </div>
+        </div>
+
         <div class="table-responsive">
           <table class="premium-table">
             <thead>
               <tr>
-                <th width="70" class="text-center">ID</th>
-                <th>Utilisateur</th>
-                <th>Contact / Email</th>
-                <th>Rôles</th>
-                <th width="90" class="text-center">Annonces</th>
-                <th width="120">Accès</th>
-                <th class="text-right">Actions</th>
+                <th class="text-center">Utilisateur</th>
+                <th class="text-center">Contact</th>
+                <th class="text-center">Rôles</th>
+                <th class="text-center">Annonces</th>
+                <th class="text-center">Accès</th>
+                <th class="text-center">Action</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let user of users">
-                <td class="text-center"><code class="code-id">#{{ user.id }}</code></td>
-                <td>
-                  <div class="user-profile">
-                    <div class="u-avatar">{{ user.nomComplet?.charAt(0) }}</div>
-                    <span class="u-name">{{ user.nomComplet }}</span>
-                  </div>
-                </td>
-                <td><span class="u-email">{{ user.email }}</span></td>
-                <td>
-                  <div class="tag-cloud">
-                    <span *ngFor="let role of user.roles" class="tag-role">{{ role.replace('ROLE_', '') }}</span>
+                <td class="text-center">
+                  <div class="table-user-cell" style="justify-content:center;">
+                    <div class="user-meta">
+                      <span class="u-name">{{ user.nomComplet }}</span>
+                    </div>
                   </div>
                 </td>
                 <td class="text-center">
-                  <button (click)="viewUserProducts(user)" class="count-chip">
-                    {{ user.productsCount || 0 }}
-                  </button>
-                </td>
-                <td>
-                  <div class="status-toggle" [class.active]="user.compteActif" (click)="onToggleActive(user.id)">
-                    <div class="toggle-track">
-                      <div class="toggle-thumb"></div>
-                    </div>
-                    <span>{{ user.compteActif ? 'Actif' : 'Bloqué' }}</span>
+                  <div class="user-info" style="display:flex; flex-direction:column; align-items:center; gap:2px;">
+                    <span class="u-name" style="font-weight:500;">{{ user.email }}</span>
+                    <span class="u-sub" style="font-size:0.65rem; color:#718096; font-weight:bold;">{{ user.telephone || 'Non renseigné' }}</span>
                   </div>
                 </td>
-                <td class="text-right">
-                  <div class="action-row">
-                    <button (click)="onEditUser(user)" class="btn-icon edit" title="Modifier">✏️</button>
-                    <button (click)="onDelete(user.id)" class="btn-icon delete" title="Supprimer">🗑️</button>
+                <td class="text-center">
+                  <div class="roles-list" style="justify-content:center;">
+                    <span *ngFor="let role of user.roles" class="tag-role" style="font-size:0.6rem; background:#F1F5F9; padding:2px 6px; border-radius:4px;">{{ role.replace('ROLE_', '') }}</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="count-chip" style="border:1.5px solid #e0f7ff; background:#e0f7ff; color:#007fb1; padding:2px 8px; border-radius:8px; font-weight:700; font-size:0.65rem;">{{ user.productsCount || 0 }}</span>
+                </td>
+                <td class="text-center">
+                   <span class="status-pill-bordered" [ngClass]="{'active': user.compteActif, 'pending': !user.compteActif}" style="font-size:0.55rem; padding:2px 8px;">
+                    {{ user.compteActif ? 'Actif' : 'Bloqué' }}
+                   </span>
+                </td>
+                <td class="text-center">
+                  <div class="action-row" style="justify-content:center; gap:10px;">
+                    <button class="icon-btn-reference info" (click)="viewUserProducts(user)" title="Voir Annonces">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                    <button class="icon-btn-reference success" (click)="onEditUser(user)" title="Modifier">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <button class="icon-btn-reference danger" (click)="onDelete(user.id)" title="Supprimer">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -236,28 +247,50 @@ import { FormsModule } from '@angular/forms';
           </table>
         </div>
       </div>
+    </div>
 
-      <!-- ROLES TABLE -->
-      <div class="card table-card roles-card" *ngIf="view === 'roles'">
+    <div class="admin-page-content" *ngIf="isView('roles') && !showCreateForm">
+      <div class="card table-card roles-card" style="padding: 15px 25px;">
+        <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 15px;">
+            <div class="table-title-area">
+                <h2 style="margin:0; font-size:1.2rem; font-weight:700; color:#1A202C;">Rôles</h2>
+            </div>
+            <div class="table-tools" style="display:flex; align-items:center; gap:25px; margin-left: auto;">
+                <!-- VIEW SWITCHER AS PREMIUM TABS -->
+                <div class="premium-filter-tabs" style="margin-left: auto;">
+                    <button [class.active]="isView('users')" (click)="setView('users')" class="filter-tab">Utilisateurs</button>
+                    <button [class.active]="isView('roles')" (click)="setView('roles')" class="filter-tab">Rôles API</button>
+                </div>
+                <div class="search-input-wrapper">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E7E7E" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Search">
+                </div>
+                <button class="btn-create-luxe" (click)="toggleForm()" style="padding: 10px 20px; font-size: 0.8rem; margin:0; border-radius:12px;">
+                   {{ showCreateForm ? 'Annuler' : '✚ Nouveau' }}
+                </button>
+            </div>
+        </div>
           <div class="table-responsive">
-            <table class="premium-table">
+            <table class="premium-table compact-table">
               <thead>
                 <tr>
-                  <th style="width: 80px; text-align: center;">ID</th>
-                  <th>Nom Système</th>
-                  <th>Description</th>
-                  <th style="width: 150px;" class="text-right">Actions</th>
+                  <th class="text-center">Nom du Rôle</th>
+                  <th class="text-center">Description</th>
+                  <th class="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let role of rolesList">
-                  <td style="text-align: center;"><code class="code-id">#{{ role.id }}</code></td>
-                  <td><span class="role-badge-large">{{ role.name }}</span></td>
-                  <td><p class="role-desc-text">{{ role.description || 'Aucune description' }}</p></td>
-                  <td class="text-right">
-                    <div class="action-row">
-                      <button (click)="onEditRoleItem(role)" class="btn-icon edit">✏️</button>
-                      <button (click)="onDeleteRoleItem(role.id)" class="btn-icon delete">🗑️</button>
+                  <td class="text-center"><span class="u-name" style="font-family:'JetBrains Mono', monospace; font-size:0.65rem;">{{ role.name.replace('ROLE_', '') }}</span></td>
+                  <td class="text-center"><span style="color:#718096; font-size:0.75rem;">{{ role.description || 'Aucune description' }}</span></td>
+                  <td class="text-center">
+                    <div class="action-row" style="justify-content:center; gap:10px;">
+                      <button class="icon-btn-reference success" (click)="onEditRoleItem(role)" title="Modifier">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                      <button class="icon-btn-reference danger" (click)="onDeleteRoleItem(role.id)" title="Supprimer">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -265,6 +298,7 @@ import { FormsModule } from '@angular/forms';
             </table>
           </div>
       </div>
+    </div>
     <div class="admin-compact-wrapper">
       <!-- Modal User Products -->
       <div *ngIf="selectedUserProducts" class="modal-overlay" (click)="selectedUserProducts = null">
@@ -294,6 +328,8 @@ import { FormsModule } from '@angular/forms';
                📭 Aucune annonce pour cet utilisateur.
             </div>
           </div>
+        </div>
+      </div>
       <!-- Custom Confirmation Modal -->
       <div *ngIf="confirmDialog.visible" class="modal-overlay" (click)="confirmDialog.visible = false">
         <div class="modal-premium confirm-modal" (click)="$event.stopPropagation()">
@@ -312,10 +348,10 @@ import { FormsModule } from '@angular/forms';
   `,
   styles: [`
     :host {
-      --primary: #4db6ac;
-      --primary-dark: #00897b;
+      --primary: #00ccff;
+      --primary-dark: #0099cc;
       --noir: #111827;
-      --accent: #e0f2f1;
+      --accent: #e0f7ff;
       --bg: #f8fafc;
       --white: #ffffff;
       --text: #1e293b;
@@ -344,17 +380,19 @@ import { FormsModule } from '@angular/forms';
     /* Pro Toasts */
     .toast-container { position: fixed; top: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 15px; }
     .toast { display: flex; align-items: center; gap: 15px; background: white; padding: 16px 25px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.12); border-left: 6px solid; animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; min-width: 320px; }
-    .toast.success { border-left-color: #10b981; }
+    .toast.success { border-left-color: #00ccff; }
     .toast.error { border-left-color: var(--danger); }
     .toast-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; flex-shrink: 0; font-size: 1rem; }
-    .toast.success .toast-icon { background: #10b981; }
+    .toast.success .toast-icon { background: #00ccff; }
     .toast.error .toast-icon { background: var(--danger); }
     .toast-content { display: flex; flex-direction: column; }
     .toast-title { font-weight: 800; font-size: 0.9rem; color: var(--text); }
     .toast-text { font-size: 0.8rem; color: var(--text-light); }
     @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-    .card { background: white; border-radius: 30px; box-shadow: var(--shadow); border: 1px solid var(--white); overflow: hidden; transition: 0.3s; }
+    .card { background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #EDF2F7; overflow: hidden; transition: 0.3s; }
+    .table-card { border-radius: 24px !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important; border: 1px solid #E2E8F0 !important; }
+    
     .form-card { margin-bottom: 40px; animation: expand 0.4s ease; max-width: 850px; margin-left: auto; margin-right: auto; border: 1px solid rgba(77, 182, 172, 0.1); }
     @keyframes expand { from { transform: scale(0.98); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
@@ -365,32 +403,34 @@ import { FormsModule } from '@angular/forms';
     .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px 30px; }
     .span-3, .span-2 { grid-column: span 2; }
     @media (max-width: 800px) { .span-3, .span-2 { grid-column: span 1; } .form-grid { grid-template-columns: 1fr; } }
-    .field { display: flex; flex-direction: column; gap: 2px; }
-    .field label { font-size: 0.58rem; font-weight: 1000; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px; padding-left: 10px; }
-    .field input { padding: 6px 14px; border-radius: 30px; border: 1.5px solid var(--border); background: #fafdfd; font-size: 0.7rem; transition: 0.2s; width: 85%; border-right: 2px solid transparent; height: 28px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.65rem; font-weight: 1000; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px; padding-left: 12px; }
+    .field input { padding: 0 20px; border-radius: 30px; border: 1.5px solid var(--border); background: #fafdfd; font-size: 0.75rem; transition: 0.2s; width: 100%; border-right: 3px solid transparent; height: 42px; box-sizing: border-box; }
     .field input:focus { border-color: var(--primary); outline: none; background: white; border-right-color: var(--primary); box-shadow: 0 4px 10px rgba(77, 182, 172, 0.05); }
     .field input.invalid { border-color: #ef4444; background: #fffafb; border-right-color: #ef4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.05); }
-    .label-row { display: flex; align-items: center; gap: 5px; }
-    .field-status { font-size: 0.55rem; font-weight: 400; padding: 1px 6px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; }
-    .field-status.ok  { color: #059669; background: #ecfdf5; }
+    .label-row { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+    .field-status { font-size: 0.58rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .field-status.ok  { color: #0099cc; background: #e0f7ff; }
     .field-status.err { color: #ef4444; background: #fff1f2; }
 
     .role-pills-selector { display: flex; flex-wrap: wrap; gap: 10px; }
     .role-pills-selector button { padding: 8px 16px; border-radius: 50px; border: 1.5px solid var(--border); background: white; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
     .role-pills-selector button.selected { background: var(--accent); color: var(--primary-dark); border-color: var(--primary); }
     
-    .form-footer { margin-top: 20px; padding: 15px 35px; background: #fafdfd; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
-    .btn-primary { background: var(--primary); color: white; border: none; padding: 8px 22px; border-radius: 40px; font-weight: 900; font-size: 0.75rem; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 12px rgba(77, 182, 172, 0.15); display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px; }
-    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); box-shadow: 0 8px 18px rgba(77, 182, 172, 0.25); }
+    .form-footer { margin-top: 30px; padding: 20px 35px; background: #fafdfd; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+    .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 35px; border-radius: 40px; font-weight: 900; font-size: 0.85rem; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(0, 204, 255, 0.2); display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1.5px; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(0, 204, 255, 0.3); }
     
-    .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
+    .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .premium-table { width: 100%; border-collapse: collapse; border: 1.5px solid var(--border); font-size: 0.8rem; }
-    .premium-table th { background: #fafdfd; padding: 10px 18px; text-align: left; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-light); border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); }
-    .premium-table th:last-child { border-right: none; }
-    .premium-table td { padding: 10px 18px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); vertical-align: middle; }
-    .premium-table td:last-child { border-right: none; }
+    .table-responsive { border-radius: 16px; overflow: hidden; border: 1px solid #EDF2F7; }
+    .premium-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.7rem; }
+    .premium-table th { background: #F8FAFC; padding: 14px 16px; text-align: center; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: #64748B; border-bottom: 1px solid #EDF2F7; }
+    .premium-table td { padding: 12px 16px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; text-align: center; background: white; transition: background 0.2s; }
+    .premium-table tr:hover td { background: #F9FBFF; }
+    .premium-table tr:last-child td { border-bottom: none; }
+    .text-center { text-align: center !important; }
     .code-id { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; }
     
     .user-profile { display: flex; align-items: center; gap: 12px; }
@@ -412,10 +452,12 @@ import { FormsModule } from '@angular/forms';
     .status-toggle span { font-size: 0.75rem; font-weight: 700; color: var(--text-light); }
     .active span { color: var(--primary-dark); }
 
-    .action-row { display: flex; gap: 8px; justify-content: flex-end; }
-    .btn-icon { width: 34px; height: 34px; border-radius: 10px; border: 1px solid #eee; background: white; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-    .btn-icon:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.06); border-color: var(--primary); }
-    .btn-icon.delete:hover { border-color: var(--danger); color: var(--danger); }
+    .action-row { display: flex; gap: 10px; justify-content: center; }
+    .icon-btn-reference { background: transparent; border: none; padding: 2px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .icon-btn-reference:hover { transform: scale(1.1); filter: brightness(0.8); }
+    .icon-btn-reference.info { color: #5c6c7b; }
+    .icon-btn-reference.success { color: #0099cc; }
+    .icon-btn-reference.danger { color: #ef4444; }
 
     .role-badge-large { font-weight: 950; color: var(--primary-dark); font-size: 1rem; letter-spacing: 0.5px; text-transform: uppercase; }
     .role-info { display: flex; flex-direction: column; gap: 6px; padding: 5px 0; }
@@ -428,9 +470,9 @@ import { FormsModule } from '@angular/forms';
     .role-checkbox input { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
     .role-checkbox label { cursor: pointer; text-transform: none; letter-spacing: normal; color: inherit; font-size: inherit; margin: 0; }
 
-    .premium-switches { display: flex; gap: 20px; align-items: center; background: #fafdfd; border: 1.5px solid var(--border); padding: 5px 20px; border-radius: 40px; height: 42px; }
-    .switch-item { display: flex; align-items: center; gap: 8px; }
-    .switch-label { font-size: 0.6rem; font-weight: 1000; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .premium-switches { display: flex; gap: 20px; align-items: center; background: #fafdfd; border: 1.5px solid var(--border); padding: 0 25px; border-radius: 40px; height: 42px; width: 100%; box-sizing: border-box; }
+    .switch-item { display: flex; align-items: center; gap: 12px; }
+    .switch-label { font-size: 0.65rem; font-weight: 1000; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(38, 50, 56, 0.4); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
@@ -473,16 +515,49 @@ import { FormsModule } from '@angular/forms';
     .text-center { text-align: center; }
     .content-header h1 span { color: var(--primary); font-weight: 900; }
     
-    .view-switcher-premium { display: flex; background: rgba(255,255,255,0.8); padding: 5px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-    .view-switcher-premium button { border: none; background: transparent; padding: 10px 20px; border-radius: 12px; font-weight: 800; font-size: 0.8rem; color: var(--text-light); cursor: pointer; transition: 0.3s; }
-    .view-switcher-premium button.active { background: var(--noir); color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .view-switcher-premium { display: none; }
     
-    .btn-create-luxe { background: var(--primary); color: white; border: none; padding: 12px 28px; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(0, 105, 92, 0.25); }
-    .btn-create-luxe:hover { transform: translateY(-3px); background: var(--primary-dark); box-shadow: 0 12px 25px rgba(0, 105, 92, 0.35); }
+    .premium-filter-tabs {
+        display: flex;
+        gap: 2px;
+        background: #F9FBFF;
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid #EEEEEE;
+    }
+    .filter-tab {
+        border: none;
+        background: transparent;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #9199AF;
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .filter-tab:hover {
+        color: #1A202C;
+        background: rgba(255,255,255,0.5);
+    }
+    .filter-tab.active {
+        background: white;
+        color: #00ccff;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    
+    .btn-create-luxe { background: var(--primary); color: white; border: none; padding: 10px 24px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 20px rgba(0, 204, 255, 0.25); }
+    .btn-create-luxe:hover { transform: translateY(-3px); background: var(--primary-dark); box-shadow: 0 12px 25px rgba(0, 204, 255, 0.35); }
+    
+    .compact-table { font-size: 0.75rem !important; }
+    .compact-table th { padding: 8px 10px !important; font-size: 0.6rem !important; }
+    .compact-table td { padding: 6px 10px !important; font-size: 0.75rem !important; }
   `]
 })
 export class UserManagementComponent implements OnInit {
   private adminService = inject(AdminService);
+  private cdr = inject(ChangeDetectorRef);
 
   view: 'users' | 'roles' = 'users';
   users: any[] = [];
@@ -524,21 +599,42 @@ export class UserManagementComponent implements OnInit {
     callback: () => { }
   };
 
+  isView(v: string): boolean {
+    return this.view === v;
+  }
+
+  setView(v: 'users' | 'roles') {
+    this.view = v;
+  }
+
   ngOnInit() {
     this.loadUsers();
     this.loadRoles();
   }
 
+  ngOnDestroy() {
+  }
+
   loadUsers() {
     this.adminService.getUsers().subscribe({
-      next: (data) => this.users = data,
+      next: (data) => {
+        setTimeout(() => {
+          this.users = data;
+          this.cdr.detectChanges();
+        }, 0);
+      },
       error: () => this.showError("Erreur de chargement des utilisateurs.")
     });
   }
 
   loadRoles() {
     this.adminService.getRoles().subscribe({
-      next: (data) => this.rolesList = data,
+      next: (data) => {
+        setTimeout(() => {
+          this.rolesList = data;
+          this.cdr.detectChanges();
+        }, 0);
+      },
       error: () => this.showError("Erreur de chargement des rôles.")
     });
   }

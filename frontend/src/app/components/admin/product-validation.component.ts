@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 
@@ -9,108 +9,96 @@ import { AdminService } from '../../services/admin.service';
   template: `
     <div class="admin-page-container">
       <div class="admin-compact-wrapper">
-        <header class="content-header">
-          <h1>Gestion des Annonces</h1>
-      </header>
-
-      <div class="filter-bar">
-        <div class="tabs-premium">
-          <button [class.active]="currentFilter === 'EN_ATTENTE'" (click)="setFilter('EN_ATTENTE')">
-            <span class="dot warning"></span> En Attente
-          </button>
-          <button [class.active]="currentFilter === 'VALIDE'" (click)="setFilter('VALIDE')">
-            <span class="dot info"></span> Validées
-          </button>
-          <button [class.active]="currentFilter === 'ACTIVEE'" (click)="setFilter('ACTIVEE')">
-            <span class="dot success"></span> Actives
-          </button>
-          <button [class.active]="currentFilter === 'REFUSE'" (click)="setFilter('REFUSE')">
-            <span class="dot danger"></span> Refusées
-          </button>
-          <button [class.active]="currentFilter === 'ALL'" (click)="setFilter('ALL')">
-             Toutes
-          </button>
+        <div class="admin-page-content">
+      <div class="card table-card" style="padding: 30px;">
+        <div class="table-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 25px;">
+          <div class="table-title-area">
+            <h2 style="margin:0; font-size:1.4rem; font-weight:700; color:#1A202C;">Annonces</h2>
+          </div>
+          
+          <div class="table-tools" style="display:flex; align-items:center; gap:20px;">
+            <div class="search-input-wrapper">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7E7E7E" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" placeholder="Search">
+            </div>
+            
+            <div class="sort-by">
+                Filtre : 
+                <select (change)="onFilterDropdownChange($event)" style="border:none; background:transparent; font-weight:700; color:#1A202C; cursor:pointer; outline:none; font-family:inherit; font-size:inherit; -webkit-appearance:none; padding-right:15px; background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAiIGhlaWdodD0iNiIgdmlld0JveD0iMCAwIDEwIDYiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMUw1IDVMOSAxIiBzdHJva2U9IiMxQTIwMkMiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=') no-repeat right center;">
+                    <option value="EN_ATTENTE" [selected]="currentFilter === 'EN_ATTENTE'">En attente</option>
+                    <option value="ACTIVEE" [selected]="currentFilter === 'ACTIVEE'">Active</option>
+                    <option value="VALIDE" [selected]="currentFilter === 'VALIDE'">Validée</option>
+                    <option value="REFUSE" [selected]="currentFilter === 'REFUSE'">Refusée</option>
+                    <option value="ALL" [selected]="currentFilter === 'ALL'">Toutes</option>
+                </select>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="card table-card">
         <div class="table-responsive">
           <table class="premium-table">
             <thead>
               <tr>
-                <th width="70" class="text-center">ID</th>
-                <th>Produit</th>
-                <th>Annonceur</th>
-                <th width="110">Date</th>
-                <th width="100">Statut</th>
-                <th class="text-right">Actions</th>
+                <th class="text-center">Titre du Produit</th>
+                <th class="text-center">Annonceur</th>
+                <th class="text-center">Date Publication</th>
+                <th class="text-center">Statut</th>
+                <th class="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let prod of filteredProducts">
-                <td class="text-center"><code class="code-id">#{{ prod.id }}</code></td>
-                <td>
-                  <div class="product-cell">
-                    <div class="p-thumb">
-                      <img *ngIf="prod.imageUrl" [src]="prod.imageUrl" alt="Thumb">
-                      <span *ngIf="!prod.imageUrl">{{ prod.titreProduit?.charAt(0) }}</span>
-                    </div>
-                    <div class="p-meta">
-                      <span class="p-name">{{ prod.titreProduit }}</span>
-                      <span class="p-loc">{{ prod.villeLocalisation }}</span>
-                    </div>
+                <td class="text-center">
+                  <div class="table-user-cell" style="justify-content:center;">
+                    <span class="u-name">{{ prod.titreProduit }}</span>
                   </div>
                 </td>
-                <td>
-                  <div class="user-info">
-                    <strong>{{ prod.annonceur?.nomComplet }}</strong>
-                    <span class="email-sub">{{ prod.annonceur?.adresseEmail }}</span>
-                  </div>
+                <td class="text-center">
+                    <span class="u-name" style="color:#292D32;">{{ prod.annonceur?.nomComplet }}</span>
                 </td>
-                <td>{{ prod.dateSoumission | date:'dd/MM/yyyy' }}</td>
-                <td>
-                  <span class="status-pill-bordered" [ngClass]="prod.statutValidation.toLowerCase()">
-                    {{ prod.statutValidation }}
+                <td class="text-center">{{ prod.dateSoumission | date:'dd MMM yyyy' }}</td>
+                <td class="text-center">
+                   <span class="status-pill-bordered" [ngClass]="prod.statutValidation?.toLowerCase()">
+                    {{ prod.statutValidation === 'EN_ATTENTE' ? 'En attente' : prod.statutValidation === 'VALIDE' ? 'Validée' : prod.statutValidation === 'ACTIVEE' ? 'Active' : prod.statutValidation === 'REFUSE' ? 'Refusée' : prod.statutValidation }}
                   </span>
                 </td>
-                <td class="actions-cell text-right">
-                  <div class="action-group">
-                    <button (click)="viewDetail(prod)" class="icon-btn info" title="Détails">👁️</button>
-                    <button (click)="onEdit(prod)" class="icon-btn warning" title="Modifier">✏️</button>
-
-                    <!-- Actions pour EN_ATTENTE -->
+                <td class="text-center">
+                  <div class="action-group" style="justify-content:center;">
+                    <!-- DETAILS -->
+                    <button class="icon-btn-reference info" (click)="viewDetail(prod)" title="Détails">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                    <!-- EDIT -->
+                    <button class="icon-btn-reference success" (click)="onEdit(prod)" title="Modifier">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </button>
+                    <!-- VALIDATION ACTIONS IF PENDING -->
                     <ng-container *ngIf="prod.statutValidation === 'EN_ATTENTE'">
-                      <button (click)="onValidate(prod.id)" class="text-btn success" [disabled]="loadingId === prod.id">
-                        <span>Valider</span>
+                      <button class="icon-btn-reference success-check" (click)="onValidate(prod.id!)" title="Valider">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                       </button>
-                      <button (click)="onReject(prod.id)" class="text-btn danger" [disabled]="loadingId === prod.id">
-                        <span>Refuser</span>
-                      </button>
-                    </ng-container>
-                    
-                    <ng-container *ngIf="prod.statutValidation === 'VALIDE'">
-                      <button (click)="onSimulatePayment(prod.id)" class="text-btn primary" [disabled]="loadingId === prod.id">
-                        <div class="spinner-mini" *ngIf="loadingId === prod.id"></div>
-                        <span>{{ loadingId === prod.id ? '...' : 'Activer' }}</span>
+                      <button class="icon-btn-reference danger-x" (click)="onReject(prod.id!)" title="Refuser">
+                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                       </button>
                     </ng-container>
-
-                    <ng-container *ngIf="prod.statutValidation === 'ACTIVEE' || prod.statutValidation === 'VALIDE' || prod.statutValidation === 'REFUSE'">
-                      <button (click)="onArchive(prod.id)" class="icon-btn archive" title="Archiver" [disabled]="loadingId === prod.id">📦</button>
-                    </ng-container>
-
-                    <button (click)="onDelete(prod.id)" class="icon-btn delete" title="Supprimer" [disabled]="loadingId === prod.id">🗑️</button>
+                    <!-- DELETE -->
+                    <button class="icon-btn-reference danger" (click)="onDelete(prod.id!)" title="Supprimer">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
                   </div>
                 </td>
               </tr>
               <tr *ngIf="filteredProducts.length === 0">
-                <td colspan="5" class="empty-row">Aucune annonce trouvée pour ce filtre.</td>
+                <td colspan="5" class="empty-row" style="text-align:center; padding:40px; color:#B5B7C0;">Aucune annonce trouvée pour ce filtre.</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
-
+    </div>
+    <style>
+      /* Styles are now handled via global classes or inline for specific dropdown logic */
+    </style>
       <!-- MODAL DETAILS -->
       <div *ngIf="selectedProduct" class="modal-overlay" (click)="selectedProduct = null">
         <div class="modal-premium" (click)="$event.stopPropagation()">
@@ -185,10 +173,10 @@ import { AdminService } from '../../services/admin.service';
   `,
   styles: [`
     :host {
-      --primary: #4db6ac;
-      --primary-dark: #00897b;
+      --primary: #00ccff;
+      --primary-dark: #0099cc;
       --noir: #111827;
-      --accent: #e0f2f1;
+      --accent: #e0f7ff;
       --bg: #f8fafc;
       --white: #ffffff;
       --text: #1e293b;
@@ -196,7 +184,7 @@ import { AdminService } from '../../services/admin.service';
       --border: #e2e8f0;
       --shadow: 0 10px 25px rgba(0, 137, 123, 0.08);
       --danger: #ef4444;
-      --success: #10b981;
+      --success: #00ccff;
       --warning: #f59e0b;
       --info: #3b82f6;
     }
@@ -237,52 +225,44 @@ import { AdminService } from '../../services/admin.service';
     .content-header h1 { font-size: 1.8rem; font-weight: 900; color: var(--noir); letter-spacing: -1px; }
     .content-header h1 span { color: var(--primary); }
 
-    .filter-bar { margin-bottom: 20px; }
-    .tabs-premium { display: flex; gap: 6px; background: white; padding: 4px; border-radius: 50px; width: fit-content; box-shadow: var(--shadow); border: 1px solid var(--white); }
-    .tabs-premium button { padding: 6px 16px; border: none; background: transparent; border-radius: 50px; font-weight: 800; font-size: 0.65rem; color: var(--text-light); cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 5px; text-transform: uppercase; letter-spacing: 0.3px; }
-    .tabs-premium button:hover { background: #f0fdf9; color: var(--primary); }
-    .tabs-premium button.active { background: var(--noir); color: white; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
-    
-    .dot { width: 8px; height: 8px; border-radius: 50%; }
-    .dot.warning { background: var(--warning); }
-    .dot.info { background: var(--info); }
-    .dot.success { background: var(--success); }
-    .dot.danger { background: var(--danger); }
-    .active .dot { background: white; }
+    .card { background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #EDF2F7; overflow: hidden; transition: 0.3s; }
+    .table-card { border-radius: 24px !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02) !important; border: 1px solid #E2E8F0 !important; }
 
-    .table-card { background: white; border-radius: 30px; padding: 0; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--white); }
-    .premium-table { width: 100%; border-collapse: collapse; border: 1.5px solid var(--border); font-size: 0.75rem; }
-    .premium-table th { background: #fafdfd; padding: 8px 15px; text-align: left; font-size: 0.6rem; font-weight: 900; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); }
-    .premium-table th:last-child { border-right: none; }
-    .premium-table td { padding: 8px 15px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); vertical-align: middle; }
-    .premium-table td:last-child { border-right: none; }
+    .table-responsive { border-radius: 16px; overflow: hidden; border: 1px solid #EDF2F7; }
+    .premium-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.70rem; }
+    .premium-table th { background: #F8FAFC; padding: 14px 16px; text-align: center; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: #64748B; border-bottom: 1px solid #EDF2F7; }
+    .premium-table td { padding: 12px 16px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; text-align: center; background: white; transition: background 0.2s; }
+    .premium-table tr:hover td { background: #F9FBFF; }
+    .premium-table tr:last-child td { border-bottom: none; }
+    .text-center { text-align: center !important; }
     
-    .product-cell { display: flex; align-items: center; gap: 12px; }
+    .product-cell { display: flex; align-items: center; gap: 8px; }
     .p-thumb { width: 44px; height: 44px; background: var(--accent); color: var(--primary-dark); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1rem; overflow: hidden; }
     .p-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .p-meta { display: flex; flex-direction: column; }
-    .p-name { font-weight: 800; font-size: 0.85rem; color: var(--text); }
-    .p-loc { font-size: 0.7rem; color: var(--text-light); }
+    .p-name { font-weight: 800; font-size: 0.8rem; color: var(--text); }
+    .p-loc { font-size: 0.65rem; color: var(--text-light); }
     
-    .category-tag { background: #f0fdf9; color: var(--primary-dark); padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.7rem; }
+    .category-tag { background: #e0f7ff; color: var(--primary-dark); padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.7rem; }
     .user-info { display: flex; flex-direction: column; }
-    .user-info strong { font-size: 0.8rem; color: var(--text); }
-    .email-sub { font-size: 0.7rem; color: var(--text-light); }
+    .user-info strong { font-size: 0.75rem; color: var(--text); }
+    .email-sub { font-size: 0.65rem; color: var(--text-light); }
 
-    .status-pill-bordered { padding: 3px 10px; border-radius: 50px; font-size: 0.58rem; font-weight: 1000; text-transform: uppercase; border: 1.5px solid transparent; }
-    .status-pill-bordered.en_attente { border-color: var(--warning); color: var(--warning); background: #fffdf7; }
+    .status-pill-bordered { padding: 4px 12px; border-radius: 50px; font-size: 0.55rem; font-weight: 1000; text-transform: uppercase; border: 1.5px solid transparent; }
+    .status-pill-bordered.en_attente { border-color: #f59e0b; color: #f59e0b; background: rgba(245, 158, 11, 0.05); }
     .status-pill-bordered.valide { border-color: var(--info); color: var(--info); background: #f0f9ff; }
-    .status-pill-bordered.activee { border-color: var(--primary); color: var(--primary-dark); background: #f0fdfa; }
+    .status-pill-bordered.activee { border-color: var(--primary); color: var(--primary-dark); background: #e0f7ff; }
     .status-pill-bordered.refuse { border-color: var(--danger); color: var(--danger); background: #fef2f2; }
     .status-pill-bordered.archive { border-color: var(--text-light); color: var(--text-light); background: #f9fafb; }
 
-    .action-group { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
-    .icon-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid #eee; background: white; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-    .icon-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-    .icon-btn.info:hover { border-color: var(--info); }
-    .icon-btn.warning:hover { border-color: var(--warning); }
-    .icon-btn.archive:hover { border-color: var(--primary); }
-    .icon-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
+    .action-group { display: flex; align-items: center; gap: 6px; justify-content: center; }
+    .icon-btn-reference { background: transparent; border: none; padding: 2px; border-radius: 4px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .icon-btn-reference:hover { transform: scale(1.1); filter: brightness(0.8); }
+    .icon-btn-reference.info { color: #5c6c7b; }
+    .icon-btn-reference.success { color: #0099cc; }
+    .icon-btn-reference.success-check { color: #00ccff; }
+    .icon-btn-reference.danger-x { color: #ef4444; }
+    .icon-btn-reference.danger { color: #ef4444; }
     
     .text-btn { padding: 5px 10px; border-radius: 9px; font-weight: 800; font-size: 0.6rem; border: none; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
     .text-btn.success { background: var(--success); color: white; }
@@ -325,9 +305,10 @@ import { AdminService } from '../../services/admin.service';
 })
 export class ProductValidationComponent implements OnInit {
   private adminService = inject(AdminService);
+  private cdr = inject(ChangeDetectorRef);
   allProducts: any[] = [];
   filteredProducts: any[] = [];
-  currentFilter: string = 'EN_ATTENTE';
+  currentFilter: string = 'ALL';
   selectedProduct: any = null;
   loadingId: number | null = null;
 
@@ -347,14 +328,22 @@ export class ProductValidationComponent implements OnInit {
 
   loadProducts() {
     this.adminService.getAllProducts().subscribe(data => {
-      this.allProducts = data;
-      this.applyFilter();
+      setTimeout(() => {
+        this.allProducts = data;
+        this.applyFilter();
+        this.cdr.detectChanges();
+      }, 0);
     });
   }
 
   setFilter(filter: string) {
     this.currentFilter = filter;
     this.applyFilter();
+  }
+
+  onFilterDropdownChange(event: any) {
+    const val = event.target.value;
+    this.setFilter(val);
   }
 
   applyFilter() {

@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 
@@ -63,8 +63,8 @@ import { AdminService } from '../../services/admin.service';
   `,
   styles: [`
     :host {
-      --primary: #4db6ac;
-      --primary-dark: #00897b;
+      --primary: #00ccff;
+      --primary-dark: #0099cc;
       --bg: #f8fafc;
       --border: #e2e8f0;
       --shadow: 0 10px 25px rgba(0, 137, 123, 0.08);
@@ -124,6 +124,7 @@ import { AdminService } from '../../services/admin.service';
 })
 export class AdminLogsComponent implements OnInit {
   private adminService = inject(AdminService);
+  private cdr = inject(ChangeDetectorRef);
   logs: any[] = [];
 
   ngOnInit() {
@@ -132,9 +133,12 @@ export class AdminLogsComponent implements OnInit {
 
   loadLogs() {
     this.adminService.getActivityLogs().subscribe(data => {
-      this.logs = data.sort((a: any, b: any) =>
-        new Date(b.dateValidation).getTime() - new Date(a.dateValidation).getTime()
-      );
+      setTimeout(() => {
+        this.logs = data.sort((a: any, b: any) =>
+          new Date(b.dateValidation).getTime() - new Date(a.dateValidation).getTime()
+        );
+        this.cdr.detectChanges();
+      }, 0);
     });
   }
 
