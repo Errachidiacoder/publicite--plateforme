@@ -1,5 +1,6 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -29,13 +30,16 @@ public class Categorie {
     @Column(name = "categorie_active", nullable = false)
     private Boolean categorieActive = true;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_parente_id")
     private Categorie categorieParente;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "categorieParente", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Categorie> sousCategories;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "categorie", fetch = FetchType.LAZY)
     private List<Produit> produits;
 

@@ -100,6 +100,7 @@ public class StatistiqueAnnonce {
     // Relation 0..* StatistiqueAnnonce → 1 Produit (composition)
     // ─────────────────────────────────────────────
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_suivi_id", nullable = false)
     private Produit produitSuivi;

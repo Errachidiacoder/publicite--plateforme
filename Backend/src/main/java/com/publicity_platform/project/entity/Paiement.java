@@ -118,6 +118,7 @@ public class Paiement {
     // Relation 1 Paiement → 1 Commande (composition)
     // ─────────────────────────────────────────────
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commande_id", nullable = false)
     private Commande commande;

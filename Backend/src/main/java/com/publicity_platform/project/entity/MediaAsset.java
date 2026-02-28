@@ -1,5 +1,6 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -111,6 +112,7 @@ public class MediaAsset {
     // Relation 1..* MediaAsset → 1 Produit (composition)
     // ─────────────────────────────────────────────
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_id", nullable = false)
     private Produit produit;

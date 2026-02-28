@@ -1,5 +1,6 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.publicity_platform.project.enumm.MethodePaiement;
 import com.publicity_platform.project.enumm.StatutCommande;
 import jakarta.persistence.*;
@@ -131,17 +132,37 @@ public class Commande {
         // ─────────────────────────────────────────────
 
         /** 0..* Commandes → 1 Utilisateur (acheteur) */
+        @JsonIgnore
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "acheteur_id", nullable = false)
         private Utilisateur acheteur;
 
         /** 1 Commande contient 1..* LigneCommande (composition) */
+        @JsonIgnore
         @OneToMany(mappedBy = "commandeParente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
         private List<LigneCommande> lignes;
 
         /** 1 Commande génère 1 Paiement (composition) */
+        @JsonIgnore
         @OneToOne(mappedBy = "commande", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
         private Paiement paiement;
+
+        // ─── Champs SouqBladi ───────────────────────
+
+        @Column(name = "adresse_livraison", columnDefinition = "TEXT")
+        private String adresseLivraison;
+
+        @Column(name = "telephone_contact")
+        private String telephoneContact;
+
+        @Column(name = "notes_livraison", columnDefinition = "TEXT")
+        private String notesLivraison;
+
+        /** Le livreur assigné à cette commande */
+        @JsonIgnore
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "livreur_id")
+        private Utilisateur livreur;
 
         // Explicit Getters and Setters
         public Long getId() {
@@ -242,4 +263,38 @@ public class Commande {
          * .sum();
          * }
          */
+
+        // ─── Getters & Setters SouqBladi ───────────
+
+        public String getAdresseLivraison() {
+                return adresseLivraison;
+        }
+
+        public void setAdresseLivraison(String adresseLivraison) {
+                this.adresseLivraison = adresseLivraison;
+        }
+
+        public String getTelephoneContact() {
+                return telephoneContact;
+        }
+
+        public void setTelephoneContact(String telephoneContact) {
+                this.telephoneContact = telephoneContact;
+        }
+
+        public String getNotesLivraison() {
+                return notesLivraison;
+        }
+
+        public void setNotesLivraison(String notesLivraison) {
+                this.notesLivraison = notesLivraison;
+        }
+
+        public Utilisateur getLivreur() {
+                return livreur;
+        }
+
+        public void setLivreur(Utilisateur livreur) {
+                this.livreur = livreur;
+        }
 }

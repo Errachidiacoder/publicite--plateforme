@@ -1,5 +1,6 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -31,6 +32,7 @@ public class Utilisateur implements UserDetails {
     @Column(name = "adresse_email", nullable = false, unique = true)
     private String adresseEmail;
 
+    @JsonIgnore
     @NotBlank
     @Column(name = "mot_de_passe_hache", nullable = false)
     private String motDePasseHache;
@@ -51,23 +53,55 @@ public class Utilisateur implements UserDetails {
     @Column(name = "date_inscription", nullable = false, updatable = false)
     private LocalDateTime dateInscription;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "annonceur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Produit> produits;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "destinataire", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<TokenReinitialisation> tokens;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "acheteur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Commande> commandes;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "adminResponsable", fetch = FetchType.LAZY)
     private List<HistoriqueValidation> historiquesEffectues;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<HistoriqueNavigation> historiquesNavigation;
+
+    // ─── Champs SouqBladi ───────────────────────
+
+    @Column(name = "ville")
+    private String ville;
+
+    @Column(name = "adresse_complete")
+    private String adresseComplete;
+
+    /** Carte Nationale d'Identité */
+    @Column(name = "cni")
+    private String cni;
+
+    // ─── Relations SouqBladi ────────────────────
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "proprietaire", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Boutique boutique;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Adresse> adresses;
+
+    @JsonIgnore
+    @OneToOne(mappedBy = "utilisateur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Panier panier;
 
     @PrePersist
     protected void onCreate() {
@@ -254,6 +288,56 @@ public class Utilisateur implements UserDetails {
 
     public void setHistoriquesNavigation(List<HistoriqueNavigation> historiquesNavigation) {
         this.historiquesNavigation = historiquesNavigation;
+    }
+
+    // ─── Getters & Setters SouqBladi ───────────
+
+    public String getVille() {
+        return ville;
+    }
+
+    public void setVille(String ville) {
+        this.ville = ville;
+    }
+
+    public String getAdresseComplete() {
+        return adresseComplete;
+    }
+
+    public void setAdresseComplete(String adresseComplete) {
+        this.adresseComplete = adresseComplete;
+    }
+
+    public String getCni() {
+        return cni;
+    }
+
+    public void setCni(String cni) {
+        this.cni = cni;
+    }
+
+    public Boutique getBoutique() {
+        return boutique;
+    }
+
+    public void setBoutique(Boutique boutique) {
+        this.boutique = boutique;
+    }
+
+    public List<Adresse> getAdresses() {
+        return adresses;
+    }
+
+    public void setAdresses(List<Adresse> adresses) {
+        this.adresses = adresses;
+    }
+
+    public Panier getPanier() {
+        return panier;
+    }
+
+    public void setPanier(Panier panier) {
+        this.panier = panier;
     }
 
     @Override

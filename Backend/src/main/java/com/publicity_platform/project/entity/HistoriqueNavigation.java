@@ -1,5 +1,6 @@
 package com.publicity_platform.project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -109,17 +110,19 @@ public class HistoriqueNavigation {
     // Relations
     // ─────────────────────────────────────────────
 
-    /** 0..* HistoriqueNavigation → 1 Utilisateur (peut être null si anonyme) */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "utilisateur_id")
     private Utilisateur utilisateur;
 
     /** 0..* HistoriqueNavigation → 1 Produit consulté */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_consulte_id")
     private Produit produitConsulte;
 
     /** 0..* HistoriqueNavigation → 1 Categorie visitée */
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_visitee_id")
     private Categorie categorieVisitee;
