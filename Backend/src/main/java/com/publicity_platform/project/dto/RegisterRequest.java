@@ -5,6 +5,8 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String telephone;
+    private String typeActivite;
+    private String ville;
 
     public RegisterRequest() {
     }
@@ -81,5 +83,21 @@ public class RegisterRequest {
 
     public void setTelephone(String telephone) {
         this.telephone = telephone;
+    }
+
+    public String getTypeActivite() {
+        return typeActivite;
+    }
+
+    public void setTypeActivite(String typeActivite) {
+        this.typeActivite = typeActivite;
+    }
+
+    public String getVille() {
+        return ville;
+    }
+
+    public void setVille(String ville) {
+        this.ville = ville;
     }
 }

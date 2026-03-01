@@ -9,15 +9,17 @@ import { AdminLogsComponent } from './components/admin/admin-logs.component';
 import { UserManagementComponent } from './components/admin/user-management.component';
 import { CategoryManagementComponent } from './components/admin/category-management.component';
 import { ProductDetailComponent } from './components/product-detail.component';
-import { PaymentComponent } from './components/payment.component';
-import { MyAdsComponent } from './components/my-ads.component';
-import { UserProfileComponent } from './components/user-profile.component';
-import { WishlistComponent } from './components/wishlist.component';
+import { PanierComponent } from './components/panier.component';
 import { authGuard } from './guards/auth.guard';
-
 
 import { roleGuard } from './guards/role.guard';
 import { AdminLayoutComponent } from './components/admin/admin-layout.component';
+
+import { VendeurLayoutComponent } from './components/vendeur/vendeur-layout.component';
+import { VendeurDashboardComponent } from './components/vendeur/vendeur-dashboard.component';
+import { VendeurProduitsComponent } from './components/vendeur/vendeur-produits.component';
+import { VendeurCommandesComponent } from './components/vendeur/vendeur-commandes.component';
+import { VendeurEtudeComponent } from './components/vendeur/vendeur-etude.component';
 
 export const routes: Routes = [
     // Public routes
@@ -25,39 +27,33 @@ export const routes: Routes = [
     { path: 'home', component: HomeComponent },
     { path: 'product/:id', component: ProductDetailComponent },
     { path: 'login', component: LoginComponent },
-
     { path: 'register', component: RegisterComponent },
 
-    // Requires login (any authenticated user)
+    // Requires login
+    {
+        path: 'panier',
+        component: PanierComponent,
+        canActivate: [authGuard]
+    },
     {
         path: 'submit-product',
         component: ProductSubmissionComponent,
         canActivate: [authGuard]
     },
+
+    // Vendor routes
     {
-        path: 'payment/:id',
-        component: PaymentComponent,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'my-ads',
-        component: MyAdsComponent,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'edit-product/:id',
-        component: ProductSubmissionComponent,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'profile',
-        component: UserProfileComponent,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'wishlist',
-        component: WishlistComponent,
-        canActivate: [authGuard]
+        path: 'vendeur',
+        component: VendeurLayoutComponent,
+        canActivate: [roleGuard],
+        data: { roles: ['ROLE_AUTO_ENTREPRENEUR', 'ROLE_MAGASIN', 'ROLE_COOPERATIVE', 'ROLE_SARL', 'ROLE_ANNONCEUR'] },
+        children: [
+            { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+            { path: 'dashboard', component: VendeurDashboardComponent },
+            { path: 'produits', component: VendeurProduitsComponent },
+            { path: 'commandes', component: VendeurCommandesComponent },
+            { path: 'etude', component: VendeurEtudeComponent }
+        ]
     },
 
     // Admin-only routes (SUPERADMIN or ADJOINTADMIN)
@@ -72,12 +68,9 @@ export const routes: Routes = [
             { path: 'products', component: ProductValidationComponent },
             { path: 'users', component: UserManagementComponent },
             { path: 'categories', component: CategoryManagementComponent },
-            { path: 'logs', component: AdminLogsComponent },
-
+            { path: 'logs', component: AdminLogsComponent }
         ]
     },
-
-
 
     // Fallback
     { path: '**', redirectTo: '/home' }

@@ -101,11 +101,13 @@ public class InteractionUtilisateur {
     // ─────────────────────────────────────────────
 
     /** 0..* InteractionUtilisateur → 1 Produit recommandé */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_recommande_id", nullable = false)
     private Produit produitRecommande;
 
     /** 0..* InteractionUtilisateur → 1 Utilisateur ciblé */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "utilisateur_cible_id", nullable = false)
     private Utilisateur utilisateurCible;

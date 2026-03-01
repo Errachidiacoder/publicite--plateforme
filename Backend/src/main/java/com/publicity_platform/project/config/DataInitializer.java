@@ -36,24 +36,36 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner initData() {
         return args -> {
-            // Create roles
+            // Rôles de base
             createRoleIfNotFound("SUPERADMIN");
             createRoleIfNotFound("ADJOINTADMIN");
             createRoleIfNotFound("ANNONCEUR");
             createRoleIfNotFound("CLIENT");
             createRoleIfNotFound("VISITEUR");
 
-            // Create default categories
+            // Rôles SouqBladi
+            createRoleIfNotFound("AUTO_ENTREPRENEUR");
+            createRoleIfNotFound("MAGASIN");
+            createRoleIfNotFound("COOPERATIVE");
+            createRoleIfNotFound("SARL");
+            createRoleIfNotFound("LIVREUR");
+            createRoleIfNotFound("STOCKEUR");
+
+            // Catégories SouqBladi
             createCategoryIfNotFound("Santé", "Produits et services de santé", "🏥");
             createCategoryIfNotFound("Technologie", "Électronique et gadgets", "💻");
             createCategoryIfNotFound("Immobilier", "Vente et location de biens", "🏠");
             createCategoryIfNotFound("Automobile", "Voitures, motos et accessoires", "🚗");
             createCategoryIfNotFound("Mode & Textile", "Vêtements et accessoires", "👗");
             createCategoryIfNotFound("Services", "Services professionnels", "🔧");
-            createCategoryIfNotFound("Alimentation", "Produits alimentaires", "🍕");
+            createCategoryIfNotFound("Alimentation", "Produits alimentaires et terroir marocain", "🍕");
             createCategoryIfNotFound("Maison & Jardin", "Meubles et décoration", "🛋️");
+            createCategoryIfNotFound("Cosmétique & Beauté", "Soins et produits de beauté", "💄");
+            createCategoryIfNotFound("Artisanat", "Produits artisanaux marocains", "🏺");
+            createCategoryIfNotFound("Sport & Loisirs", "Équipements sportifs et loisirs", "⚽");
+            createCategoryIfNotFound("Bébé & Enfant", "Jouets, vêtements et puériculture", "🧸");
 
-            // Create default SUPERADMIN account
+            // Créer le compte admin par défaut
             createSuperAdminIfNotFound();
 
             // Proactively promote 'Zineb' to admin for testing
@@ -62,7 +74,7 @@ public class DataInitializer {
     }
 
     private void createSuperAdminIfNotFound() {
-        String adminEmail = "admin@pubplatform.com";
+        String adminEmail = "admin@souqbladi.ma";
         if (utilisateurRepository.findByAdresseEmail(adminEmail).isEmpty()) {
             Role superAdminRole = roleRepository.findByName("SUPERADMIN")
                     .orElseGet(() -> roleRepository.save(new Role("SUPERADMIN")));
@@ -70,7 +82,7 @@ public class DataInitializer {
                     .orElseGet(() -> roleRepository.save(new Role("ADJOINTADMIN")));
 
             Utilisateur admin = Utilisateur.builder()
-                    .nomComplet("Super Administrateur")
+                    .nomComplet("Super Administrateur SouqBladi")
                     .adresseEmail(adminEmail)
                     .motDePasseHache(passwordEncoder.encode("Admin1234!"))
                     .numeroDeTelephone("+212600000000")
@@ -79,7 +91,7 @@ public class DataInitializer {
                     .emailVerifie(true)
                     .build();
             utilisateurRepository.save(java.util.Objects.requireNonNull(admin));
-            System.out.println("=== DEFAULT ADMIN CREATED: admin@pubplatform.com / Admin1234! ===");
+            System.out.println("=== ADMIN SOUQBLADI CRÉÉ: admin@souqbladi.ma / Admin1234! ===");
         }
     }
 

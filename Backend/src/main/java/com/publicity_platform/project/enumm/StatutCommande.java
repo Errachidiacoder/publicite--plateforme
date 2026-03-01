@@ -4,6 +4,10 @@ public enum StatutCommande {
     EN_ATTENTE_PAIEMENT,
     PAIEMENT_CONFIRME,
     EN_PREPARATION,
+    EXPEDIEE,
+    EN_LIVRAISON,
+    LIVREE,
     LIVRE,
+    RETOURNEE,
     ANNULE
 }

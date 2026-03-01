@@ -1,831 +1,396 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ProduitService } from '../services/product.service';
 import { CategorieService } from '../services/category.service';
+
+interface FilePreview {
+  file: File;
+  url: string;
+  type: 'image' | 'video';
+}
 
 @Component({
   selector: 'app-product-submission',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="submission-page">
-      <div class="hero-section">
-        <div class="hero-content">
-          <h1>{{ isEditing ? 'Modifier votre Annonce' : 'Publier une Annonce' }}</h1>
-          <p>{{ isEditing ? 'Mettez à jour les détails de votre offre en quelques clics.' : 'Mettez en avant vos produits ou services auprès de milliers de clients.' }}</p>
-        </div>
-      </div>
-
-      <div class="main-container">
-        <!-- Success/Error Messages -->
-        <div class="toast-container" *ngIf="message">
-          <div class="toast" [class.success]="isSuccess" [class.error]="!isSuccess">
-            <div class="toast-icon">
-              <svg *ngIf="isSuccess" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              <svg *ngIf="!isSuccess" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </div>
-            <div class="toast-content">{{ message }}</div>
-          </div>
-        </div>
-
-        <form (ngSubmit)="onSubmit()" #productForm="ngForm" class="premium-card submission-card">
-          <div class="card-header">
-            <h3>Détails du Produit</h3>
-            <div class="header-divider"></div>
+    <div class="container">
+      <section class="section">
+        <div class="submit-card">
+          <div class="submit-header">
+            <span class="header-icon">📦</span>
+            <h1>Soumettre un produit</h1>
+            <p>Remplissez les informations ci-dessous pour soumettre votre produit au catalogue SouqBladi.</p>
           </div>
 
-          <div class="form-body">
-            <!-- TYPE D'ANNONCE -->
-            <div class="form-section">
-              <label class="section-label">Quel type d'annonce souhaitez-vous publier ?</label>
-              <div class="type-selector">
-                <div class="type-card" [class.active]="product.typeAnnonce === 'PRODUIT_PHYSIQUE'" (click)="product.typeAnnonce = 'PRODUIT_PHYSIQUE'">
-                  <div class="type-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
-                  </div>
-                  <div class="type-info">
-                    <strong>Produit Physique</strong>
-                    <span>Articles, Équipements, Mode...</span>
-                  </div>
-                  <div class="check-mark">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </div>
-                </div>
-                <div class="type-card" [class.active]="product.typeAnnonce === 'SERVICE_PROFESSIONNEL'" (click)="product.typeAnnonce = 'SERVICE_PROFESSIONNEL'">
-                  <div class="type-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-                  </div>
-                  <div class="type-info">
-                    <strong>Service Professionnel</strong>
-                    <span>Expertise, Maintenance, Conseil...</span>
-                  </div>
-                  <div class="check-mark">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </div>
+          @if (successMsg) {
+            <div class="alert alert-success">✅ {{ successMsg }}</div>
+          }
+          @if (errorMsg) {
+            <div class="alert alert-error">⚠️ {{ errorMsg }}</div>
+          }
+
+          <form (ngSubmit)="onSubmit()" #productForm="ngForm">
+
+            <!-- Media Upload Zone -->
+            <div class="upload-section">
+              <label class="section-label">📸 Photos & Vidéos du produit</label>
+
+              <div class="drop-zone" [class.drag-over]="dragOver"
+                   (dragover)="onDragOver($event)" (dragleave)="dragOver = false"
+                   (drop)="onDrop($event)" (click)="fileInput.click()">
+                <input #fileInput type="file" multiple accept="image/*,video/*"
+                       (change)="onFilesSelected($event)" style="display:none">
+                <div class="drop-content">
+                  <span class="drop-icon">📁</span>
+                  <p class="drop-text">Glissez vos photos/vidéos ici</p>
+                  <p class="drop-hint">ou cliquez pour parcourir • JPG, PNG, MP4 • 20 Mo max / fichier</p>
                 </div>
               </div>
+
+              @if (previews.length > 0) {
+                <div class="preview-grid">
+                  @for (preview of previews; track preview.url; let i = $index) {
+                    <div class="preview-card">
+                      @if (preview.type === 'image') {
+                        <img [src]="preview.url" [alt]="'Photo ' + (i + 1)">
+                      } @else {
+                        <video [src]="preview.url" muted></video>
+                        <span class="video-badge">🎬 Vidéo</span>
+                      }
+                      @if (i === 0) {
+                        <span class="main-badge">★ Principale</span>
+                      }
+                      <button type="button" class="remove-btn" (click)="removeFile(i)">✕</button>
+                    </div>
+                  }
+                </div>
+              }
             </div>
 
             <div class="form-grid">
-              <!-- TITRE -->
-              <div class="field full-width">
-                <div class="label-row">
-                  <label>Titre de l'Annonce</label>
-                  <span class="status ok" *ngIf="product.titreProduit && product.titreProduit.length >= 5">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </span>
-                  <span class="status err" *ngIf="attemptedSubmit && !product.titreProduit">Requis</span>
-                  <span class="status err" *ngIf="product.titreProduit && product.titreProduit.length < 5">Trop court (5 min)</span>
-                </div>
-                <input type="text" [(ngModel)]="product.titreProduit" name="titre" required 
-                       [class.invalid]="attemptedSubmit && !product.titreProduit"
-                       placeholder="Ex: iPhone 15 Pro Max - Noir Sidéral">
+              <div class="input-group span-2">
+                <label>Titre du produit</label>
+                <input type="text" class="form-input" [(ngModel)]="product.titreProduit" name="titre"
+                       required placeholder="Ex: iPhone 15 Pro Max" [disabled]="loading">
               </div>
 
-              <!-- CATEGORIE -->
-              <div class="field">
-                <div class="label-row">
-                  <label>Catégorie</label>
-                  <span class="status ok" *ngIf="product.categorieId">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </span>
-                  <span class="status err" *ngIf="attemptedSubmit && !product.categorieId">Requis</span>
-                </div>
-                <select [(ngModel)]="product.categorieId" name="categorieId" required
-                        [class.invalid]="attemptedSubmit && !product.categorieId">
-                  <option [ngValue]="null" disabled selected>Choisir une catégorie...</option>
-                  <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.nomCategorie }}</option>
+              <div class="input-group">
+                <label>Catégorie</label>
+                <select class="form-input" [(ngModel)]="product.categorieId" name="categorieId" required [disabled]="loading">
+                  <option [ngValue]="null" disabled>Choisir une catégorie...</option>
+                  @for (cat of categories; track cat.id) {
+                    <option [value]="cat.id">{{ cat.nomCategorie }}</option>
+                  }
                 </select>
               </div>
 
-              <!-- VILLE -->
-              <div class="field">
-                <div class="label-row">
-                  <label>Ville / Localisation</label>
-                  <span class="status ok" *ngIf="product.villeLocalisation">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </span>
-                  <span class="status err" *ngIf="attemptedSubmit && !product.villeLocalisation">Requis</span>
-                </div>
-                <input type="text" [(ngModel)]="product.villeLocalisation" name="ville" required 
-                       [class.invalid]="attemptedSubmit && !product.villeLocalisation"
-                       placeholder="Ex: Casablanca, Maarif">
-              </div>
-
-              <!-- DISPONIBILITE -->
-              <div class="field">
-                <div class="label-row">
-                  <label>Disponibilité</label>
-                  <span class="status ok" *ngIf="product.disponibilite">&#10003;</span>
-                </div>
-                <select [(ngModel)]="product.disponibilite" name="disponibilite" required>
-                  <option value="DISPONIBLE_IMMEDIATEMENT">Disponible immédiatement</option>
-                  <option value="STOCK_LIMITE">En stock limité</option>
-                  <option value="SUR_COMMANDE">Sur commande</option>
+              <div class="input-group">
+                <label>Ville</label>
+                <select class="form-input" [(ngModel)]="product.villeLocalisation" name="ville" required [disabled]="loading">
+                  <option value="" disabled>Choisir une ville...</option>
+                  @for (v of villes; track v) {
+                    <option [value]="v">{{ v }}</option>
+                  }
                 </select>
               </div>
 
-              <!-- TYPE PRIX -->
-              <div class="field">
-                <div class="label-row">
-                  <label>Type de Prix</label>
-                  <span class="status ok" *ngIf="product.typePrix">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </span>
-                </div>
-                <select [(ngModel)]="product.typePrix" name="typePrix" required>
+              <div class="input-group">
+                <label>Type de prix</label>
+                <select class="form-input" [(ngModel)]="product.typePrix" name="typePrix" required [disabled]="loading">
                   <option value="PRIX_FIXE">Prix Fixe</option>
-                  <option value="PRIX_NEGOCIABLE">Prix Négociable</option>
-                  <option value="GRATUIT">Gratuit</option>
+                  <option value="PRIX_NEGOCIABLE">Négociable</option>
                   <option value="SUR_DEVIS">Sur Devis</option>
+                  <option value="GRATUIT">Gratuit</option>
                 </select>
               </div>
 
-              <!-- PRIX -->
-              <div class="field" *ngIf="product.typePrix !== 'GRATUIT' && product.typePrix !== 'SUR_DEVIS'">
-                <div class="label-row">
+              @if (product.typePrix !== 'SUR_DEVIS' && product.typePrix !== 'GRATUIT') {
+                <div class="input-group">
                   <label>Prix (DH)</label>
-                  <span class="status ok" *ngIf="product.prixAfiche > 0">&#10003;</span>
-                  <span class="status err" *ngIf="attemptedSubmit && !product.prixAfiche">Requis</span>
+                  <input type="number" class="form-input" [(ngModel)]="product.prixAfiche" name="prix"
+                         required placeholder="0.00" [disabled]="loading">
                 </div>
-                <div class="price-input-wrapper">
-                  <input type="number" [(ngModel)]="product.prixAfiche" name="prix" 
-                         [required]="product.typePrix !== 'GRATUIT' && product.typePrix !== 'SUR_DEVIS'"
-                         [class.invalid]="attemptedSubmit && !product.prixAfiche"
-                         placeholder="0.00">
-                  <span class="currency">DH</span>
-                </div>
+              }
+
+              <div class="input-group" [class.span-2]="product.typePrix === 'SUR_DEVIS' || product.typePrix === 'GRATUIT'">
+                <label>Quantité en stock</label>
+                <input type="number" class="form-input" [(ngModel)]="product.quantiteStock" name="stock"
+                       placeholder="Ex: 10" [disabled]="loading">
               </div>
 
-                <!-- DESCRIPTION -->
-                <div class="field full-width">
-                  <div class="label-row">
-                    <label>Description Détaillée</label>
-                    <span class="status ok" *ngIf="product.descriptionDetaillee && product.descriptionDetaillee.length >= 20">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" width="10" height="10"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    </span>
-                    <span class="status err" *ngIf="attemptedSubmit && !product.descriptionDetaillee">Requis</span>
-                    <span class="status err" *ngIf="product.descriptionDetaillee && product.descriptionDetaillee.length < 20">Plus de détails (20 min)</span>
-                  </div>
-                  <textarea [(ngModel)]="product.descriptionDetaillee" name="description" required rows="5" 
-                            [class.invalid]="attemptedSubmit && !product.descriptionDetaillee"
-                            placeholder="Décrivez les caractéristiques principales, l'état, et les avantages..."></textarea>
-                </div>
-
-                <!-- IMAGE UPLOAD -->
-                <div class="field full-width">
-                  <div class="label-row">
-                    <label>Photos du Produit</label>
-                    <span class="status ok" *ngIf="imagePreview">&#10003; Sélectionnée</span>
-                  </div>
-                  
-                  <div class="upload-zone" (click)="fileInput.click()" [class.has-preview]="!!imagePreview">
-                    <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" hidden>
-                    
-                    <div class="upload-placeholder" *ngIf="!imagePreview">
-                      <div class="upload-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                      </div>
-                      <div class="upload-text">
-                        <strong>Cliquez pour charger une photo</strong>
-                        <span>JPG, PNG ou WEBP (Max. 5MB)</span>
-                      </div>
-                    </div>
-
-                    <div class="preview-container" *ngIf="imagePreview">
-                      <img [src]="imagePreview" alt="Aperçu">
-                      <button type="button" class="remove-img" (click)="removeImage($event)">&times;</button>
-                      <div class="change-overlay">Cliquer pour changer de photo</div>
-                    </div>
-                  </div>
-                </div>
+              <div class="input-group span-2">
+                <label>Description détaillée</label>
+                <textarea class="form-input" [(ngModel)]="product.descriptionDetaillee" name="description"
+                          required rows="5" placeholder="Décrivez votre produit en détail pour attirer plus de clients..."
+                          [disabled]="loading"></textarea>
               </div>
             </div>
 
-          <div class="form-footer">
-            <p class="disclaimer">En publiant, vous acceptez nos conditions d'utilisation et la politique de visibilité.</p>
-            <div class="form-actions">
-              <button type="button" class="btn-cancel" (click)="router.navigate(['/my-ads'])" *ngIf="isEditing">Annuler</button>
-              <button type="submit" class="btn-submit" [disabled]="loading">
-                <div class="spinner-mini" *ngIf="loading"></div>
-                <span>{{ loading ? (isEditing ? 'Mise à jour...' : 'Soumission...') : (isEditing ? 'Mettre à jour mon annonce' : 'Publier mon annonce') }}</span>
+            <div class="submit-footer">
+              <button type="submit" class="btn btn-primary btn-lg" [disabled]="!productForm.form.valid || loading">
+                @if (!loading) { 📤 Soumettre pour validation } @else { ⏳ {{ uploadProgress }} }
               </button>
+              <p class="footer-hint">Votre produit sera vérifié par notre équipe avant d'être publié sur SouqBladi.</p>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      </section>
     </div>
   `,
   styles: [`
-    :host {
-      --primary: #4db6ac;
-      --primary-dark: #00897b;
-      --accent: #e0f2f1;
-      --bg: #f8fafc;
-      --white: #ffffff;
-      --text: #1e293b;
-      --text-light: #64748b;
-      --border: #e2e8f0;
-      --shadow: 0 10px 25px rgba(0, 137, 123, 0.08);
-      --danger: #ef4444;
-      --success: #10b981;
+    .submit-card {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--sb-bg-elevated);
+      border: 1px solid var(--sb-border);
+      border-radius: var(--sb-radius-xl);
+      padding: 40px;
     }
+    .submit-header { text-align: center; margin-bottom: 32px; }
+    .header-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+    .submit-header h1 { font-family: 'Outfit',sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--sb-text); margin-bottom: 8px; }
+    .submit-header p { color: var(--sb-text-secondary); font-size: 0.92rem; }
 
-    .submission-page {
-      background: var(--bg);
-      min-height: 100vh;
-      padding-bottom: 80px;
-    }
+    .alert { padding: 12px 16px; border-radius: var(--sb-radius-md); margin-bottom: 20px; font-size: 0.88rem; font-weight: 500; }
+    .alert-error { background: rgba(239,68,68,0.1); color: var(--sb-danger); border: 1px solid rgba(239,68,68,0.2); }
+    .alert-success { background: rgba(16,185,129,0.1); color: var(--sb-success); border: 1px solid rgba(16,185,129,0.2); }
 
-    .hero-section {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    /* Upload Section */
+    .upload-section { margin-bottom: 28px; }
+    .section-label { display: block; font-weight: 700; font-size: 0.9rem; color: var(--sb-text); margin-bottom: 10px; }
+
+    .drop-zone {
+      border: 2px dashed var(--sb-border);
+      border-radius: var(--sb-radius-lg);
       padding: 40px 20px;
       text-align: center;
-      color: white;
-      clip-path: ellipse(150% 100% at 50% 0%);
-    }
-
-    .hero-content h1 {
-      font-size: 2rem;
-      font-weight: 900;
-      margin-bottom: 8px;
-    }
-
-    .hero-content h1 span {
-      background: rgba(255, 255, 255, 0.2);
-      padding: 0 15px;
-      border-radius: 12px;
-    }
-
-    .hero-content p {
-      font-size: 1.1rem;
-      opacity: 0.9;
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .main-container {
-      max-width: 900px;
-      margin: -60px auto 0;
-      padding: 0 20px;
-    }
-
-    .premium-card {
-      background: white;
-      border-radius: 32px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
-      border: 1px solid rgba(255,255,255,0.5);
-      overflow: hidden;
-    }
-
-    .card-header {
-      padding: 30px 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .card-header h3 {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--text);
-      margin: 0;
-    }
-
-    .header-divider {
-      height: 4px;
-      width: 60px;
-      background: var(--primary);
-      border-radius: 2px;
-    }
-
-    .form-body {
-      padding: 20px 40px;
-    }
-
-    .form-section {
-      margin-bottom: 40px;
-    }
-
-    .section-label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: var(--text-light);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 20px;
-    }
-
-    .type-selector {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    .type-card {
-      background: #f1f5f9;
-      padding: 24px;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
       cursor: pointer;
-      transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-      border: 2px solid transparent;
+      transition: var(--sb-transition);
+      background: var(--sb-surface);
     }
-
-    .type-card:hover {
-      background: white;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-      transform: translateY(-2px);
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--sb-primary);
+      background: var(--sb-primary-light);
     }
+    .drop-icon { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+    .drop-text { font-weight: 700; font-size: 0.95rem; color: var(--sb-text); margin-bottom: 4px; }
+    .drop-hint { font-size: 0.78rem; color: var(--sb-text-muted); }
 
-    .type-card.active {
-      background: var(--accent);
-      border-color: var(--primary);
-    }
-
-    .type-icon {
-      font-size: 2rem;
-    }
-
-    .type-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .type-info strong {
-      font-size: 1rem;
-      color: var(--text);
-    }
-
-    .type-info span {
-      font-size: 0.8rem;
-      color: var(--text-light);
-    }
-
-    .check-mark {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 24px;
-      height: 24px;
-      background: var(--primary);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      opacity: 0;
-      transform: scale(0.5);
-      transition: 0.3s;
-    }
-
-    .type-card.active .check-mark {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .form-grid {
+    /* Preview Grid */
+    .preview-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 25px 35px;
-      padding-top: 20px;
-      border-top: 1px solid #f1f5f9;
-    }
-
-    .full-width {
-      grid-column: span 2;
-    }
-
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .label-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .field label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .status {
-      font-size: 0.7rem;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 12px;
-      text-transform: uppercase;
-    }
-
-    .status.ok { color: var(--success); background: #ecfdf5; }
-    .status.err { color: var(--danger); background: #fff1f2; }
-
-    input, select, textarea {
-      padding: 14px 20px;
-      border-radius: 16px;
-      border: 1.5px solid var(--border);
-      background: #fafdfd;
-      font-size: 0.95rem;
-      transition: 0.2s;
-      width: 100%;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--primary);
-      outline: none;
-      background: white;
-      box-shadow: 0 4px 12px rgba(77, 182, 172, 0.1);
-    }
-
-    input.invalid, select.invalid, textarea.invalid {
-      border-color: var(--danger);
-      background: #fffafa;
-    }
-
-    .price-input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .price-input-wrapper input {
-      padding-right: 60px;
-    }
-
-    .currency {
-      position: absolute;
-      right: 20px;
-      font-weight: 900;
-      color: var(--primary-dark);
-      pointer-events: none;
-    }
-
-    .form-footer {
-      padding: 40px;
-      background: #fafdfd;
-      border-top: 1px solid #f1f5f9;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .disclaimer {
-      font-size: 0.85rem;
-      color: var(--text-light);
-      text-align: center;
-      max-width: 500px;
-    }
-
-    .btn-submit {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 16px 45px;
-      border-radius: 20px;
-      font-weight: 900;
-      font-size: 1.05rem;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 10px 25px rgba(77, 182, 172, 0.3);
-      display: flex;
-      align-items: center;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 12px;
+      margin-top: 16px;
     }
-
-    .btn-submit:hover:not(:disabled) {
-      transform: translateY(-3px);
-      filter: brightness(1.1);
-      box-shadow: 0 15px 35px rgba(77, 182, 172, 0.4);
-    }
-
-    .btn-submit:disabled {
-      background: #cbd5e1;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    /* Upload Zone */
-    .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 20px;
-      padding: 40px;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.3s;
-      background: #fafdfd;
+    .preview-card {
       position: relative;
+      border-radius: var(--sb-radius-md);
       overflow: hidden;
-      min-height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      aspect-ratio: 1;
+      border: 2px solid var(--sb-border);
+      transition: var(--sb-transition);
     }
-
-    .upload-zone:hover {
-      border-color: var(--primary);
-      background: #f0fdf9;
+    .preview-card:hover { border-color: var(--sb-primary); }
+    .preview-card img, .preview-card video {
+      width: 100%; height: 100%; object-fit: cover;
     }
-
-    .upload-zone.has-preview {
-      border-style: solid;
-      padding: 0;
-    }
-
-    .upload-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .upload-icon {
-      font-size: 3rem;
-    }
-
-    .upload-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .upload-text strong {
-      color: var(--text);
-      font-size: 1rem;
-    }
-
-    .upload-text span {
-      color: var(--text-light);
-      font-size: 0.8rem;
-    }
-
-    .preview-container {
-      width: 100%;
-      height: 300px;
-      position: relative;
-    }
-
-    .preview-container img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .remove-img {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      width: 32px;
-      height: 32px;
+    .remove-btn {
+      position: absolute; top: 4px; right: 4px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
       background: rgba(0,0,0,0.6);
       color: white;
       border: none;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
+      font-size: 0.7rem;
       cursor: pointer;
-      z-index: 10;
+      display: flex; align-items: center; justify-content: center;
       transition: 0.2s;
     }
-
-    .remove-img:hover {
-      background: var(--danger);
-      transform: scale(1.1);
-    }
-
-    .change-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 137, 123, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .remove-btn:hover { background: var(--sb-danger); }
+    .main-badge {
+      position: absolute; bottom: 4px; left: 4px;
+      background: var(--sb-primary);
       color: white;
+      font-size: 0.6rem;
       font-weight: 800;
-      font-size: 0.9rem;
-      opacity: 0;
-      transition: 0.3s;
-      backdrop-filter: blur(2px);
+      padding: 2px 8px;
+      border-radius: var(--sb-radius-full);
     }
-
-    .preview-container:hover .change-overlay {
-      opacity: 1;
-    }
-
-    /* Toasts */
-    .toast-container {
-      margin-bottom: 25px;
-    }
-
-    .toast {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 16px 25px;
-      border-radius: 20px;
-      background: white;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-      border-left: 6px solid;
-      animation: slideDown 0.4s ease-out;
-    }
-
-    .toast.success { border-left-color: var(--success); }
-    .toast.error { border-left-color: var(--danger); }
-
-    .toast-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .video-badge {
+      position: absolute; bottom: 4px; right: 4px;
+      background: rgba(0,0,0,0.7);
       color: white;
-      font-weight: bold;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--sb-radius-full);
     }
 
-    .toast.success .toast-icon { background: var(--success); }
-    .toast.error .toast-icon { background: var(--danger); }
-
-    .toast-content {
-      font-weight: 600;
-      color: var(--text);
+    /* Form */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .span-2 { grid-column: span 2; }
+    select.form-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
     }
+    textarea.form-input { resize: vertical; min-height: 120px; }
 
-    @keyframes slideDown {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
+    .submit-footer { text-align: center; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--sb-border); }
+    .submit-footer .btn { min-width: 280px; }
+    .footer-hint { margin-top: 14px; font-size: 0.82rem; color: var(--sb-text-muted); }
 
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-radius: 50%;
-      border-top-color: white;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 768px) {
+    @media (max-width: 600px) {
+      .submit-card { padding: 24px 16px; }
       .form-grid { grid-template-columns: 1fr; }
-      .full-width { grid-column: span 1; }
-      .type-selector { grid-template-columns: 1fr; }
+      .span-2 { grid-column: span 1; }
+      .preview-grid { grid-template-columns: repeat(3, 1fr); }
     }
   `]
 })
 export class ProductSubmissionComponent implements OnInit {
   private produitService = inject(ProduitService);
-  private categorieService = inject(CategorieService);
-  public router = inject(Router);
-  private route = inject(ActivatedRoute);
+  private catService = inject(CategorieService);
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
   categories: any[] = [];
   loading = false;
-  attemptedSubmit = false;
-  message = '';
-  isSuccess = false;
+  successMsg = '';
+  errorMsg = '';
+  uploadProgress = 'Envoi en cours...';
+  dragOver = false;
+
+  previews: FilePreview[] = [];
 
   product: any = {
-    id: null,
     titreProduit: '',
     descriptionDetaillee: '',
     categorieId: null,
     typePrix: 'PRIX_FIXE',
     prixAfiche: null,
     villeLocalisation: '',
+    quantiteStock: null,
     typeAnnonce: 'PRODUIT_PHYSIQUE',
-    disponibilite: 'DISPONIBLE_IMMEDIATEMENT',
-    imageUrl: ''
+    disponibilite: 'DISPONIBLE_IMMEDIATEMENT'
   };
 
-  selectedFile: File | null = null;
-  imagePreview: string | ArrayBuffer | null = null;
-
-  isEditing = false;
-  loadingData = false;
-
+  villes = [
+    'Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger', 'Meknès',
+    'Agadir', 'Oujda', 'Kénitra', 'Tétouan', 'Safi', 'El Jadida',
+    'Nador', 'Béni Mellal', 'Mohammédia', 'Khouribga', 'Errachidia'
+  ];
 
   ngOnInit() {
-    this.categorieService.getAllActive().subscribe(data => this.categories = data);
-
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.isEditing = true;
-      this.loadingData = true;
-      this.produitService.getById(Number(id)).subscribe({
-        next: (data) => {
-          this.product = {
-            ...data,
-            categorieId: data.categorie?.id || null
-          };
-          if (data.imageUrl) {
-            this.imagePreview = data.imageUrl;
-          }
-          this.loadingData = false;
-        },
-        error: () => this.loadingData = false
-      });
-    }
+    this.catService.getAllActive().subscribe((cats: any[]) => {
+      this.categories = cats;
+    });
   }
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imagePreview = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  }
+  // ─── Drag & Drop ──────────────────────────────
 
-  removeImage(event: Event) {
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
     event.stopPropagation();
-    this.selectedFile = null;
-    this.imagePreview = null;
+    this.dragOver = true;
   }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragOver = false;
+    if (event.dataTransfer?.files) {
+      this.addFiles(event.dataTransfer.files);
+    }
+  }
+
+  onFilesSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      this.addFiles(input.files);
+    }
+    input.value = ''; // Reset so same file can be re-selected
+  }
+
+  addFiles(files: FileList) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (this.previews.length >= 10) {
+        this.errorMsg = 'Maximum 10 fichiers autorisés.';
+        break;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        this.errorMsg = `Le fichier "${file.name}" dépasse 20 Mo.`;
+        continue;
+      }
+
+      const type: 'image' | 'video' = file.type.startsWith('video') ? 'video' : 'image';
+      const url = URL.createObjectURL(file);
+      this.previews.push({ file, url, type });
+    }
+  }
+
+  removeFile(index: number) {
+    URL.revokeObjectURL(this.previews[index].url);
+    this.previews.splice(index, 1);
+  }
+
+  // ─── Submit ───────────────────────────────────
 
   onSubmit() {
-    this.attemptedSubmit = true;
-
-    if (!this.validateForm()) {
-      this.showToast("Veuillez remplir correctement tous les champs obligatoires.", false);
-      return;
-    }
-
     this.loading = true;
+    this.errorMsg = '';
+    this.successMsg = '';
+    this.uploadProgress = 'Création du produit...';
 
-    if (this.selectedFile) {
-      this.produitService.uploadImage(this.selectedFile).subscribe({
-        next: (res) => {
-          this.product.imageUrl = res.url;
-          this.saveProduct();
-        },
-        error: () => {
-          this.showToast("Erreur lors du chargement de l'image.", false);
-          this.loading = false;
-        }
-      });
-    } else {
-      this.saveProduct();
-    }
-  }
-
-  saveProduct() {
     const payload = {
       ...this.product,
       categorie: { id: this.product.categorieId }
     };
 
-    const obs = this.isEditing
-      ? this.produitService.update(this.product.id, payload)
-      : this.produitService.submit(payload);
-
-    obs.subscribe({
-      next: () => {
-        this.loading = false;
-        this.showToast(this.isEditing ? "Annonce mise à jour !" : "Annonce soumise avec succès ! Elle sera validée par un administrateur.", true);
-        setTimeout(() => this.router.navigate(['/my-ads']), 2000);
+    this.produitService.submit(payload).subscribe({
+      next: (createdProduct: any) => {
+        if (this.previews.length > 0) {
+          this.uploadMedia(createdProduct.id);
+        } else {
+          this.onSuccess();
+        }
       },
-      error: (err: any) => {
-        console.error(err);
-        this.showToast("Une erreur est survenue. Veuillez réessayer.", false);
+      error: () => {
+        this.loading = false;
+        this.errorMsg = 'Erreur lors de la soumission. Veuillez réessayer.';
+      }
+    });
+  }
+
+  private uploadMedia(produitId: number) {
+    this.uploadProgress = `Upload des médias (${this.previews.length} fichier${this.previews.length > 1 ? 's' : ''})...`;
+
+    const formData = new FormData();
+    for (const preview of this.previews) {
+      formData.append('files', preview.file);
+    }
+
+    this.http.post(`http://localhost:8081/api/v1/media/upload/${produitId}`, formData).subscribe({
+      next: () => this.onSuccess(),
+      error: () => {
+        // Product was created even if media upload fails
+        this.successMsg = 'Produit créé, mais les médias n\'ont pas pu être uploadés.';
         this.loading = false;
       }
     });
   }
 
-  validateForm(): boolean {
-    const p = this.product;
-    if (!p.titreProduit || p.titreProduit.length < 5) return false;
-    if (!p.descriptionDetaillee || p.descriptionDetaillee.length < 20) return false;
-    if (!p.categorieId) return false;
-    if (!p.villeLocalisation) return false;
-    if (p.typePrix !== 'GRATUIT' && p.typePrix !== 'SUR_DEVIS' && (!p.prixAfiche || p.prixAfiche <= 0)) return false;
-    return true;
-  }
-
-  showToast(msg: string, success: boolean) {
-    this.message = msg;
-    this.isSuccess = success;
-    if (!success) {
-      setTimeout(() => this.message = '', 5000);
-    }
+  private onSuccess() {
+    this.successMsg = 'Votre produit a été soumis avec succès ! Il est en attente de validation.';
+    this.loading = false;
+    setTimeout(() => this.router.navigate(['/home']), 2000);
   }
 }
-

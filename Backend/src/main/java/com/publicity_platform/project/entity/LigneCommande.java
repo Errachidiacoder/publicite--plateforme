@@ -84,12 +84,13 @@ public class LigneCommande {
     // Relations
     // ─────────────────────────────────────────────
 
-    /** 0..* LigneCommande → 1 Produit (référence le produit acheté) */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produit_commande_id", nullable = false)
     private Produit produitCommande;
 
     /** 1..* LigneCommande → 1 Commande (composition) */
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "commande_parente_id", nullable = false)
     private Commande commandeParente;
