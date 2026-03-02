@@ -214,7 +214,7 @@ export class RegisterComponent {
     { value: 'MAGASIN', label: 'Magasin', icon: '🏪' },
     { value: 'COOPERATIVE', label: 'Coopérative', icon: '🤝' },
     { value: 'SARL', label: 'SARL / Société', icon: '🏢' },
-    { value: 'LIVREUR', label: 'Livreur', icon: '🚚' }
+    { value: 'LIVREUR', label: 'Livraison / Stockage', icon: '🚚' }
   ];
 
   villes = [
