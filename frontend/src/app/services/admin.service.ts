@@ -14,37 +14,37 @@ export class AdminService {
     }
 
     getPendingProducts(): Observable<any[]> {
-        return this.http.get<any[]>(`${this.apiUrl}/pending-products`);
+        return this.http.get<any[]>(`${this.apiUrl}/pending-anonces`);
     }
 
     getAllProducts(statut?: string): Observable<any[]> {
-        const url = statut ? `${this.apiUrl}/products?statut=${statut}` : `${this.apiUrl}/products`;
+        const url = statut ? `${this.apiUrl}/anonces?statut=${statut}` : `${this.apiUrl}/anonces`;
         return this.http.get<any[]>(url);
     }
 
     validateProduct(id: number, durationMonths: number = 12): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl}/products/${id}/validate`, { durationMonths });
+        return this.http.post<any>(`${this.apiUrl}/anonces/${id}/validate`, { durationMonths });
     }
 
     rejectProduct(id: number, reason: string): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl}/products/${id}/reject`, { reason });
+        return this.http.post<any>(`${this.apiUrl}/anonces/${id}/reject`, { reason });
     }
 
     deleteProduct(id: number): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/products/${id}`);
+        return this.http.delete<void>(`${this.apiUrl}/anonces/${id}`);
     }
 
     archiveProduct(id: number): Observable<void> {
-        return this.http.post<void>(`${this.apiUrl}/products/${id}/archive`, {});
+        return this.http.post<void>(`${this.apiUrl}/anonces/${id}/archive`, {});
     }
 
     // Utilisé pour la simulation de paiement dans cette phase
     activateProduct(id: number): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl.replace('/admin', '')}/produits/${id}/activate-mock`, {});
+        return this.http.post<any>(`${this.apiUrl.replace('/admin', '')}/anonces/${id}/activate-mock`, {});
     }
 
     updateProduct(id: number, product: any): Observable<any> {
-        return this.http.put<any>(`${this.apiUrl}/products/${id}`, product);
+        return this.http.put<any>(`${this.apiUrl}/anonces/${id}`, product);
     }
 
     // Gestion des utilisateurs

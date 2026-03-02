@@ -5,9 +5,9 @@ import { Observable } from 'rxjs';
 @Injectable({
     providedIn: 'root'
 })
-export class ProduitService {
+export class AnonceService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8081/api/v1/produits';
+    private apiUrl = 'http://localhost:8081/api/v1/anonces';
     private mediaUrl = 'http://localhost:8081/api/v1/media';
 
     uploadImage(file: File): Observable<any> {
@@ -16,13 +16,12 @@ export class ProduitService {
         return this.http.post<any>(`${this.mediaUrl}/upload`, formData);
     }
 
-    // Renamed getActive to getAll since products are inventory
     getActive(): Observable<any[]> {
         return this.http.get<any[]>(this.apiUrl);
     }
 
-    submit(produit: any): Observable<any> {
-        return this.http.post<any>(`${this.apiUrl}/submit`, produit);
+    submit(anonce: any): Observable<any> {
+        return this.http.post<any>(`${this.apiUrl}/submit`, anonce);
     }
 
     getById(id: number): Observable<any> {
@@ -33,8 +32,12 @@ export class ProduitService {
         return this.http.get<any[]>(`${this.apiUrl}/annonceur/${annonceurId}`);
     }
 
-    update(id: number, produit: any): Observable<any> {
-        return this.http.put<any>(`${this.apiUrl}/${id}`, produit);
+    update(id: number, anonce: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/${id}`, anonce);
+    }
+
+    archive(id: number): Observable<void> {
+        return this.http.post<void>(`${this.apiUrl}/${id}/archive-mock`, {});
     }
 
     delete(id: number): Observable<void> {
