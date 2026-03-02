@@ -1,14 +1,13 @@
 package com.publicity_platform.project.entity;
 
 import com.publicity_platform.project.enumm.Disponibilite;
-import com.publicity_platform.project.enumm.StatutValidation;
 import com.publicity_platform.project.enumm.TypeAnnonce;
 import com.publicity_platform.project.enumm.TypePrix;
+import com.publicity_platform.project.entity.Anonce;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -45,33 +44,15 @@ public class Produit {
     @Column(name = "disponibilite")
     private Disponibilite disponibilite;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "statut_validation", nullable = false)
-    private StatutValidation statutValidation = StatutValidation.EN_ATTENTE;
-
-    @Column(name = "annonce_premium", nullable = false)
-    private Boolean annoncePremium = false;
-
-    @Column(name = "compteur_vues", nullable = false)
-    private Long compteurVues = 0L;
-
-    @Column(name = "date_soumission", nullable = false, updatable = false)
-    private LocalDateTime dateSoumission;
-
-    @Column(name = "date_publication")
-    private LocalDateTime datePublication;
-
-    @Column(name = "date_expiration")
-    private LocalDateTime dateExpiration;
-
     @Column(name = "ville_localisation")
     private String villeLocalisation;
 
-    @Column(name = "motif_refus_admin", columnDefinition = "TEXT")
-    private String motifRefusAdmin;
-
     @Column(name = "image_url")
     private String imageUrl;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Anonce> anonces;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "annonceur_id", nullable = false)
@@ -103,22 +84,7 @@ public class Produit {
 
     @PrePersist
     protected void onCreate() {
-        this.dateSoumission = LocalDateTime.now();
-        this.statutValidation = StatutValidation.EN_ATTENTE;
-    }
-
-    public void incrementerVues() {
-        this.compteurVues++;
-    }
-
-    public void publier(int dureeEnMois) {
-        this.statutValidation = StatutValidation.VALIDE;
-        this.datePublication = LocalDateTime.now();
-        this.dateExpiration = LocalDateTime.now().plusMonths(dureeEnMois);
-    }
-
-    public void archiver() {
-        this.statutValidation = StatutValidation.ARCHIVE;
+        // Product-specific initialization logic can be added here if needed
     }
 
     // Explicit Getters and Setters
@@ -178,52 +144,12 @@ public class Produit {
         this.disponibilite = disponibilite;
     }
 
-    public StatutValidation getStatutValidation() {
-        return statutValidation;
-    }
-
-    public void setStatutValidation(StatutValidation statutValidation) {
-        this.statutValidation = statutValidation;
-    }
-
-    public Boolean getAnnoncePremium() {
-        return annoncePremium;
-    }
-
-    public void setAnnoncePremium(Boolean annoncePremium) {
-        this.annoncePremium = annoncePremium;
-    }
-
-    public Long getCompteurVues() {
-        return compteurVues;
-    }
-
-    public void setCompteurVues(Long compteurVues) {
-        this.compteurVues = compteurVues;
-    }
-
-    public LocalDateTime getDateSoumission() {
-        return dateSoumission;
-    }
-
-    public void setDateSoumission(LocalDateTime dateSoumission) {
-        this.dateSoumission = dateSoumission;
-    }
-
     public String getVilleLocalisation() {
         return villeLocalisation;
     }
 
     public void setVilleLocalisation(String villeLocalisation) {
         this.villeLocalisation = villeLocalisation;
-    }
-
-    public String getMotifRefusAdmin() {
-        return motifRefusAdmin;
-    }
-
-    public void setMotifRefusAdmin(String motifRefusAdmin) {
-        this.motifRefusAdmin = motifRefusAdmin;
     }
 
     public String getImageUrl() {
@@ -260,7 +186,6 @@ public class Produit {
         private TypeAnnonce typeAnnonce;
         private Double prixAfiche;
         private TypePrix typePrix;
-        private StatutValidation statutValidation = StatutValidation.EN_ATTENTE;
         private Utilisateur annonceur;
         private Categorie categorie;
         private String imageUrl;
@@ -290,11 +215,6 @@ public class Produit {
             return this;
         }
 
-        public ProduitBuilder statutValidation(StatutValidation statutValidation) {
-            this.statutValidation = statutValidation;
-            return this;
-        }
-
         public ProduitBuilder annonceur(Utilisateur annonceur) {
             this.annonceur = annonceur;
             return this;
@@ -317,7 +237,6 @@ public class Produit {
             p.setTypeAnnonce(typeAnnonce);
             p.setPrixAfiche(prixAfiche);
             p.setTypePrix(typePrix);
-            p.setStatutValidation(statutValidation);
             p.setAnnonceur(annonceur);
             p.setCategorie(categorie);
             p.setImageUrl(imageUrl);

@@ -13,7 +13,7 @@ public class HistoriqueNavigation {
     }
 
     public HistoriqueNavigation(Long id, String utilisateurOuSession, Integer dureeConsultationSec,
-            String sourceRecherche, LocalDateTime dateConsultation, Utilisateur utilisateur, Produit produitConsulte,
+            String sourceRecherche, LocalDateTime dateConsultation, Utilisateur utilisateur, Anonce anonceConsulte,
             Categorie categorieVisitee) {
         this.id = id;
         this.utilisateurOuSession = utilisateurOuSession;
@@ -21,7 +21,7 @@ public class HistoriqueNavigation {
         this.sourceRecherche = sourceRecherche;
         this.dateConsultation = dateConsultation;
         this.utilisateur = utilisateur;
-        this.produitConsulte = produitConsulte;
+        this.anonceConsulte = anonceConsulte;
         this.categorieVisitee = categorieVisitee;
     }
 
@@ -36,7 +36,7 @@ public class HistoriqueNavigation {
         private String sourceRecherche;
         private LocalDateTime dateConsultation;
         private Utilisateur utilisateur;
-        private Produit produitConsulte;
+        private Anonce anonceConsulte;
         private Categorie categorieVisitee;
 
         public HistoriqueNavigationBuilder id(Long id) {
@@ -69,8 +69,8 @@ public class HistoriqueNavigation {
             return this;
         }
 
-        public HistoriqueNavigationBuilder produitConsulte(Produit produitConsulte) {
-            this.produitConsulte = produitConsulte;
+        public HistoriqueNavigationBuilder anonceConsulte(Anonce anonceConsulte) {
+            this.anonceConsulte = anonceConsulte;
             return this;
         }
 
@@ -81,7 +81,7 @@ public class HistoriqueNavigation {
 
         public HistoriqueNavigation build() {
             return new HistoriqueNavigation(id, utilisateurOuSession, dureeConsultationSec, sourceRecherche,
-                    dateConsultation, utilisateur, produitConsulte, categorieVisitee);
+                    dateConsultation, utilisateur, anonceConsulte, categorieVisitee);
         }
     }
 
@@ -115,11 +115,11 @@ public class HistoriqueNavigation {
     @JoinColumn(name = "utilisateur_id")
     private Utilisateur utilisateur;
 
-    /** 0..* HistoriqueNavigation → 1 Produit consulté */
+    /** 0..* HistoriqueNavigation → 1 Anonce consulté */
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "produit_consulte_id")
-    private Produit produitConsulte;
+    @JoinColumn(name = "anonce_consulte_id")
+    private Anonce anonceConsulte;
 
     /** 0..* HistoriqueNavigation → 1 Categorie visitée */
     @JsonIgnore
@@ -176,12 +176,12 @@ public class HistoriqueNavigation {
         this.utilisateur = utilisateur;
     }
 
-    public Produit getProduitConsulte() {
-        return produitConsulte;
+    public Anonce getAnonceConsulte() {
+        return anonceConsulte;
     }
 
-    public void setProduitConsulte(Produit produitConsulte) {
-        this.produitConsulte = produitConsulte;
+    public void setAnonceConsulte(Anonce anonceConsulte) {
+        this.anonceConsulte = anonceConsulte;
     }
 
     public Categorie getCategorieVisitee() {

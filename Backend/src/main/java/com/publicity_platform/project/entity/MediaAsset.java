@@ -13,7 +13,7 @@ public class MediaAsset {
     }
 
     public MediaAsset(Long id, String urlStockage, String formatFichier, Long tailleFichierKo, Boolean imagePrincipale,
-            Integer ordreAffichage, LocalDateTime dateTelechargement, Produit produit) {
+            Integer ordreAffichage, LocalDateTime dateTelechargement, Anonce anonce) {
         this.id = id;
         this.urlStockage = urlStockage;
         this.formatFichier = formatFichier;
@@ -21,7 +21,7 @@ public class MediaAsset {
         this.imagePrincipale = imagePrincipale;
         this.ordreAffichage = ordreAffichage;
         this.dateTelechargement = dateTelechargement;
-        this.produit = produit;
+        this.anonce = anonce;
     }
 
     public static MediaAssetBuilder builder() {
@@ -36,7 +36,7 @@ public class MediaAsset {
         private Boolean imagePrincipale = false;
         private Integer ordreAffichage;
         private LocalDateTime dateTelechargement;
-        private Produit produit;
+        private Anonce anonce;
 
         public MediaAssetBuilder id(Long id) {
             this.id = id;
@@ -73,14 +73,14 @@ public class MediaAsset {
             return this;
         }
 
-        public MediaAssetBuilder produit(Produit produit) {
-            this.produit = produit;
+        public MediaAssetBuilder anonce(Anonce anonce) {
+            this.anonce = anonce;
             return this;
         }
 
         public MediaAsset build() {
             return new MediaAsset(id, urlStockage, formatFichier, tailleFichierKo, imagePrincipale, ordreAffichage,
-                    dateTelechargement, produit);
+                    dateTelechargement, anonce);
         }
     }
 
@@ -109,13 +109,13 @@ public class MediaAsset {
     private LocalDateTime dateTelechargement;
 
     // ─────────────────────────────────────────────
-    // Relation 1..* MediaAsset → 1 Produit (composition)
+    // Relation 1..* MediaAsset → 1 Anonce (composition)
     // ─────────────────────────────────────────────
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "produit_id", nullable = false)
-    private Produit produit;
+    @JoinColumn(name = "anonce_id", nullable = false)
+    private Anonce anonce;
 
     // Explicit Getters and Setters
     public Long getId() {
@@ -174,12 +174,12 @@ public class MediaAsset {
         this.dateTelechargement = dateTelechargement;
     }
 
-    public Produit getProduit() {
-        return produit;
+    public Anonce getAnonce() {
+        return anonce;
     }
 
-    public void setProduit(Produit produit) {
-        this.produit = produit;
+    public void setAnonce(Anonce anonce) {
+        this.anonce = anonce;
     }
 
     @PrePersist

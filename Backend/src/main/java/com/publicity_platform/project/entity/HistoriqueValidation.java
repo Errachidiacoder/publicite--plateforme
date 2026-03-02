@@ -15,7 +15,7 @@ public class HistoriqueValidation {
 
     public HistoriqueValidation(Long id, String actionEffectuee, String commentaireAdmin,
             StatutValidation ancienStatut, StatutValidation nouveauStatut, LocalDateTime dateAction,
-            Utilisateur adminResponsable, Produit produitConcerne) {
+            Utilisateur adminResponsable, Anonce anonceConcerne) {
         this.id = id;
         this.actionEffectuee = actionEffectuee;
         this.commentaireAdmin = commentaireAdmin;
@@ -23,7 +23,7 @@ public class HistoriqueValidation {
         this.nouveauStatut = nouveauStatut;
         this.dateAction = dateAction;
         this.adminResponsable = adminResponsable;
-        this.produitConcerne = produitConcerne;
+        this.anonceConcerne = anonceConcerne;
     }
 
     public static HistoriqueValidationBuilder builder() {
@@ -38,7 +38,7 @@ public class HistoriqueValidation {
         private StatutValidation nouveauStatut;
         private LocalDateTime dateAction;
         private Utilisateur adminResponsable;
-        private Produit produitConcerne;
+        private Anonce anonceConcerne;
 
         public HistoriqueValidationBuilder id(Long id) {
             this.id = id;
@@ -75,14 +75,14 @@ public class HistoriqueValidation {
             return this;
         }
 
-        public HistoriqueValidationBuilder produitConcerne(Produit produitConcerne) {
-            this.produitConcerne = produitConcerne;
+        public HistoriqueValidationBuilder anonceConcerne(Anonce anonceConcerne) {
+            this.anonceConcerne = anonceConcerne;
             return this;
         }
 
         public HistoriqueValidation build() {
             return new HistoriqueValidation(id, actionEffectuee, commentaireAdmin, ancienStatut, nouveauStatut,
-                    dateAction, adminResponsable, produitConcerne);
+                    dateAction, adminResponsable, anonceConcerne);
         }
     }
 
@@ -121,8 +121,8 @@ public class HistoriqueValidation {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "produit_concerne_id", nullable = false)
-    private Produit produitConcerne;
+    @JoinColumn(name = "anonce_concerne_id", nullable = false)
+    private Anonce anonceConcerne;
 
     // Explicit Getters and Setters
     public Long getId() {
@@ -181,12 +181,12 @@ public class HistoriqueValidation {
         this.adminResponsable = adminResponsable;
     }
 
-    public Produit getProduitConcerne() {
-        return produitConcerne;
+    public Anonce getAnonceConcerne() {
+        return anonceConcerne;
     }
 
-    public void setProduitConcerne(Produit produitConcerne) {
-        this.produitConcerne = produitConcerne;
+    public void setAnonceConcerne(Anonce anonceConcerne) {
+        this.anonceConcerne = anonceConcerne;
     }
 
     @PrePersist

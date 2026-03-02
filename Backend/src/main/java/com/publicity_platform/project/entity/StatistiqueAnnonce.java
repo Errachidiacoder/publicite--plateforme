@@ -12,14 +12,14 @@ public class StatistiqueAnnonce {
     }
 
     public StatistiqueAnnonce(Long id, Long totalVuesGlobales, Integer totalContactsRecus, Double tauxConversionEstime,
-            String periodeAnalyse, LocalDateTime dateGeneration, Produit produitSuivi) {
+            String periodeAnalyse, LocalDateTime dateGeneration, Anonce anonceSuivi) {
         this.id = id;
         this.totalVuesGlobales = totalVuesGlobales;
         this.totalContactsRecus = totalContactsRecus;
         this.tauxConversionEstime = tauxConversionEstime;
         this.periodeAnalyse = periodeAnalyse;
         this.dateGeneration = dateGeneration;
-        this.produitSuivi = produitSuivi;
+        this.anonceSuivi = anonceSuivi;
     }
 
     public static StatistiqueAnnonceBuilder builder() {
@@ -33,7 +33,7 @@ public class StatistiqueAnnonce {
         private Double tauxConversionEstime;
         private String periodeAnalyse;
         private LocalDateTime dateGeneration;
-        private Produit produitSuivi;
+        private Anonce anonceSuivi;
 
         public StatistiqueAnnonceBuilder id(Long id) {
             this.id = id;
@@ -65,14 +65,14 @@ public class StatistiqueAnnonce {
             return this;
         }
 
-        public StatistiqueAnnonceBuilder produitSuivi(Produit produitSuivi) {
-            this.produitSuivi = produitSuivi;
+        public StatistiqueAnnonceBuilder anonceSuivi(Anonce anonceSuivi) {
+            this.anonceSuivi = anonceSuivi;
             return this;
         }
 
         public StatistiqueAnnonce build() {
             return new StatistiqueAnnonce(id, totalVuesGlobales, totalContactsRecus, tauxConversionEstime,
-                    periodeAnalyse, dateGeneration, produitSuivi);
+                    periodeAnalyse, dateGeneration, anonceSuivi);
         }
     }
 
@@ -97,13 +97,12 @@ public class StatistiqueAnnonce {
     private LocalDateTime dateGeneration;
 
     // ─────────────────────────────────────────────
-    // Relation 0..* StatistiqueAnnonce → 1 Produit (composition)
+    // Relation 0..* StatistiqueAnnonce → 1 Anonce (composition)
     // ─────────────────────────────────────────────
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "produit_suivi_id", nullable = false)
-    private Produit produitSuivi;
+    @JoinColumn(name = "anonce_suivi_id", nullable = false)
+    private Anonce anonceSuivi;
 
     // Explicit Getters and Setters
     public Long getId() {
@@ -154,12 +153,12 @@ public class StatistiqueAnnonce {
         this.dateGeneration = dateGeneration;
     }
 
-    public Produit getProduitSuivi() {
-        return produitSuivi;
+    public Anonce getAnonceSuivi() {
+        return anonceSuivi;
     }
 
-    public void setProduitSuivi(Produit produitSuivi) {
-        this.produitSuivi = produitSuivi;
+    public void setAnonceSuivi(Anonce anonceSuivi) {
+        this.anonceSuivi = anonceSuivi;
     }
 
     @PrePersist

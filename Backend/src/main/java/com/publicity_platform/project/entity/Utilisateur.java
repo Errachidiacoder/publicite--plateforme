@@ -55,7 +55,7 @@ public class Utilisateur implements UserDetails {
 
     @JsonIgnore
     @OneToMany(mappedBy = "annonceur", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Produit> produits;
+    private List<Anonce> anonces;
 
     @JsonIgnore
     @OneToMany(mappedBy = "destinataire", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -242,12 +242,12 @@ public class Utilisateur implements UserDetails {
         this.dateInscription = dateInscription;
     }
 
-    public List<Produit> getProduits() {
-        return produits;
+    public List<Anonce> getAnonces() {
+        return anonces;
     }
 
-    public void setProduits(List<Produit> produits) {
-        this.produits = produits;
+    public void setAnonces(List<Anonce> anonces) {
+        this.anonces = anonces;
     }
 
     public List<Notification> getNotifications() {

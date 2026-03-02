@@ -13,7 +13,7 @@ public class Notification {
     }
 
     public Notification(Long id, String sujetNotification, String corpsMessage, String typeEvenement,
-            Boolean notificationLue, LocalDateTime dateEnvoi, Utilisateur destinataire, Produit produitSource) {
+            Boolean notificationLue, LocalDateTime dateEnvoi, Utilisateur destinataire, Anonce anonceSource) {
         this.id = id;
         this.sujetNotification = sujetNotification;
         this.corpsMessage = corpsMessage;
@@ -21,7 +21,7 @@ public class Notification {
         this.notificationLue = notificationLue;
         this.dateEnvoi = dateEnvoi;
         this.destinataire = destinataire;
-        this.produitSource = produitSource;
+        this.anonceSource = anonceSource;
     }
 
     public static NotificationBuilder builder() {
@@ -36,7 +36,7 @@ public class Notification {
         private Boolean notificationLue = false;
         private LocalDateTime dateEnvoi;
         private Utilisateur destinataire;
-        private Produit produitSource;
+        private Anonce anonceSource;
 
         public NotificationBuilder id(Long id) {
             this.id = id;
@@ -73,14 +73,14 @@ public class Notification {
             return this;
         }
 
-        public NotificationBuilder produitSource(Produit produitSource) {
-            this.produitSource = produitSource;
+        public NotificationBuilder anonceSource(Anonce anonceSource) {
+            this.anonceSource = anonceSource;
             return this;
         }
 
         public Notification build() {
             return new Notification(id, sujetNotification, corpsMessage, typeEvenement, notificationLue, dateEnvoi,
-                    destinataire, produitSource);
+                    destinataire, anonceSource);
         }
     }
 
@@ -116,8 +116,8 @@ public class Notification {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "produit_source_id")
-    private Produit produitSource;
+    @JoinColumn(name = "anonce_source_id")
+    private Anonce anonceSource;
 
     // Explicit Getters and Setters
     public Long getId() {
@@ -176,12 +176,12 @@ public class Notification {
         this.destinataire = destinataire;
     }
 
-    public Produit getProduitSource() {
-        return produitSource;
+    public Anonce getAnonceSource() {
+        return anonceSource;
     }
 
-    public void setProduitSource(Produit produitSource) {
-        this.produitSource = produitSource;
+    public void setAnonceSource(Anonce anonceSource) {
+        this.anonceSource = anonceSource;
     }
 
     @PrePersist
