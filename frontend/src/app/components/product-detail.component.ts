@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ProduitService } from '../services/product.service';
+import { AnonceService } from '../services/anonce.service';
 import { AuthService } from '../services/auth.service';
 import { HttpClient } from '@angular/common/http';
 
@@ -18,14 +18,14 @@ import { HttpClient } from '@angular/common/http';
           <span class="sep">/</span>
           <a href="#">{{ product.categorie?.nomCategorie }}</a>
           <span class="sep">/</span>
-          <span class="current">{{ product.titreProduit }}</span>
+          <span class="current">{{ product.titreAnonce }}</span>
         </nav>
 
         <div class="product-layout">
           <!-- LEFT: GALLERY -->
           <div class="gallery-section">
             <div class="main-stage">
-              <img [src]="selectedImg || defaultImg" [alt]="product.titreProduit" class="main-img">
+              <img [src]="selectedImg || defaultImg" [alt]="product.titreAnonce" class="main-img">
               <div class="premium-tag" *ngIf="product.annoncePremium">Annonce Premium</div>
               <button class="favorite-btn" [class.active]="isFavorited" (click)="toggleFavorite()" title="Ajouter aux favoris">
                 <svg viewBox="0 0 24 24" [attr.fill]="isFavorited ? '#e11d48' : 'none'" [attr.stroke]="isFavorited ? '#e11d48' : 'currentColor'" stroke-width="2">
@@ -34,8 +34,8 @@ import { HttpClient } from '@angular/common/http';
               </button>
             </div>
             
-            <div class="thumbnails-bar" *ngIf="product.mediaProduits?.length > 1">
-              <div class="thumb" *ngFor="let m of product.mediaProduits" 
+            <div class="thumbnails-bar" *ngIf="product.mediaAssets?.length > 1">
+              <div class="thumb" *ngFor="let m of product.mediaAssets" 
                    [class.active]="selectedImg === m.urlMedia"
                    (click)="selectedImg = m.urlMedia">
                 <img [src]="m.urlMedia" alt="Miniature">
@@ -50,7 +50,7 @@ import { HttpClient } from '@angular/common/http';
                 {{ formatDispo(product.disponibilite) }}
               </div>
               
-              <h1 class="product-title">{{ product.titreProduit }}</h1>
+              <h1 class="product-title">{{ product.titreAnonce }}</h1>
               
               <div class="price-box">
                 <span class="price-val">{{ (product.prixAfiche || 0).toLocaleString() }}</span>
@@ -236,7 +236,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class ProductDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
-  private produitService = inject(ProduitService);
+  private anonceService = inject(AnonceService);
   private authService = inject(AuthService);
   private http = inject(HttpClient);
 
@@ -249,13 +249,13 @@ export class ProductDetailComponent implements OnInit {
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.produitService.getById(+id).subscribe({
+      this.anonceService.getById(+id).subscribe({
         next: (res) => {
           this.product = res;
           if (res.imageUrl) {
             this.selectedImg = res.imageUrl;
-          } else if (res.mediaProduits && res.mediaProduits.length > 0) {
-            this.selectedImg = res.mediaProduits[0].urlMedia;
+          } else if (res.mediaAssets && res.mediaAssets.length > 0) {
+            this.selectedImg = res.mediaAssets[0].urlMedia;
           }
           this.checkIfFavorited();
         },

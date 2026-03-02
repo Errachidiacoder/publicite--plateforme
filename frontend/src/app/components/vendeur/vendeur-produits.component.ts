@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { AnonceService } from '../../services/anonce.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
     selector: 'app-vendeur-produits',
@@ -34,23 +36,23 @@ import { RouterLink } from '@angular/router';
           @for (p of produits; track p.id) {
             <div class="product-row">
               <div class="prod-img">
-                <img [src]="p.mediaProduits?.[0]?.urlMedia || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&fit=crop'" [alt]="p.titreProduit">
+                <img [src]="p.mediaAssets?.[0]?.urlMedia || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&fit=crop'" [alt]="p.titreAnonce">
               </div>
               <div class="prod-info">
-                <h3>{{ p.titreProduit }}</h3>
+                <h3>{{ p.titreAnonce }}</h3>
                 <span class="prod-category">{{ p.categorie?.nomCategorie || 'Non classé' }}</span>
               </div>
               <div class="prod-price">{{ (p.prixAfiche || 0).toLocaleString() }} DH</div>
               <div class="prod-stock">
-                <span class="stock-badge" [class.low]="(p.quantiteStock || 0) < 5">
-                  {{ p.quantiteStock || 0 }} en stock
+                <span class="stock-badge" [class.low]="(p.produit?.quantiteStock || 0) < 5">
+                  {{ p.produit?.quantiteStock || 0 }} en stock
                 </span>
               </div>
               <div class="prod-sales">
-                <span>{{ p.nombreVentes || 0 }} ventes</span>
+                <span>{{ p.compteurVues || 0 }} vues</span>
               </div>
               <div class="prod-status">
-                <span class="status-dot" [class.active]="p.statutValidation === 'VALIDE'"
+                <span class="status-dot" [class.active]="p.statutValidation === 'VALIDE' || p.statutValidation === 'ACTIVEE'"
                       [class.pending]="p.statutValidation === 'EN_ATTENTE'"></span>
                 {{ p.statutValidation || 'EN_ATTENTE' }}
               </div>
@@ -116,14 +118,20 @@ import { RouterLink } from '@angular/router';
   `]
 })
 export class VendeurProduitsComponent implements OnInit {
-    private http = inject(HttpClient);
+    private anonceService = inject(AnonceService);
+    private authService = inject(AuthService);
     produits: any[] = [];
     loading = true;
 
     ngOnInit() {
-        this.http.get<any[]>('http://localhost:8081/api/v1/produits/active').subscribe({
-            next: (data) => { this.produits = data; this.loading = false; },
-            error: () => { this.produits = []; this.loading = false; }
-        });
+        const userId = this.authService.getUserId();
+        if (userId) {
+            this.anonceService.getByAnnonceur(userId).subscribe({
+                next: (data) => { this.produits = data; this.loading = false; },
+                error: () => { this.produits = []; this.loading = false; }
+            });
+        } else {
+            this.loading = false;
+        }
     }
 }

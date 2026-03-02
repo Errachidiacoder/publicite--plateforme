@@ -39,7 +39,7 @@ import { AdminService } from '../../services/admin.service';
           <table class="premium-table">
             <thead>
               <tr>
-                <th class="text-center">Titre du Produit</th>
+                <th class="text-center">Titre de l'Annonce</th>
                 <th class="text-center">Annonceur</th>
                 <th class="text-center">Date Publication</th>
                 <th class="text-center">Statut</th>
@@ -50,7 +50,7 @@ import { AdminService } from '../../services/admin.service';
               <tr *ngFor="let prod of filteredProducts">
                 <td class="text-center">
                   <div class="table-user-cell" style="justify-content:center;">
-                    <span class="u-name">{{ prod.titreProduit }}</span>
+                    <span class="u-name">{{ prod.titreAnonce }}</span>
                   </div>
                 </td>
                 <td class="text-center">
@@ -121,7 +121,7 @@ import { AdminService } from '../../services/admin.service';
                 </div>
                 <div class="detail-section">
                     <label>Titre & Description</label>
-                    <h4 class="detail-title">{{ selectedProduct.titreProduit }}</h4>
+                    <h4 class="detail-title">{{ selectedProduct.titreAnonce }}</h4>
                     <p class="detail-desc">{{ selectedProduct.descriptionDetaillee }}</p>
                 </div>
                 <div class="detail-section" *ngIf="selectedProduct.motifRefusAdmin">
@@ -361,10 +361,10 @@ export class ProductValidationComponent implements OnInit {
   }
 
   onEdit(product: any) {
-    const newTitle = prompt('Nouveau titre:', product.titreProduit);
+    const newTitle = prompt('Nouveau titre:', product.titreAnonce);
     const newDesc = prompt('Nouvelle description:', product.descriptionDetaillee);
     if (newTitle !== null && newDesc !== null) {
-      this.adminService.updateProduct(product.id, { titreProduit: newTitle, descriptionDetaillee: newDesc })
+      this.adminService.updateProduct(product.id, { titreAnonce: newTitle, descriptionDetaillee: newDesc })
         .subscribe(() => {
           this.loadProducts();
           if (this.selectedProduct && this.selectedProduct.id === product.id) {

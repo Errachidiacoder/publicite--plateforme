@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { ProduitService } from '../services/product.service';
+import { AnonceService } from '../services/anonce.service';
 import { CategorieService } from '../services/category.service';
 
 interface FilePreview {
@@ -13,7 +13,7 @@ interface FilePreview {
 }
 
 @Component({
-  selector: 'app-product-submission',
+  selector: 'app-anonce-submission',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
@@ -22,8 +22,8 @@ interface FilePreview {
         <div class="submit-card">
           <div class="submit-header">
             <span class="header-icon">📦</span>
-            <h1>Soumettre un produit</h1>
-            <p>Remplissez les informations ci-dessous pour soumettre votre produit au catalogue SouqBladi.</p>
+            <h1>Soumettre une annonce</h1>
+            <p>Remplissez les informations ci-dessous pour soumettre votre annonce au catalogue SouqBladi.</p>
           </div>
 
           @if (successMsg) {

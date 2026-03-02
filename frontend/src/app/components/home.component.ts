@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { CategorieService } from '../services/category.service';
-import { ProduitService } from '../services/product.service';
+import { AnonceService } from '../services/anonce.service';
+import { SuperDealsComponent } from './super-deals.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SuperDealsComponent],
   template: `
     <!-- HERO SECTION -->
     <section class="hero">
@@ -108,25 +109,8 @@ import { ProduitService } from '../services/product.service';
       </div>
     </section>
 
-    <!-- FLASH SALE -->
-    <section class="flash-section">
-      <div class="container">
-        <div class="flash-banner">
-          <div class="flash-left">
-            <span class="flash-icon">⚡</span>
-            <h2>Ventes Flash</h2>
-            <div class="timer">
-              <span class="timer-block">02</span>
-              <span class="timer-sep">:</span>
-              <span class="timer-block">45</span>
-              <span class="timer-sep">:</span>
-              <span class="timer-block">12</span>
-            </div>
-          </div>
-          <a href="#" class="btn btn-outline btn-sm">Tout voir →</a>
-        </div>
-      </div>
-    </section>
+    <!-- SUPER DEALS (AliExpress Style) -->
+    <app-super-deals></app-super-deals>
 
     <!-- PRODUCTS -->
     <section class="section">
@@ -348,35 +332,6 @@ import { ProduitService } from '../services/product.service';
     .cat-icon { font-size: 2rem; }
     .cat-name { font-weight: 600; font-size: 0.85rem; color: var(--sb-text); text-align: center; }
 
-    /* FLASH SALE */
-    .flash-section { padding: 30px 0; }
-    .flash-banner {
-      background: var(--sb-primary-gradient);
-      border-radius: var(--sb-radius-xl);
-      padding: 24px 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .flash-left { display: flex; align-items: center; gap: 16px; }
-    .flash-icon { font-size: 1.6rem; animation: pulse 1.5s infinite; }
-    .flash-banner h2 { color: white; font-size: 1.3rem; font-weight: 800; margin: 0; }
-    .timer { display: flex; align-items: center; gap: 4px; }
-    .timer-block {
-      background: rgba(0,0,0,0.25);
-      color: white;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-weight: 800;
-      font-size: 1rem;
-      min-width: 38px;
-      text-align: center;
-    }
-    .timer-sep { color: white; font-weight: 800; }
-    .flash-banner .btn-outline { color: white; border-color: white; }
-    .flash-banner .btn-outline:hover { background: white; color: var(--sb-primary); }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-
     /* PRODUCTS */
     .products-grid {
       display: grid;
@@ -450,7 +405,7 @@ import { ProduitService } from '../services/product.service';
 export class HomeComponent implements OnInit {
   private authService = inject(AuthService);
   private catService = inject(CategorieService);
-  private produitService = inject(ProduitService);
+  private anonceService = inject(AnonceService);
   private router = inject(Router);
 
   searchQuery = '';
@@ -470,7 +425,7 @@ export class HomeComponent implements OnInit {
     { nomCategorie: 'Alimentation', iconeCategorie: '🥘' },
     { nomCategorie: 'Artisanat', iconeCategorie: '🏺' }
   ];
-
+  
   ngOnInit() { this.loadData(); }
 
   loadData() {
@@ -480,18 +435,18 @@ export class HomeComponent implements OnInit {
       error: () => this.categories = []
     });
 
-    this.produitService.getActive().subscribe({
-      next: (prods) => {
-        this.allProducts = prods.map((p: any) => ({
-          id: p.id,
-          name: p.titreProduit,
-          price: (p.prixAfiche || 0).toLocaleString() + ' DH',
-          location: p.villeLocalisation,
-          categorie: p.categorie?.nomCategorie || 'Divers',
-          img: p.mediaProduits && p.mediaProduits.length > 0
-            ? p.mediaProduits[0].urlMedia
+    this.anonceService.getActive().subscribe({
+      next: (anonces) => {
+        this.allProducts = anonces.map((a: any) => ({
+          id: a.id,
+          name: a.titreAnonce,
+          price: (a.prixAfiche || 0).toLocaleString() + ' DH',
+          location: a.villeLocalisation,
+          categorie: a.categorie?.nomCategorie || 'Divers',
+          img: a.mediaAssets && a.mediaAssets.length > 0
+            ? a.mediaAssets[0].urlMedia
             : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&fit=crop',
-          badge: p.annoncePremium ? 'TOP' : null
+          badge: a.annoncePremium ? 'TOP' : null
         }));
         this.filteredProducts = [...this.allProducts];
         this.loading = false;
