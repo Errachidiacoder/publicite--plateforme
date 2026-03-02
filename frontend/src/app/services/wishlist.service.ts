@@ -9,7 +9,7 @@ import { AuthService } from './auth.service';
 export class WishlistService {
     private http = inject(HttpClient);
     private authService = inject(AuthService);
-    private apiUrl = 'http://localhost:8081/api/v1/favoris';
+    private apiUrl = 'http://localhost:18081/api/v1/favoris';
 
     private favoritesCountSubject = new BehaviorSubject<number>(0);
     favoritesCount$ = this.favoritesCountSubject.asObservable();

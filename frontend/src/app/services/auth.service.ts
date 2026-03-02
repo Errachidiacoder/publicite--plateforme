@@ -19,7 +19,7 @@ const STORAGE_KEY = 'pub_auth';
 export class AuthService {
     private http = inject(HttpClient);
     private router = inject(Router);
-    private apiUrl = 'http://localhost:8081/api/v1/auth';
+    private apiUrl = 'http://localhost:18081/api/v1/auth';
 
     register(request: any): Observable<AuthResponse> {
         return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request).pipe(
@@ -95,13 +95,9 @@ export class AuthService {
     isLoggedIn(): boolean {
         const token = this.getToken();
         if (!token) return false;
-        // Check token expiry
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.exp * 1000 > Date.now();
-        } catch {
-            return false;
-        }
+        const payload = this.decodeJwtPayload(token);
+        if (!payload?.exp) return false;
+        return payload.exp * 1000 > Date.now();
     }
 
     isAdmin(): boolean {
@@ -128,13 +124,18 @@ export class AuthService {
         return this.getRoles().includes(role);
     }
 
-    /** Decode the JWT payload to extract the roles array */
     private decodeRolesFromToken(token: string): string[] {
+        return this.decodeJwtPayload(token)?.roles ?? [];
+    }
+
+    private decodeJwtPayload(token: string): any | null {
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.roles ?? [];
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+                + '='.repeat((4 - (base64Url.length % 4)) % 4);
+            return JSON.parse(atob(base64));
         } catch {
-            return [];
+            return null;
         }
     }
 }

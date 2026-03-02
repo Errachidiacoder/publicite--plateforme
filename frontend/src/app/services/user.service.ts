@@ -15,7 +15,7 @@ export interface UserDto {
 })
 export class UserService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8080/api/v1/users';
+    private apiUrl = 'http://localhost:18081/api/v1/users';
 
     getProfile(id: number): Observable<UserDto> {
         return this.http.get<UserDto>(`${this.apiUrl}/${id}`);

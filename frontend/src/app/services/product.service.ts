@@ -7,8 +7,8 @@ import { Observable } from 'rxjs';
 })
 export class ProduitService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8081/api/v1/produits';
-    private mediaUrl = 'http://localhost:8081/api/v1/media';
+    private apiUrl = 'http://localhost:18081/api/v1/produits';
+    private mediaUrl = 'http://localhost:18081/api/v1/media';
 
     uploadImage(file: File): Observable<any> {
         const formData = new FormData();

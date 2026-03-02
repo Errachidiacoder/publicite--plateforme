@@ -19,7 +19,7 @@ export interface Notification {
 export class NotificationService {
     private http = inject(HttpClient);
     private auth = inject(AuthService);
-    private apiUrl = 'http://localhost:8081/api/v1/notifications';
+    private apiUrl = 'http://localhost:18081/api/v1/notifications';
 
     private notificationsSub = new BehaviorSubject<Notification[]>([]);
     notifications$ = this.notificationsSub.asObservable();

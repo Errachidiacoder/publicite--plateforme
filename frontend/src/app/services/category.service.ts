@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class CategorieService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8081/api/v1/categories';
+    private apiUrl = 'http://localhost:18081/api/v1/categories';
 
     getAll(): Observable<any[]> {
         return this.getAllActive();

@@ -179,12 +179,12 @@ export class VendeurDashboardComponent implements OnInit {
 
   ngOnInit() {
     // Fetch user's product count
-    this.http.get<any[]>('http://localhost:8081/api/v1/produits/active').subscribe({
+    this.http.get<any[]>('http://localhost:18081/api/v1/produits/active').subscribe({
       next: (produits) => { this.stats.totalProduits = produits.length; },
       error: () => { }
     });
     // Fetch boutique stats
-    this.http.get<any>('http://localhost:8081/api/v1/boutiques/ma-boutique').subscribe({
+    this.http.get<any>('http://localhost:18081/api/v1/boutiques/ma-boutique').subscribe({
       next: (boutique) => {
         if (boutique) {
           this.stats.noteMoyenne = boutique.noteMoyenne || 0;

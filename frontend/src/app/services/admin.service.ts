@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class AdminService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8081/api/v1/admin';
+    private apiUrl = 'http://localhost:18081/api/v1/admin';
 
     getDashboardStats(): Observable<any> {
         return this.http.get<any>(`${this.apiUrl}/dashboard/stats`);

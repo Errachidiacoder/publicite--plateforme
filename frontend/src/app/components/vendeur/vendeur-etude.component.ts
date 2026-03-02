@@ -202,7 +202,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class VendeurEtudeComponent implements OnInit {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8081/api/v1/etude';
+    private apiUrl = 'http://localhost:18081/api/v1/etude';
 
     winningProducts: any[] = [];
     tendances: any[] = [];

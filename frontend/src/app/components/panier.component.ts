@@ -156,7 +156,7 @@ export class PanierComponent implements OnInit {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
   private router = inject(Router);
-  private apiUrl = 'http://localhost:8081/api/v1/panier';
+  private apiUrl = 'http://localhost:18081/api/v1/panier';
 
   panier: any = null;
   loading = true;

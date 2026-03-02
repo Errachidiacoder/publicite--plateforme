@@ -378,7 +378,7 @@ export class ProductSubmissionComponent implements OnInit {
       formData.append('files', preview.file);
     }
 
-    this.http.post(`http://localhost:8081/api/v1/media/upload/${produitId}`, formData).subscribe({
+    this.http.post(`http://localhost:18081/api/v1/media/upload/${produitId}`, formData).subscribe({
       next: () => this.onSuccess(),
       error: () => {
         // Product was created even if media upload fails

@@ -90,10 +90,10 @@ export class VendeurCommandesComponent implements OnInit {
     loading = true;
 
     ngOnInit() {
-        this.http.get<any>('http://localhost:8081/api/v1/boutiques/ma-boutique').subscribe({
+        this.http.get<any>('http://localhost:18081/api/v1/boutiques/ma-boutique').subscribe({
             next: (boutique: any) => {
                 if (boutique?.id) {
-                    this.http.get<any[]>(`http://localhost:8081/api/v1/commandes/boutique/${boutique.id}`).subscribe({
+                    this.http.get<any[]>(`http://localhost:18081/api/v1/commandes/boutique/${boutique.id}`).subscribe({
                         next: (data: any[]) => { this.commandes = data; this.loading = false; },
                         error: () => { this.commandes = []; this.loading = false; }
                     });
