@@ -9,6 +9,10 @@ export class CategorieService {
     private http = inject(HttpClient);
     private apiUrl = 'http://localhost:8081/api/v1/categories';
 
+    getAll(): Observable<any[]> {
+        return this.getAllActive();
+    }
+
     getAllActive(): Observable<any[]> {
         return this.http.get<any[]>(this.apiUrl);
     }

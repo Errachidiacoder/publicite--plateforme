@@ -2,6 +2,7 @@ package com.publicity_platform.project.controller;
 
 import com.publicity_platform.project.entity.Anonce;
 import com.publicity_platform.project.dto.AnonceDto;
+import com.publicity_platform.project.dto.ProduitDto;
 import com.publicity_platform.project.dto.UtilisateurDto;
 
 import com.publicity_platform.project.entity.Role;

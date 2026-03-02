@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProduitService } from '../services/product.service';
+import { AnonceService } from '../services/anonce.service';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 
@@ -35,7 +35,7 @@ import { Router } from '@angular/router';
       <div class="ads-grid" *ngIf="ads.length > 0">
         <div class="ad-card-premium" *ngFor="let ad of ads">
           <div class="card-image-wrapper">
-             <img [src]="ad.imageUrl || 'assets/placeholder-ad.png'" [alt]="ad.titreProduit" class="card-img">
+             <img [src]="ad.imageUrl || 'assets/placeholder-ad.png'" [alt]="ad.titreAnonce" class="card-img">
              <div class="status-overlay" [ngClass]="ad.statutValidation.toLowerCase()">
                 {{ ad.statutValidation }}
              </div>
@@ -43,7 +43,7 @@ import { Router } from '@angular/router';
           
           <div class="card-body">
             <div class="category-tag">{{ ad.categorieName || 'Général' }}</div>
-            <h3>{{ ad.titreProduit }}</h3>
+            <h3>{{ ad.titreAnonce }}</h3>
             <p class="price-tag">{{ ad.prixAfiche ? (ad.prixAfiche | number:'1.0-0') + ' DH' : 'Prix sur demande' }}</p>
             
             <div class="card-info">
@@ -299,7 +299,7 @@ import { Router } from '@angular/router';
   `]
 })
 export class MyAdsComponent implements OnInit {
-  private produitService = inject(ProduitService);
+  private anonceService = inject(AnonceService);
   private authService = inject(AuthService);
   router = inject(Router);
 
@@ -314,8 +314,8 @@ export class MyAdsComponent implements OnInit {
     this.isRefreshing = true;
     const userId = this.authService.getUserId();
     if (userId) {
-      this.produitService.getByAnnonceur(userId).subscribe({
-        next: (data) => {
+      this.anonceService.getByAnnonceur(userId).subscribe({
+        next: (data: any[]) => {
           this.ads = data;
           setTimeout(() => this.isRefreshing = false, 600);
         },
@@ -338,13 +338,13 @@ export class MyAdsComponent implements OnInit {
 
   archiveAd(ad: any) {
     if (confirm("Voulez-vous vraiment archiver cette annonce ?")) {
-      this.produitService.archive(ad.id).subscribe(() => this.loadMyAds());
+      this.anonceService.archive(ad.id).subscribe(() => this.loadMyAds());
     }
   }
 
   deleteAd(ad: any) {
     if (confirm("Action irréversible. Supprimer cette annonce ?")) {
-      this.produitService.delete(ad.id).subscribe(() => this.loadMyAds());
+      this.anonceService.delete(ad.id).subscribe(() => this.loadMyAds());
     }
   }
 }

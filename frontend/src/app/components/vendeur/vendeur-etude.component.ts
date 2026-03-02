@@ -213,17 +213,17 @@ export class VendeurEtudeComponent implements OnInit {
 
     ngOnInit() {
         this.http.get<any[]>(`${this.apiUrl}/winning-products`).subscribe({
-            next: (data) => { this.winningProducts = data; this.loadingWinning = false; },
+            next: (data: any[]) => { this.winningProducts = data; this.loadingWinning = false; },
             error: () => this.loadingWinning = false
         });
 
         this.http.get<any[]>(`${this.apiUrl}/tendances`).subscribe({
-            next: (data) => { this.tendances = data; this.loadingTendances = false; },
+            next: (data: any[]) => { this.tendances = data; this.loadingTendances = false; },
             error: () => this.loadingTendances = false
         });
 
         this.http.get<any>(`${this.apiUrl}/besoins-clients`).subscribe({
-            next: (data) => { this.besoins = data; this.loadingBesoins = false; },
+            next: (data: any) => { this.besoins = data; this.loadingBesoins = false; },
             error: () => this.loadingBesoins = false
         });
     }

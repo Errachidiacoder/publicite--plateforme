@@ -617,7 +617,7 @@ export class UserManagementComponent implements OnInit {
 
   loadUsers() {
     this.adminService.getUsers().subscribe({
-      next: (data) => {
+      next: (data: any[]) => {
         setTimeout(() => {
           this.users = data;
           this.cdr.detectChanges();
@@ -629,7 +629,7 @@ export class UserManagementComponent implements OnInit {
 
   loadRoles() {
     this.adminService.getRoles().subscribe({
-      next: (data) => {
+      next: (data: any[]) => {
         setTimeout(() => {
           this.rolesList = data;
           this.cdr.detectChanges();

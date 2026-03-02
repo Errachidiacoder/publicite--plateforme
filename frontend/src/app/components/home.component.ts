@@ -443,9 +443,7 @@ export class HomeComponent implements OnInit {
           price: (a.prixAfiche || 0).toLocaleString() + ' DH',
           location: a.villeLocalisation,
           categorie: a.categorie?.nomCategorie || 'Divers',
-          img: a.mediaAssets && a.mediaAssets.length > 0
-            ? a.mediaAssets[0].urlMedia
-            : 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&fit=crop',
+          img: a.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&fit=crop',
           badge: a.annoncePremium ? 'TOP' : null
         }));
         this.filteredProducts = [...this.allProducts];

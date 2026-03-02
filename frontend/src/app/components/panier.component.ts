@@ -166,7 +166,7 @@ export class PanierComponent implements OnInit {
   loadPanier() {
     this.loading = true;
     this.http.get(this.apiUrl).subscribe({
-      next: (data) => { this.panier = data; this.loading = false; },
+      next: (data: any) => { this.panier = data; this.loading = false; },
       error: () => { this.panier = { lignes: [] }; this.loading = false; }
     });
   }
@@ -174,13 +174,13 @@ export class PanierComponent implements OnInit {
   updateQty(produitId: number, qty: number) {
     if (qty <= 0) { this.removeItem(produitId); return; }
     this.http.put(`${this.apiUrl}/modifier`, { produitId, quantite: qty }).subscribe({
-      next: (data) => this.panier = data
+      next: (data: any) => this.panier = data
     });
   }
 
   removeItem(produitId: number) {
     this.http.delete(`${this.apiUrl}/supprimer/${produitId}`).subscribe({
-      next: (data) => this.panier = data
+      next: (data: any) => this.panier = data
     });
   }
 

@@ -80,6 +80,18 @@ export class AuthService {
         return this.getSession()?.userId ?? null;
     }
 
+    getCurrentUser(): { id: number; nomComplet: string; email: string; role: string; roles: string[] } | null {
+        const s = this.getSession();
+        if (!s?.userId) return null;
+        return {
+            id: s.userId,
+            nomComplet: s.nomComplet ?? '',
+            email: s.email ?? '',
+            role: s.role ?? 'VISITEUR',
+            roles: s.roles ?? []
+        };
+    }
+
     isLoggedIn(): boolean {
         const token = this.getToken();
         if (!token) return false;

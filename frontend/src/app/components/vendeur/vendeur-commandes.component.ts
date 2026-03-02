@@ -91,10 +91,10 @@ export class VendeurCommandesComponent implements OnInit {
 
     ngOnInit() {
         this.http.get<any>('http://localhost:8081/api/v1/boutiques/ma-boutique').subscribe({
-            next: (boutique) => {
+            next: (boutique: any) => {
                 if (boutique?.id) {
                     this.http.get<any[]>(`http://localhost:8081/api/v1/commandes/boutique/${boutique.id}`).subscribe({
-                        next: (data) => { this.commandes = data; this.loading = false; },
+                        next: (data: any[]) => { this.commandes = data; this.loading = false; },
                         error: () => { this.commandes = []; this.loading = false; }
                     });
                 } else {

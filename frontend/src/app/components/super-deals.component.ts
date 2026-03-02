@@ -253,7 +253,7 @@ export class SuperDealsComponent implements OnInit {
           return {
             id: a.id,
             title: a.titreAnonce,
-            img: a.mediaAssets?.[0]?.urlMedia || 'https://via.placeholder.com/200',
+            img: a.imageUrl || 'https://via.placeholder.com/200',
             price: price,
             originalPrice: originalPrice,
             discount: discount,

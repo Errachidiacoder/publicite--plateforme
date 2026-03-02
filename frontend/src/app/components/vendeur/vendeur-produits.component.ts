@@ -36,7 +36,7 @@ import { AuthService } from '../../services/auth.service';
           @for (p of produits; track p.id) {
             <div class="product-row">
               <div class="prod-img">
-                <img [src]="p.mediaAssets?.[0]?.urlMedia || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&fit=crop'" [alt]="p.titreAnonce">
+                <img [src]="p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&fit=crop'" [alt]="p.titreAnonce">
               </div>
               <div class="prod-info">
                 <h3>{{ p.titreAnonce }}</h3>
@@ -127,7 +127,7 @@ export class VendeurProduitsComponent implements OnInit {
         const userId = this.authService.getUserId();
         if (userId) {
             this.anonceService.getByAnnonceur(userId).subscribe({
-                next: (data) => { this.produits = data; this.loading = false; },
+                next: (data: any[]) => { this.produits = data; this.loading = false; },
                 error: () => { this.produits = []; this.loading = false; }
             });
         } else {

@@ -131,7 +131,7 @@ public class AnonceDto {
         return annonceur;
     }
 
-    public void setAnonceur(UtilisateurDto annonceur) {
+    public void setAnnonceur(UtilisateurDto annonceur) {
         this.annonceur = annonceur;
     }
 

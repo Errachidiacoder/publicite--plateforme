@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { AnonceService } from '../services/anonce.service';
 import { CategorieService } from '../services/category.service';
+import { ProduitService } from '../services/product.service';
 
 interface FilePreview {
   file: File;
