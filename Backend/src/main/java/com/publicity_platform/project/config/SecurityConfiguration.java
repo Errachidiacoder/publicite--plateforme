@@ -2,6 +2,7 @@ package com.publicity_platform.project.config;
 
 import com.publicity_platform.project.security.JwtAuthenticationFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -10,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -36,7 +38,10 @@ public class SecurityConfiguration {
         }
 
         @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http,
+                        ObjectProvider<ClientRegistrationRepository> clientRegistrationRepositoryProvider)
+                        throws Exception {
                 http
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(AbstractHttpConfigurer::disable)
@@ -90,8 +95,6 @@ public class SecurityConfiguration {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authenticationProvider(authenticationProvider)
                                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-                                .oauth2Login(oauth2 -> oauth2
-                                                .successHandler(oauth2SuccessHandler))
                                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                                 .exceptionHandling(ex -> ex
                                                 .authenticationEntryPoint((request, response, authException) -> {
@@ -111,6 +114,10 @@ public class SecurityConfiguration {
                                                                                                         .getMessage()
                                                                                         + "\"}");
                                                 }));
+
+                if (clientRegistrationRepositoryProvider.getIfAvailable() != null) {
+                        http.oauth2Login(oauth2 -> oauth2.successHandler(oauth2SuccessHandler));
+                }
 
                 return http.build();
         }
