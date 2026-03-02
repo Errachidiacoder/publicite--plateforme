@@ -87,6 +87,14 @@ public class Categorie {
         this.iconeCategorie = iconeCategorie;
     }
 
+    public List<Categorie> getSousCategories() {
+        return sousCategories;
+    }
+
+    public void setSousCategories(List<Categorie> sousCategories) {
+        this.sousCategories = sousCategories;
+    }
+
     public static class CategorieBuilder {
         private String nomCategorie;
         private String descriptionCategorie;
