@@ -50,6 +50,12 @@ public class Produit {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "note_moyenne", nullable = false)
+    private Double noteMoyenne = 0.0;
+
+    @Column(name = "nombre_avis", nullable = false)
+    private Integer nombreAvis = 0;
+
     @JsonIgnore
     @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Anonce> anonces;
@@ -158,6 +164,22 @@ public class Produit {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public Double getNoteMoyenne() {
+        return noteMoyenne;
+    }
+
+    public void setNoteMoyenne(Double noteMoyenne) {
+        this.noteMoyenne = noteMoyenne;
+    }
+
+    public Integer getNombreAvis() {
+        return nombreAvis;
+    }
+
+    public void setNombreAvis(Integer nombreAvis) {
+        this.nombreAvis = nombreAvis;
     }
 
     public Utilisateur getAnnonceur() {
