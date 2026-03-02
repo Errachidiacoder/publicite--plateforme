@@ -43,13 +43,14 @@ public class DataInitializer {
             createRoleIfNotFound("CLIENT");
             createRoleIfNotFound("VISITEUR");
 
-            // Rôles SouqBladi
-            createRoleIfNotFound("AUTO_ENTREPRENEUR");
-            createRoleIfNotFound("MAGASIN");
-            createRoleIfNotFound("COOPERATIVE");
-            createRoleIfNotFound("SARL");
-            createRoleIfNotFound("LIVREUR");
-            createRoleIfNotFound("STOCKEUR");
+            // Rôles d'entreprise marocaine (Types de commerçants)
+            createRoleIfNotFound("SARL", "Société à Responsabilité Limitée");
+            createRoleIfNotFound("AUTO_ENTREPRENEUR", "Auto-entrepreneur");
+            createRoleIfNotFound("COOPERATIVE", "Coopérative");
+            createRoleIfNotFound("SOCIETE_LIVRAISON", "Société de livraison/stockage");
+            createRoleIfNotFound("MAGASIN", "Magasin physique");
+            createRoleIfNotFound("LIVREUR", "Service de livraison");
+            createRoleIfNotFound("STOCKEUR", "Service de stockage");
 
             // Catégories SouqBladi
             createCategoryIfNotFound("Santé", "Produits et services de santé", "🏥");
@@ -110,6 +111,12 @@ public class DataInitializer {
     private void createRoleIfNotFound(@NonNull String name) {
         if (roleRepository.findByName(name).isEmpty()) {
             roleRepository.save(new Role(name));
+        }
+    }
+
+    private void createRoleIfNotFound(@NonNull String name, String description) {
+        if (roleRepository.findByName(name).isEmpty()) {
+            roleRepository.save(new Role(name, description));
         }
     }
 

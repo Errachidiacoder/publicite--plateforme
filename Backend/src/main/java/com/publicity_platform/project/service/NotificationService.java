@@ -1,7 +1,7 @@
 package com.publicity_platform.project.service;
 
 import com.publicity_platform.project.entity.Notification;
-import com.publicity_platform.project.entity.Produit;
+import com.publicity_platform.project.entity.Anonce;
 import com.publicity_platform.project.entity.Utilisateur;
 import com.publicity_platform.project.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class NotificationService {
     @SuppressWarnings("null")
     public void createNotification(Utilisateur destinataire, String sujet, String message, String type,
 
-            Produit source) {
+            Anonce source) {
         Notification notification = Notification.builder()
                 .destinataire(destinataire)
                 .sujetNotification(sujet)
@@ -31,7 +31,7 @@ public class NotificationService {
                 .typeEvenement(type)
                 .notificationLue(false)
                 .dateEnvoi(LocalDateTime.now())
-                .produitSource(source)
+                .anonceSource(source)
                 .build();
         notificationRepository.save(java.util.Objects.requireNonNull(notification));
     }

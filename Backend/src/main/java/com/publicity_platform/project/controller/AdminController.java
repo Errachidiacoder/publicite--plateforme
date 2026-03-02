@@ -1,19 +1,19 @@
 package com.publicity_platform.project.controller;
 
-import com.publicity_platform.project.entity.Produit;
-import com.publicity_platform.project.dto.ProduitDto;
+import com.publicity_platform.project.entity.Anonce;
+import com.publicity_platform.project.dto.AnonceDto;
 import com.publicity_platform.project.dto.UtilisateurDto;
 
 import com.publicity_platform.project.entity.Role;
 import com.publicity_platform.project.entity.Utilisateur;
 import com.publicity_platform.project.enumm.StatutValidation;
 import com.publicity_platform.project.repository.CategorieRepository;
-import com.publicity_platform.project.repository.ProduitRepository;
+import com.publicity_platform.project.repository.AnonceRepository;
 import com.publicity_platform.project.repository.RoleRepository;
 import com.publicity_platform.project.repository.UtilisateurRepository;
 import com.publicity_platform.project.entity.HistoriqueValidation;
 import com.publicity_platform.project.repository.HistoriqueValidationRepository;
-import com.publicity_platform.project.service.ProduitService;
+import com.publicity_platform.project.service.AnonceService;
 import com.publicity_platform.project.entity.Categorie;
 import com.publicity_platform.project.service.CategorieService;
 
@@ -34,31 +34,34 @@ import java.util.*;
 @PreAuthorize("hasAnyRole('ADJOINTADMIN', 'SUPERADMIN')")
 public class AdminController {
 
-    private final ProduitService produitService;
-    private final ProduitRepository produitRepository;
+    private final AnonceService anonceService;
+    private final AnonceRepository anonceRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final RoleRepository roleRepository;
     private final CategorieRepository categorieRepository;
     private final HistoriqueValidationRepository historiqueValidationRepository;
     private final PasswordEncoder passwordEncoder;
     private final CategorieService categorieService;
+    private final com.publicity_platform.project.service.ProduitService produitService;
 
-    public AdminController(ProduitService produitService,
-            ProduitRepository produitRepository,
+    public AdminController(AnonceService anonceService,
+            AnonceRepository anonceRepository,
             UtilisateurRepository utilisateurRepository,
             RoleRepository roleRepository,
             CategorieRepository categorieRepository,
             HistoriqueValidationRepository historiqueValidationRepository,
             PasswordEncoder passwordEncoder,
-            CategorieService categorieService) {
-        this.produitService = produitService;
-        this.produitRepository = produitRepository;
+            CategorieService categorieService,
+            com.publicity_platform.project.service.ProduitService produitService) {
+        this.anonceService = anonceService;
+        this.anonceRepository = anonceRepository;
         this.utilisateurRepository = utilisateurRepository;
         this.roleRepository = roleRepository;
         this.categorieRepository = categorieRepository;
         this.historiqueValidationRepository = historiqueValidationRepository;
         this.passwordEncoder = passwordEncoder;
         this.categorieService = categorieService;
+        this.produitService = produitService;
     }
 
     // ============================
@@ -71,15 +74,15 @@ public class AdminController {
         System.out.println("DEBUG: Calculating Dashboard Stats...");
         Map<String, Object> stats = new HashMap<>();
 
-        long total = produitRepository.count();
-        long pending = produitRepository.countByStatutValidation(StatutValidation.EN_ATTENTE);
-        long validated = produitRepository.countByStatutValidation(StatutValidation.VALIDE);
-        long active = produitRepository.countByStatutValidation(StatutValidation.ACTIVEE);
-        long refused = produitRepository.countByStatutValidation(StatutValidation.REFUSE);
+        long total = anonceRepository.count();
+        long pending = anonceRepository.countByStatutValidation(StatutValidation.EN_ATTENTE);
+        long validated = anonceRepository.countByStatutValidation(StatutValidation.VALIDE);
+        long active = anonceRepository.countByStatutValidation(StatutValidation.ACTIVEE);
+        long refused = anonceRepository.countByStatutValidation(StatutValidation.REFUSE);
 
-        List<Produit> allProducts = produitRepository.findAll();
-        long totalVues = allProducts.stream()
-                .mapToLong(p -> p.getCompteurVues() != null ? p.getCompteurVues() : 0L)
+        List<Anonce> allAnonces = anonceRepository.findAll();
+        long totalVues = allAnonces.stream()
+                .mapToLong(a -> a.getCompteurVues() != null ? a.getCompteurVues() : 0L)
                 .sum();
 
         List<Utilisateur> allUsers = utilisateurRepository.findAll();
@@ -98,13 +101,13 @@ public class AdminController {
 
         System.out.println("DEBUG: Stats calculated - Total Products: " + total + ", Users: " + usersCount);
 
-        stats.put("produitsTotal", total);
-        stats.put("totalProduits", total); // Redondance pour compatibilité
-        stats.put("produitsEnAttente", pending);
+        stats.put("anoncesTotal", total);
+        stats.put("totalAnonces", total); // Redondance pour compatibilité
+        stats.put("anoncesEnAttente", pending);
         stats.put("totalEnAttente", pending);
-        stats.put("produitsValides", validated);
-        stats.put("produitsActifs", active);
-        stats.put("produitsRefuses", refused);
+        stats.put("anoncesValides", validated);
+        stats.put("anoncesActifs", active);
+        stats.put("anoncesRefuses", refused);
         stats.put("totalVues", totalVues);
 
         stats.put("utilisateursTotal", usersCount);
@@ -125,11 +128,11 @@ public class AdminController {
         long maxCatVues = -1;
 
         for (Categorie cat : allCats) {
-            List<Produit> catProds = allProducts.stream()
-                    .filter(p -> p.getCategorie() != null && p.getCategorie().getId().equals(cat.getId()))
+            List<Anonce> catAnonces = allAnonces.stream()
+                    .filter(a -> a.getCategorie() != null && a.getCategorie().getId().equals(cat.getId()))
                     .toList();
-            long count = catProds.size();
-            long catVues = catProds.stream().mapToLong(p -> p.getCompteurVues() != null ? p.getCompteurVues() : 0L)
+            long count = catAnonces.size();
+            long catVues = catAnonces.stream().mapToLong(a -> a.getCompteurVues() != null ? a.getCompteurVues() : 0L)
                     .sum();
 
             if (catVues > maxCatVues && count > 0) {
@@ -147,21 +150,21 @@ public class AdminController {
         stats.put("repartitionCategories", categoryDistribution);
         stats.put("hotCategory", hotCatName);
 
-        // Top 5 produits (Utilisation de DTO pour éviter les cycles de sérialisation)
-        List<ProduitDto> topProducts = produitRepository.findTop5ByOrderByCompteurVuesDesc().stream()
-                .map(ProduitDto::fromEntity)
+        // Top 5 anonces (Utilisation de DTO pour éviter les cycles de sérialisation)
+        List<AnonceDto> topAnonces = anonceRepository.findTop5ByOrderByCompteurVuesDesc().stream()
+                .map(AnonceDto::fromEntity)
                 .toList();
-        stats.put("topProducts", topProducts);
+        stats.put("topAnonces", topAnonces);
 
         // Top 5 annonceurs
         List<Map<String, Object>> advertisersSummary = allUsers.stream()
-                .filter(u -> u.getProduits() != null && !u.getProduits().isEmpty())
-                .sorted((u1, u2) -> Integer.compare(u2.getProduits().size(), u1.getProduits().size()))
+                .filter(u -> u.getAnonces() != null && !u.getAnonces().isEmpty())
+                .sorted((u1, u2) -> Integer.compare(u2.getAnonces().size(), u1.getAnonces().size()))
                 .limit(5)
                 .map(u -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("nomComplet", u.getNomComplet());
-                    map.put("annonceCount", u.getProduits().size());
+                    map.put("annonceCount", u.getAnonces().size());
                     return map;
                 }).toList();
         stats.put("topAdvertisers", advertisersSummary);
@@ -170,80 +173,80 @@ public class AdminController {
     }
 
     // ============================
-    // PRODUCT MANAGEMENT
+    // ANONCE MANAGEMENT
     // ============================
 
-    @GetMapping("/products")
-    public ResponseEntity<List<ProduitDto>> getAllProducts(
+    @GetMapping("/anonces")
+    public ResponseEntity<List<AnonceDto>> getAllAnonces(
             @RequestParam(required = false) String statut) {
         if (statut != null) {
             try {
                 StatutValidation sv = StatutValidation.valueOf(statut.toUpperCase());
-                return ResponseEntity.ok(produitService.getProductsByStatus(sv));
+                return ResponseEntity.ok(anonceService.getAnoncesByStatus(sv));
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().build();
             }
         }
-        return ResponseEntity.ok(produitService.getAllProducts());
+        return ResponseEntity.ok(anonceService.getAllAnonces());
     }
 
-    @GetMapping("/pending-products")
-    public ResponseEntity<List<ProduitDto>> getPendingProducts() {
-        return ResponseEntity.ok(produitService.getPendingProducts());
+    @GetMapping("/pending-anonces")
+    public ResponseEntity<List<AnonceDto>> getPendingAnonces() {
+        return ResponseEntity.ok(anonceService.getPendingAnonces());
     }
 
-    @PostMapping("/products/{id}/validate")
-    public ResponseEntity<ProduitDto> validate(@PathVariable @NonNull Long id,
+    @PostMapping("/anonces/{id}/validate")
+    public ResponseEntity<AnonceDto> validate(@PathVariable @NonNull Long id,
             @RequestBody Map<String, Integer> body,
             @AuthenticationPrincipal Utilisateur admin) {
         int duration = body.getOrDefault("durationMonths", 12);
-        return ResponseEntity.ok(produitService.validateProductDto(id, duration, admin));
+        return ResponseEntity.ok(anonceService.validateAnonceDto(id, duration, admin));
     }
 
-    @PostMapping("/products/{id}/reject")
-    public ResponseEntity<ProduitDto> reject(@PathVariable @NonNull Long id,
+    @PostMapping("/anonces/{id}/reject")
+    public ResponseEntity<AnonceDto> reject(@PathVariable @NonNull Long id,
             @RequestBody Map<String, String> body,
             @AuthenticationPrincipal Utilisateur admin) {
         String reason = body.getOrDefault("reason", "Non conforme aux conditions");
-        return ResponseEntity.ok(produitService.rejectProductDto(id, reason, admin));
+        return ResponseEntity.ok(anonceService.rejectAnonceDto(id, reason, admin));
     }
 
-    @DeleteMapping("/products/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable @NonNull Long id) {
-        produitService.deleteProduct(id);
+    @DeleteMapping("/anonces/{id}")
+    public ResponseEntity<Void> deleteAnonce(@PathVariable @NonNull Long id) {
+        anonceService.deleteAnonce(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/products/{id}/archive")
-    public ResponseEntity<Void> archiveProduct(@PathVariable @NonNull Long id,
+    @PostMapping("/anonces/{id}/archive")
+    public ResponseEntity<Void> archiveAnonce(@PathVariable @NonNull Long id,
             @AuthenticationPrincipal Utilisateur admin) {
-        produitService.archiveProduct(id, admin);
+        anonceService.archiveAnonce(id, admin);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/products/{id}")
-    public ResponseEntity<ProduitDto> updateProduct(@PathVariable @NonNull Long id,
+    @PutMapping("/anonces/{id}")
+    public ResponseEntity<AnonceDto> updateAnonce(@PathVariable @NonNull Long id,
             @RequestBody Map<String, Object> body,
             @AuthenticationPrincipal Utilisateur admin) {
-        Produit p = produitService.getProductById(id);
-        if (body.containsKey("titreProduit"))
-            p.setTitreProduit((String) body.get("titreProduit"));
+        Anonce a = anonceService.getAnonceById(id);
+        if (body.containsKey("titreAnonce"))
+            a.setTitreAnonce((String) body.get("titreAnonce"));
         if (body.containsKey("descriptionDetaillee"))
-            p.setDescriptionDetaillee((String) body.get("descriptionDetaillee"));
+            a.setDescriptionDetaillee((String) body.get("descriptionDetaillee"));
 
-        Produit saved = produitService.saveProduct(p);
+        Anonce saved = anonceService.saveAnonce(a);
 
         // Log modification
         historiqueValidationRepository.save(HistoriqueValidation.builder()
                 .actionEffectuee("MODIFICATION")
                 .adminResponsable(admin)
-                .produitConcerne(saved)
+                .anonceConcerne(saved)
                 .ancienStatut(saved.getStatutValidation())
                 .nouveauStatut(saved.getStatutValidation())
                 .commentaireAdmin("Modification des informations de l'annonce")
                 .build());
 
-        return ResponseEntity.ok(ProduitDto.fromEntity(saved));
+        return ResponseEntity.ok(AnonceDto.fromEntity(saved));
     }
 
     // ============================
