@@ -1,5 +1,9 @@
-<app-navbar />
+@if (showHeaderFooter) {
+  <app-navbar />
+}
 <main class="main-content">
     <router-outlet />
 </main>
-<app-footer />
+@if (showHeaderFooter) {
+  <app-footer />
+}

@@ -165,14 +165,16 @@ import { SuperDealsComponent } from './super-deals.component';
 
     /* CATEGORIES BAR */
     .categories-bar {
-      background: #1e293b;
+      background: var(--sb-primary);
       padding: 0;
       color: white;
+      z-index: 100;
+      box-shadow: 0 4px 15px rgba(26, 175, 165, 0.2);
     }
-    [data-theme="dark"] .categories-bar { background: #0f172a; }
+    [data-theme="dark"] .categories-bar { background: var(--sb-primary); }
 
     .cat-bar-wrapper {
-      max-width: 1100px;
+      max-width: 900px;
       margin: 0 auto;
       padding: 0 0;
       display: flex;
@@ -240,16 +242,17 @@ import { SuperDealsComponent } from './super-deals.component';
     }
     .cat-icon-wrap svg { width: 20px; height: 20px; stroke: currentColor; }
     .cat-item span:last-child {
-      font-size: 0.7rem;
-      font-weight: 600;
+      font-size: 0.72rem;
+      font-weight: 700;
       white-space: nowrap;
       text-align: center;
-      color: rgba(255,255,255,0.85);
+      color: white;
+      letter-spacing: 0.01em;
     }
     .cat-item.active span:last-child,
     .cat-item:hover span:last-child { color: white; }
     .cat-item.active .cat-icon-wrap,
-    .cat-item:hover .cat-icon-wrap { color: #1aafa5; }
+    .cat-item:hover .cat-icon-wrap { color: white; }
 
     /* PRODUCTS */
     .products-grid {
@@ -340,29 +343,38 @@ export class HomeComponent implements OnInit {
 
   searchQuery = '';
   selectedCategory = '';
-  categories: any[] = [];
+
+  mockCategories = [
+    { id: 'm1', nomCategorie: 'Électronique', iconeCategorie: '📱' },
+    { id: 'm2', nomCategorie: 'Mode', iconeCategorie: '👗' },
+    { id: 'm3', nomCategorie: 'Maison', iconeCategorie: '🏠' },
+    { id: 'm4', nomCategorie: 'Beauté', iconeCategorie: '💄' },
+    { id: 'm5', nomCategorie: 'Sport', iconeCategorie: '⚽' },
+    { id: 'm6', nomCategorie: 'Auto', iconeCategorie: '🚗' },
+    { id: 'm7', nomCategorie: 'Alimentation', iconeCategorie: '🥘' },
+    { id: 'm8', nomCategorie: 'Artisanat', iconeCategorie: '🏺' }
+  ];
+
+  categories: any[] = [...this.mockCategories];
   allProducts: any[] = [];
   filteredProducts: any[] = [];
   loading = true;
-
-  mockCategories = [
-    { nomCategorie: 'Électronique', iconeCategorie: '📱' },
-    { nomCategorie: 'Mode', iconeCategorie: '👗' },
-    { nomCategorie: 'Maison', iconeCategorie: '🏠' },
-    { nomCategorie: 'Beauté', iconeCategorie: '💄' },
-    { nomCategorie: 'Sport', iconeCategorie: '⚽' },
-    { nomCategorie: 'Auto', iconeCategorie: '🚗' },
-    { nomCategorie: 'Alimentation', iconeCategorie: '🥘' },
-    { nomCategorie: 'Artisanat', iconeCategorie: '🏺' }
-  ];
 
   ngOnInit() { this.loadData(); }
 
   loadData() {
     this.loading = true;
     this.catService.getAllActive().subscribe({
-      next: (cats) => this.categories = cats,
-      error: () => this.categories = []
+      next: (cats) => {
+        console.log('Categories fetched from api:', cats);
+        if (cats && cats.length > 0) {
+          this.categories = cats;
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching categories:', err);
+        this.categories = [...this.mockCategories];
+      }
     });
 
     this.anonceService.getActive().subscribe({

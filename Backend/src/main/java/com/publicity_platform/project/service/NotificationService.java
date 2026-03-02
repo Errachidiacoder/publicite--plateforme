@@ -43,10 +43,23 @@ public class NotificationService {
     @Transactional
     @SuppressWarnings("null")
     public void markAsRead(Long notificationId) {
-
         notificationRepository.findById(java.util.Objects.requireNonNull(notificationId)).ifPresent(n -> {
             n.setNotificationLue(true);
             notificationRepository.save(n);
+        });
+    }
+
+    /**
+     * Marks a notification as read ONLY if it belongs to the given user.
+     * Prevents a user from marking another user's notification as read.
+     */
+    @Transactional
+    public void markAsReadIfOwner(Long notificationId, Long userId) {
+        notificationRepository.findById(notificationId).ifPresent(n -> {
+            if (n.getDestinataire() != null && n.getDestinataire().getId().equals(userId)) {
+                n.setNotificationLue(true);
+                notificationRepository.save(n);
+            }
         });
     }
 

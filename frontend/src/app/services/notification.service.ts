@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, interval, switchMap, startWith, BehaviorSubject, tap } from 'rxjs';
+import { Observable, interval, switchMap, startWith, BehaviorSubject, Subject, tap } from 'rxjs';
 import { AuthService } from './auth.service';
 
 export interface Notification {
@@ -24,6 +24,9 @@ export class NotificationService {
     private notificationsSub = new BehaviorSubject<Notification[]>([]);
     notifications$ = this.notificationsSub.asObservable();
 
+    private newNotificationSub = new Subject<Notification>();
+    newNotification$ = this.newNotificationSub.asObservable();
+
     private unreadCountSub = new BehaviorSubject<number>(0);
     unreadCount$ = this.unreadCountSub.asObservable();
 
@@ -34,19 +37,20 @@ export class NotificationService {
         interval(30000).pipe(
             startWith(0),
             switchMap(() => {
-                const userId = this.auth.getUserId();
-                if (userId) {
-                    return this.fetchNotifications(userId);
+                if (this.auth.isLoggedIn()) {
+                    return this.fetchMyNotifications();
                 }
                 return [];
             })
         ).subscribe(notifs => {
             const current = this.notificationsSub.value;
-            // Check if there are new ones to play sound
+            // Check if there are new ones to play sound and emit
             if (notifs.length > current.length) {
-                const hasNewUnread = notifs.some(n => !n.notificationLue && !current.find(c => c.id === n.id));
-                if (hasNewUnread) {
+                const newUnread = notifs.filter(n => !n.notificationLue && !current.find(c => c.id === n.id));
+                if (newUnread.length > 0) {
                     this.playSound();
+                    // Emit the first new unread notification for the toast
+                    this.newNotificationSub.next(newUnread[0]);
                 }
             }
             this.notificationsSub.next(notifs);
@@ -54,6 +58,28 @@ export class NotificationService {
         });
     }
 
+    private fetchMyNotifications(): Observable<Notification[]> {
+        return this.http.get<Notification[]>(`${this.apiUrl}/me`);
+    }
+
+    refreshNotifications() {
+        if (this.auth.isLoggedIn()) {
+            this.fetchMyNotifications().subscribe(notifs => {
+                const current = this.notificationsSub.value;
+                if (notifs.length > current.length) {
+                    const newUnread = notifs.filter(n => !n.notificationLue && !current.find(c => c.id === n.id));
+                    if (newUnread.length > 0) {
+                        this.playSound();
+                        this.newNotificationSub.next(newUnread[0]);
+                    }
+                }
+                this.notificationsSub.next(notifs);
+                this.unreadCountSub.next(notifs.filter(n => !n.notificationLue).length);
+            });
+        }
+    }
+
+    /** @deprecated Use fetchMyNotifications instead */
     private fetchNotifications(userId: number): Observable<Notification[]> {
         return this.http.get<Notification[]>(`${this.apiUrl}/user/${userId}`);
     }

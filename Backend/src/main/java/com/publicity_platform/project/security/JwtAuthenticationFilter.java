@@ -35,21 +35,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        log.info("JWT Filter: {} {} | Auth header present: {}", request.getMethod(), request.getRequestURI(),
-                authHeader != null);
+
+        // DEBUG - Remove after fix
+        System.out.println("DEBUG JWT: Request " + request.getMethod() + " " + request.getRequestURI());
+        System.out.println("DEBUG JWT: Auth Header: " + (authHeader != null ? "PRESENT" : "MISSING"));
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.info("JWT Filter: No Bearer token, continuing without auth");
+            if (authHeader != null)
+                System.out.println("DEBUG JWT: Invalid format (no Bearer)");
             filterChain.doFilter(request, response);
             return;
         }
         try {
             final String jwt = authHeader.substring(7);
             final String userEmail = jwtService.extractUsername(jwt);
-            log.info("JWT Filter: Extracted email={} from token", userEmail);
+            System.out.println("DEBUG JWT: Extracted email: " + userEmail);
+
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                log.info("JWT Filter: Loaded user={}, authorities={}", userDetails.getUsername(),
-                        userDetails.getAuthorities());
+                System.out.println("DEBUG JWT: User found: " + userDetails.getUsername());
+
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
@@ -58,16 +63,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authToken.setDetails(
                             new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    log.info("JWT Filter: Authentication SET for user={}", userEmail);
+                    System.out.println("DEBUG JWT: AUTHENTICATION SUCCESS for " + userEmail);
                 } else {
-                    log.warn("JWT Filter: Token INVALID for user={}", userEmail);
+                    System.out.println("DEBUG JWT: TOKEN INVALID (expired or mismatch)");
                 }
-            } else {
-                log.info("JWT Filter: Skipped - email={}, existingAuth={}", userEmail,
-                        SecurityContextHolder.getContext().getAuthentication() != null);
             }
         } catch (Exception e) {
-            log.error("JWT Filter: Authentication FAILED: {}", e.getMessage(), e);
+            System.out.println("DEBUG JWT: ERROR: " + e.getMessage());
+            e.printStackTrace();
         }
         filterChain.doFilter(request, response);
     }

@@ -14,21 +14,39 @@ import { AuthService } from '../services/auth.service';
 
         <div class="auth-left">
           <div class="auth-brand">
-            <span class="brand-emoji">🛍️</span>
+            <span class="brand-logo">
+              <svg width="64" height="64" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="8" y="12" width="24" height="22" rx="4" stroke="white" stroke-width="2.5"/>
+                <path d="M14 14V10C14 6.68629 16.6863 4 20 4C23.3137 4 26 6.68629 26 10V14" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="20" cy="22" r="3" fill="white" opacity="0.3"/>
+                <path d="M14 22H26" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+              </svg>
+            </span>
             <h1>Souq<span>Bladi</span></h1>
             <p>Connectez-vous à votre espace SouqBladi pour acheter, vendre et développer votre activité.</p>
           </div>
           <div class="auth-features">
-            <div class="feature">✅ Paiement sécurisé</div>
-            <div class="feature">✅ Livraison dans tout le Maroc</div>
-            <div class="feature">✅ Support vendeur dédié</div>
+            <div class="feature">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Paiement sécurisé</span>
+            </div>
+            <div class="feature">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Livraison dans tout le Maroc</span>
+            </div>
+            <div class="feature">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Support vendeur dédié</span>
+            </div>
           </div>
         </div>
 
         <div class="auth-right">
           <div class="auth-form-box">
-            <h2>Bon retour ! 👋</h2>
-            <p class="auth-subtitle">Connectez-vous à votre compte</p>
+            <h2 style="display: flex; align-items: center; gap: 8px; font-size: 1.8rem; font-weight: 800; color: var(--sb-text); margin-bottom: 8px;">
+              Connexion
+            </h2>
+            <p class="auth-subtitle" style="color: var(--sb-text-secondary); margin-bottom: 32px;">Connectez-vous à votre compte</p>
 
             @if (errorMsg) {
               <div class="alert alert-error">⚠️ {{ errorMsg }}</div>
@@ -64,9 +82,9 @@ import { AuthService } from '../services/auth.service';
     </div>
   `,
   styles: [`
-    :host { display: block; margin-bottom: -80px; }
-    .auth-page { min-height: calc(100vh - var(--sb-nav-height)); display: flex; align-items: stretch; }
-    .auth-wrapper { display: flex; width: 100%; min-height: calc(100vh - var(--sb-nav-height)); }
+    :host { display: block; }
+    .auth-page { min-height: 100vh; display: flex; align-items: stretch; }
+    .auth-wrapper { display: flex; width: 100%; min-height: 100vh; }
 
     .auth-left {
       flex: 1;
@@ -77,12 +95,13 @@ import { AuthService } from '../services/auth.service';
       justify-content: center;
       color: white;
     }
-    .brand-emoji { font-size: 3rem; display: block; margin-bottom: 16px; }
-    .auth-left h1 { font-family: 'Outfit',sans-serif; font-size: 2.5rem; font-weight: 800; margin-bottom: 16px; color: white; }
-    .auth-left h1 span { opacity: 0.9; }
-    .auth-left p { font-size: 1.05rem; opacity: 0.9; line-height: 1.7; margin-bottom: 40px; }
-    .auth-features { display: flex; flex-direction: column; gap: 12px; }
-    .feature { font-size: 1rem; font-weight: 600; opacity: 0.95; }
+    .brand-logo { display: block; margin-bottom: 24px; }
+    .auth-left h1 { font-family: 'Outfit',sans-serif; font-size: 2.8rem; font-weight: 800; margin-bottom: 16px; color: white; letter-spacing: -0.02em; }
+    .auth-left h1 span { color: rgba(255,255,255,0.8); }
+    .auth-left p { font-size: 1.1rem; opacity: 0.9; line-height: 1.6; margin-bottom: 48px; max-width: 400px; }
+    .auth-features { display: flex; flex-direction: column; gap: 16px; }
+    .feature { display: flex; align-items: center; gap: 12px; font-size: 1.05rem; font-weight: 600; color: white; }
+    .feature svg { color: white; flex-shrink: 0; }
 
     .auth-right {
       flex: 1;
@@ -149,7 +168,7 @@ export class LoginComponent {
         } else if (err.status === 401 || err.status === 403) {
           this.errorMsg = 'Email ou mot de passe incorrect.';
         } else {
-          this.errorMsg = `Erreur de connexion (${err.status}).`;
+          this.errorMsg = `Erreur de connexion(${err.status}).`;
         }
       }
     });

@@ -9,33 +9,44 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, RouterModule],
   template: `
     <div class="page">
-      <h1 class="page-title">📊 Tableau de bord</h1>
+      <h1 class="page-title" style="display: flex; align-items: center; gap: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--sb-primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="21"/><line x1="8" y1="12" x2="8" y2="21"/><line x1="16" y1="16" x2="16" y2="21"/></svg>
+        Tableau de bord
+      </h1>
 
       <!-- KPI Cards -->
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-icon" style="background: rgba(26,175,165,0.1); color: #1AAFA5;">👤</div>
+          <div class="kpi-icon" style="background: rgba(26,175,165,0.1); color: #1AAFA5;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
           <div class="kpi-info">
             <span class="kpi-value">{{ stats.utilisateursTotal || 0 }}</span>
             <span class="kpi-label">Utilisateurs</span>
           </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-icon" style="background: rgba(59,130,246,0.1); color: #3b82f6;">📦</div>
+          <div class="kpi-icon" style="background: rgba(59,130,246,0.1); color: #3b82f6;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+          </div>
           <div class="kpi-info">
             <span class="kpi-value">{{ stats.produitsTotal || 0 }}</span>
             <span class="kpi-label">Total Annonces</span>
           </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">⏱️</div>
+          <div class="kpi-icon" style="background: rgba(245,158,11,0.1); color: #f59e0b;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
           <div class="kpi-info">
             <span class="kpi-value">{{ stats.produitsEnAttente || 0 }}</span>
             <span class="kpi-label">En Attente</span>
           </div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">✅</div>
+          <div class="kpi-icon" style="background: rgba(16,185,129,0.1); color: #10b981;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
           <div class="kpi-info">
             <span class="kpi-value">{{ stats.produitsValides || 0 }}</span>
             <span class="kpi-label">Validées</span>
@@ -46,7 +57,10 @@ import { RouterModule } from '@angular/router';
       <!-- Role Breakdown -->
       <div class="detail-grid">
         <div class="detail-card">
-          <h3>👥 Répartition Utilisateurs</h3>
+          <h3 style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sb-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Répartition Utilisateurs
+          </h3>
           <div class="detail-row">
             <span class="detail-label">Annonceurs / Vendeurs</span>
             <span class="detail-value">{{ stats.utilisateursAnnonceurs || 0 }}</span>
@@ -62,7 +76,10 @@ import { RouterModule } from '@angular/router';
         </div>
 
         <div class="detail-card">
-          <h3>📊 Stats Produits</h3>
+          <h3 style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sb-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+            Stats Produits
+          </h3>
           <div class="detail-row">
             <span class="detail-label">Actifs</span>
             <span class="detail-value success">{{ stats.produitsActifs || 0 }}</span>
@@ -81,7 +98,10 @@ import { RouterModule } from '@angular/router';
       <!-- Category Chart + Quick Links -->
       <div class="bottom-grid">
         <div class="chart-card">
-          <h3>📁 Répartition par Catégorie</h3>
+          <h3 style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sb-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Répartition par Catégorie
+          </h3>
           <div class="chart-bars">
             @for (cat of stats.repartitionCategories; track cat.nom) {
               <div class="bar-group">
@@ -95,11 +115,26 @@ import { RouterModule } from '@angular/router';
         </div>
 
         <div class="quick-card">
-          <h3>⚡ Raccourcis</h3>
-          <a routerLink="/admin/products" class="quick-link">🔔 Valider les annonces</a>
-          <a routerLink="/admin/users" class="quick-link">👤 Gérer les rôles</a>
-          <a routerLink="/admin/categories" class="quick-link">📁 Créer catégorie</a>
-          <a routerLink="/admin/logs" class="quick-link">📜 Voir historique</a>
+          <h3 style="display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sb-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Raccourcis
+          </h3>
+          <a routerLink="/admin/products" class="quick-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:text-bottom"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Valider les annonces
+          </a>
+          <a routerLink="/admin/users" class="quick-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:text-bottom"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Gérer les rôles
+          </a>
+          <a routerLink="/admin/categories" class="quick-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:text-bottom"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            Créer catégorie
+          </a>
+          <a routerLink="/admin/logs" class="quick-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px; vertical-align:text-bottom"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Voir historique
+          </a>
         </div>
       </div>
     </div>

@@ -47,6 +47,12 @@ public class AnonceController {
         return ResponseEntity.ok(service.getAnonceDtoById(id));
     }
 
+    @PostMapping("/{id}/notify-admins")
+    public ResponseEntity<Void> notifyAdminsForNewAnnonce(@PathVariable @NonNull Long id) {
+        service.notifyAdminsForNewAnnonce(id);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/{id}/activate-mock")
     public ResponseEntity<AnonceDto> activateAnonceMock(
             @PathVariable @NonNull Long id) {

@@ -1,6 +1,8 @@
 package com.publicity_platform.project.config;
 
 import com.publicity_platform.project.security.JwtAuthenticationFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
@@ -28,6 +30,7 @@ public class SecurityConfiguration {
         private final JwtAuthenticationFilter jwtAuthFilter;
         private final AuthenticationProvider authenticationProvider;
         private final com.publicity_platform.project.security.OAuth2LoginSuccessHandler oauth2SuccessHandler;
+        private static final Logger log = LoggerFactory.getLogger(SecurityConfiguration.class);
 
         public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter,
                         AuthenticationProvider authenticationProvider,
@@ -50,46 +53,49 @@ public class SecurityConfiguration {
                                                 .permitAll()
                                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                                 .requestMatchers("/h2-console/**").permitAll()
+                                                .requestMatchers("/error").permitAll()
+                                                // Public GET access to catalogs
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                                                "/api/v1/categories", "/api/v1/categories/**")
+                                                                "/api/v1/categories/**",
+                                                                "/api/v1/boutiques/**",
+                                                                "/api/v1/avis/**")
+
                                                 .permitAll()
-                                                // /active is user-specific, must be authenticated BEFORE the wildcard
+
+                                                // Anonces security mapping
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                                                "/api/v1/produits/active")
+                                                                "/api/v1/anonces/active")
                                                 .authenticated()
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                                                "/api/v1/produits", "/api/v1/produits/**")
+                                                                "/api/v1/anonces", "/api/v1/anonces/**")
+                                                .permitAll()
+                                                // TEMP: permitAll to debug 401 – set back to .authenticated() after fix
+                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                                                "/api/v1/anonces/submit")
                                                 .permitAll()
                                                 .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                                                "/api/v1/media/upload")
+                                                                "/api/v1/anonces/*/activate-mock")
                                                 .authenticated()
+                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                                                "/api/v1/anonces/**")
+                                                .authenticated()
+
+                                                // Notifications security mapping
+                                                .requestMatchers("/api/v1/notifications/**").authenticated()
+
+                                                // Media access
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/v1/media/files/**")
                                                 .permitAll()
                                                 .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                                                "/api/v1/produits/submit")
+                                                                "/api/v1/media/**")
                                                 .authenticated()
-                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                                                "/api/v1/boutiques", "/api/v1/boutiques/**")
-                                                .permitAll()
-                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                                                "/api/v1/avis", "/api/v1/avis/**")
-                                                .permitAll()
-                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                                                "/api/v1/produits/*/activate-mock")
-                                                .authenticated()
+
+                                                // Users & Admin
                                                 .requestMatchers("/api/v1/users/**").authenticated()
                                                 .requestMatchers("/api/v1/admin/**")
                                                 .hasAnyRole("ADJOINTADMIN", "SUPERADMIN")
-                                                // Authenticated endpoints for product operations
-                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                                                "/api/v1/produits/**")
-                                                .authenticated()
-                                                // Media upload: permit all since produitId is already scoped to an
-                                                // authenticated product
-                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
-                                                                "/api/v1/media/**")
-                                                .permitAll()
+
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -98,6 +104,21 @@ public class SecurityConfiguration {
                                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                                 .exceptionHandling(ex -> ex
                                                 .authenticationEntryPoint((request, response, authException) -> {
+                                                        String ah = request.getHeader("Authorization");
+                                                        System.out.println("DEBUG 401: at " + request.getRequestURI());
+                                                        System.out.println("DEBUG 401: Exception: "
+                                                                        + authException.getMessage());
+                                                        System.out.println("DEBUG 401: Header: " + (ah != null
+                                                                        ? ah.substring(0, Math.min(ah.length(), 15))
+                                                                                        + "..."
+                                                                        : "MISSING"));
+
+                                                        response.setHeader("Access-Control-Allow-Origin",
+                                                                        "http://localhost:4200");
+                                                        response.setHeader("Access-Control-Allow-Methods",
+                                                                        "POST, GET, OPTIONS, DELETE, PUT");
+                                                        response.setHeader("Access-Control-Allow-Headers", "*");
+                                                        response.setHeader("Access-Control-Allow-Credentials", "true");
                                                         response.setStatus(401);
                                                         response.setContentType("application/json");
                                                         response.getWriter().write(
@@ -106,6 +127,10 @@ public class SecurityConfiguration {
                                                                                         + "\"}");
                                                 })
                                                 .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                                        log.error("Access Denied error at {} {}: {}. Auth header: {}",
+                                                                        request.getMethod(), request.getRequestURI(),
+                                                                        accessDeniedException.getMessage(),
+                                                                        request.getHeader("Authorization"));
                                                         response.setStatus(403);
                                                         response.setContentType("application/json");
                                                         response.getWriter().write(

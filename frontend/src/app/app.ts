@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { NavbarComponent } from './components/shared/navbar.component';
 import { FooterComponent } from './components/shared/footer.component';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -11,4 +12,15 @@ import { FooterComponent } from './components/shared/footer.component';
   styleUrl: './app.css'
 })
 export class App {
+  private router = inject(Router);
+  showHeaderFooter = true;
+
+  constructor() {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      const url = event.urlAfterRedirects || event.url;
+      this.showHeaderFooter = !url.includes('/login') && !url.includes('/register');
+    });
+  }
 }

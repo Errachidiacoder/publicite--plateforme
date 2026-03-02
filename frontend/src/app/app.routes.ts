@@ -3,6 +3,7 @@ import { LoginComponent } from './components/login.component';
 import { RegisterComponent } from './components/register.component';
 import { HomeComponent } from './components/home.component';
 import { ProductSubmissionComponent } from './components/product-submission.component';
+import { NotificationsComponent } from './components/notifications.component';
 import { ProductValidationComponent } from './components/admin/product-validation.component';
 import { AdminDashboardComponent } from './components/admin/admin-dashboard.component';
 import { AdminLogsComponent } from './components/admin/admin-logs.component';
@@ -10,6 +11,7 @@ import { UserManagementComponent } from './components/admin/user-management.comp
 import { CategoryManagementComponent } from './components/admin/category-management.component';
 import { ProductDetailComponent } from './components/product-detail.component';
 import { PanierComponent } from './components/panier.component';
+import { MesAnnoncesComponent } from './components/mes-annonces.component';
 import { authGuard } from './guards/auth.guard';
 
 import { roleGuard } from './guards/role.guard';
@@ -38,6 +40,16 @@ export const routes: Routes = [
     {
         path: 'submit-product',
         component: ProductSubmissionComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'mes-annonces',
+        component: MesAnnoncesComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'notifications',
+        component: NotificationsComponent,
         canActivate: [authGuard]
     },
 

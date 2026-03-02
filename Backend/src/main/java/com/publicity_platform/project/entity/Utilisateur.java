@@ -343,7 +343,13 @@ public class Utilisateur implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName()))
+                .map(role -> {
+                    String roleName = role.getName();
+                    // If the role name in DB doesn't start with ROLE_, we add it.
+                    // Otherwise we use it as is to avoid ROLE_ROLE_ prefixing.
+                    String authority = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName;
+                    return new SimpleGrantedAuthority(authority);
+                })
                 .collect(java.util.stream.Collectors.toList());
     }
 

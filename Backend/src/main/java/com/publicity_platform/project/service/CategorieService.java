@@ -17,7 +17,7 @@ public class CategorieService {
     }
 
     public List<Categorie> getAllActiveCategories() {
-        return repository.findByCategorieActiveTrue();
+        return repository.findByCategorieActiveTrueAndCategorieParenteIsNull();
     }
 
     public List<Categorie> getAllCategories() {

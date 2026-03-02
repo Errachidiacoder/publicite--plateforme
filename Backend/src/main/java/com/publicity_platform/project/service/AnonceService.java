@@ -80,43 +80,68 @@ public class AnonceService {
         public Anonce submitAnonce(Anonce anonce) {
                 anonce.setStatutValidation(StatutValidation.EN_ATTENTE);
                 anonce.setDatePublication(null);
+
+                // Capture the annonceur name BEFORE saving (to avoid
+                // LazyInitializationException)
+                String nomAnnonceur = "Inconnu";
+                if (anonce.getAnnonceur() != null) {
+                        // Re-load the user from DB to ensure it's in the current session
+                        Utilisateur annonceur = utilisateurRepository.findById(anonce.getAnnonceur().getId())
+                                        .orElse(anonce.getAnnonceur());
+                        anonce.setAnnonceur(annonceur);
+                        nomAnnonceur = annonceur.getNomComplet();
+                }
+
                 Anonce saved = repository.save(anonce);
 
-                // Notifier les administrateurs
+                return saved;
+        }
+
+        @Transactional
+        public void notifyAdminsForNewAnnonce(@NonNull Long anonceId) {
+                Anonce saved = repository.findById(anonceId)
+                                .orElseThrow(() -> new RuntimeException("Annonce non trouvée"));
+                String nomAnnonceurFinal = "Inconnu";
+                if (saved.getAnnonceur() != null) {
+                        nomAnnonceurFinal = saved.getAnnonceur().getNomComplet();
+                }
+
+                // Notifier uniquement les administrateurs (SUPERADMIN ou ADJOINTADMIN)
                 List<Utilisateur> admins = utilisateurRepository.findAll().stream()
                                 .filter(u -> u.getRoles().stream()
-                                                .anyMatch(r -> r.getName().equals("ADJOINTADMIN")
+                                                .anyMatch(r -> r.getName().equals("ROLE_ADJOINTADMIN")
+                                                                || r.getName().equals("ROLE_SUPERADMIN")
+                                                                || r.getName().equals("ADJOINTADMIN")
                                                                 || r.getName().equals("SUPERADMIN")))
                                 .toList();
 
                 for (Utilisateur admin : admins) {
                         notificationService.createNotification(
                                         admin,
-                                        "Nouvelle anonce publiée",
-                                        "L'anonce '" + saved.getTitreAnonce() + "' a été publiée par "
-                                                        + saved.getAnnonceur().getNomComplet(),
+                                        "Nouvelle annonce à évaluer",
+                                        "L'annonce '" + saved.getTitreAnonce() + "' soumise par "
+                                                        + nomAnnonceurFinal
+                                                        + " est en attente de validation.",
                                         "NOUVELLE_ANNONCE",
                                         saved);
                 }
-
-                return saved;
         }
 
         @Transactional
         public Anonce createAnonceFromProduct(Produit produit) {
-            Anonce anonce = new Anonce();
-            anonce.setTitreAnonce(produit.getTitreProduit());
-            anonce.setDescriptionDetaillee(produit.getDescriptionDetaillee());
-            anonce.setTypeAnnonce(produit.getTypeAnnonce());
-            anonce.setPrixAfiche(produit.getPrixAfiche());
-            anonce.setTypePrix(produit.getTypePrix());
-            anonce.setDisponibilite(produit.getDisponibilite());
-            anonce.setVilleLocalisation(produit.getVilleLocalisation());
-            anonce.setImageUrl(produit.getImageUrl());
-            anonce.setAnnonceur(produit.getAnnonceur());
-            anonce.setCategorie(produit.getCategorie());
-            anonce.setProduit(produit);
-            return submitAnonce(anonce);
+                Anonce anonce = new Anonce();
+                anonce.setTitreAnonce(produit.getTitreProduit());
+                anonce.setDescriptionDetaillee(produit.getDescriptionDetaillee());
+                anonce.setTypeAnnonce(produit.getTypeAnnonce());
+                anonce.setPrixAfiche(produit.getPrixAfiche());
+                anonce.setTypePrix(produit.getTypePrix());
+                anonce.setDisponibilite(produit.getDisponibilite());
+                anonce.setVilleLocalisation(produit.getVilleLocalisation());
+                anonce.setImageUrl(produit.getImageUrl());
+                anonce.setAnnonceur(produit.getAnnonceur());
+                anonce.setCategorie(produit.getCategorie());
+                anonce.setProduit(produit);
+                return submitAnonce(anonce);
         }
 
         @Transactional

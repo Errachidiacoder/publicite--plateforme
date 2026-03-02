@@ -75,7 +75,7 @@ public class Anonce {
     private String imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "produit_id", nullable = false)
+    @JoinColumn(name = "produit_id", nullable = true)
     private Produit produit;
 
     @ManyToOne(fetch = FetchType.LAZY)

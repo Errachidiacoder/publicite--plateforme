@@ -1,14 +1,16 @@
 import { Component, OnInit, inject, ElementRef, HostListener } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { CategorieService } from '../../services/category.service';
+import { NotificationService } from '../../services/notification.service';
 import { ThemeToggleComponent } from './theme-toggle.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, ThemeToggleComponent],
+  imports: [RouterLink, ThemeToggleComponent, CommonModule],
   template: `
     <nav class="navbar" (click)="onNavClick($event)">
       <!-- TOP NAV -->
@@ -44,12 +46,54 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
             <app-theme-toggle class="action-item" />
 
             @if (auth.isLoggedIn()) {
-              <!-- Notification Bell -->
-                <!-- Pro Notification Bell (Filled/Modern) -->
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.37 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.64 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor" fill-opacity="0.8"/>
-                </svg>
-                <span class="badge-dot" style="background: #1aafa5;"></span>
+              <!-- Notification Bell Dropdown -->
+              <div class="notif-wrapper" (click)="$event.stopPropagation()">
+                <button class="icon-box notif-bell" title="Notifications" (click)="toggleNotifPanel()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.37 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.64 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor" fill-opacity="0.8"/>
+                  </svg>
+                  @if (unreadCount > 0) {
+                    <span class="badge-count-notif">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+                  } @else {
+                    <span class="badge-dot" style="background: #1aafa5;"></span>
+                  }
+                </button>
+
+                @if (notifPanelOpen) {
+                  <div class="notif-dropdown">
+                    <div class="notif-dropdown-header">
+                      <span class="notif-dropdown-title">Notifications</span>
+                      @if (unreadCount > 0) {
+                        <span class="notif-dropdown-count">{{ unreadCount }} non lue{{ unreadCount > 1 ? 's' : '' }}</span>
+                      }
+                    </div>
+
+                    @if (notifications.length === 0) {
+                      <div class="notif-dropdown-empty">
+                        <span>🔔</span>
+                        <p>Aucune notification</p>
+                      </div>
+                    } @else {
+                      <div class="notif-dropdown-list">
+                        @for (n of notifications.slice(0, 5); track n.id) {
+                          <div class="nd-item" [class.nd-unread]="!n.notificationLue" (click)="markRead(n)">
+                            <span class="nd-emoji">{{ getNotifEmoji(n.typeEvenement) }}</span>
+                            <div class="nd-body">
+                              <p class="nd-subject">{{ n.sujetNotification }}</p>
+                              <p class="nd-msg">{{ n.corpsMessage }}</p>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <a routerLink="/notifications" class="notif-dropdown-footer" (click)="notifPanelOpen = false">
+                      Voir toutes les notifications
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                  </div>
+                }
+              </div>
 
               <!-- Cart -->
               <a routerLink="/panier" class="icon-box" title="Mon panier">
@@ -78,6 +122,10 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
                     <a routerLink="/commandes" class="dropdown-item">
                       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                       Mes commandes
+                    </a>
+                    <a routerLink="/mes-annonces" class="dropdown-item">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                      Mes annonces
                     </a>
                     @if (isVendeur()) {
                       <a routerLink="/vendeur" class="dropdown-item">
@@ -211,6 +259,17 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           }
         </div>
       }
+      <!-- TOAST NOTIFICATION -->
+      @if (activeToast) {
+        <div class="toast-container" (click)="goToNotifications(); closeToast()">
+          <div class="toast-icon">{{ getNotifEmoji(activeToast.typeEvenement) }}</div>
+          <div class="toast-content">
+            <h4>{{ activeToast.sujetNotification }}</h4>
+            <p>{{ activeToast.corpsMessage }}</p>
+          </div>
+          <button class="toast-close" (click)="$event.stopPropagation(); closeToast()">✕</button>
+        </div>
+      }
     </nav>
   `,
   styles: [`
@@ -269,11 +328,11 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     .dropdown-item.logout { color: var(--sb-danger, #ef4444); }
 
     /* BOTTOM ROW */
-    .nav-bottom { height: 46px; background: var(--sb-bg); border-bottom: 1px solid var(--sb-border-light); position: relative; }
+    .nav-bottom { height: 46px; background: #ffffff; border-bottom: 1px solid var(--sb-border-light); position: relative; }
     .nav-categories-btn { display: flex; align-items: center; gap: 8px; background: var(--sb-primary); color: white; padding: 0 16px; height: 100%; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; flex-shrink: 0; user-select: none; }
     .nav-categories-btn:hover { background: #14928a; }
-    .nav-links { display: flex; align-items: center; gap: 20px; flex: 1; overflow: hidden; }
-    .nav-link { text-decoration: none; color: var(--sb-text); font-weight: 600; font-size: 0.82rem; transition: color 0.2s; white-space: nowrap; }
+    .nav-links { display: flex; align-items: center; gap: 20px; flex: 1; overflow: hidden; margin-left: 20px; }
+    .nav-link { text-decoration: none; color: #334155; font-weight: 600; font-size: 0.82rem; transition: color 0.2s; white-space: nowrap; opacity: 1; }
     .nav-link:hover { color: var(--sb-primary); }
     .btn-insert { display: flex; align-items: center; gap: 6px; border: 1.5px solid var(--sb-primary); color: var(--sb-primary); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; text-decoration: none; transition: var(--sb-transition); white-space: nowrap; flex-shrink: 0; }
     .btn-insert:hover { background: var(--sb-primary); color: white; }
@@ -283,7 +342,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       position: absolute; top: 46px; left: 0;
       width: 700px; max-width: 100vw;
       background: var(--sb-bg-elevated); border: 1px solid var(--sb-border);
-      border-radius: 0 0 16px 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      border-radius: 0 0 16px 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
       display: flex; z-index: 500; overflow: hidden;
       animation: slideDown 0.18s ease;
     }
@@ -316,26 +375,99 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     .mobile-link:hover { background: var(--sb-bg-alt); color: var(--sb-primary); }
     .mobile-link.logout { color: var(--sb-danger, #ef4444); }
 
+    .badge-count-notif { position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; font-size: 0.6rem; font-weight: 800; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid var(--sb-bg-elevated); animation: notif-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes notif-pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+    /* NOTIFICATION DROPDOWN */
+    .notif-wrapper { position: relative; display: flex; }
+    .notif-dropdown {
+      position: absolute; top: calc(100% + 12px); right: -8px;
+      width: 360px;
+      background: var(--sb-bg-elevated);
+      border: 1px solid var(--sb-border);
+      border-radius: var(--sb-radius-lg);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      z-index: 2000;
+      overflow: hidden;
+      animation: dropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes dropdownIn { from { opacity: 0; transform: translateY(-8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .notif-dropdown::before {
+      content: '';
+      position: absolute; top: -6px; right: 16px;
+      width: 12px; height: 12px;
+      background: var(--sb-bg-elevated);
+      border-left: 1px solid var(--sb-border);
+      border-top: 1px solid var(--sb-border);
+      transform: rotate(45deg);
+      z-index: 1;
+    }
+    .notif-dropdown-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px 12px; border-bottom: 1px solid var(--sb-border-light); }
+    .notif-dropdown-title { font-weight: 800; font-size: 0.95rem; color: var(--sb-text); }
+    .notif-dropdown-count { font-size: 0.72rem; font-weight: 700; background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 10px; border-radius: 100px; }
+    .notif-dropdown-empty { text-align: center; padding: 32px 20px; color: var(--sb-text-muted); font-size: 0.88rem; }
+    .notif-dropdown-empty span { font-size: 2rem; display: block; margin-bottom: 8px; }
+    .notif-dropdown-list { max-height: 320px; overflow-y: auto; }
+    .nd-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 20px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid var(--sb-border-light); }
+    .nd-item:hover { background: var(--sb-bg-alt); }
+    .nd-item:last-child { border-bottom: none; }
+    .nd-unread { background: rgba(26,175,165,0.04); }
+    .nd-emoji { font-size: 1.2rem; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .nd-body { flex: 1; min-width: 0; }
+    .nd-subject { font-weight: 700; font-size: 0.83rem; color: var(--sb-text); margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nd-msg { font-size: 0.77rem; color: var(--sb-text-secondary); margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .notif-dropdown-footer { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 20px; background: var(--sb-bg-alt); border-top: 1px solid var(--sb-border-light); text-decoration: none; color: var(--sb-primary); font-weight: 700; font-size: 0.82rem; transition: background 0.15s; }
+    .notif-dropdown-footer:hover { background: var(--sb-primary-light); }
+
+    .notif-dropdown-footer:hover { background: var(--sb-primary-light); }
+
+    /* TOAST */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: var(--sb-bg-elevated); border: 1px solid var(--sb-border);
+      border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      padding: 16px; display: flex; align-items: flex-start; gap: 12px;
+      width: 320px; max-width: calc(100vw - 48px);
+      cursor: pointer; transition: transform 0.2s;
+      animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .toast-container:hover { transform: translateY(-4px); border-color: var(--sb-primary); }
+    @keyframes slideInUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast-icon { font-size: 1.5rem; line-height: 1; margin-top: 2px; }
+    .toast-content { flex: 1; }
+    .toast-content h4 { margin: 0 0 4px; font-size: 0.9rem; font-weight: 700; color: var(--sb-text); }
+    .toast-content p { margin: 0; font-size: 0.8rem; color: var(--sb-text-secondary); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .toast-close { background: none; border: none; color: var(--sb-text-muted); font-size: 1.1rem; cursor: pointer; padding: 0; margin-left: 8px; line-height: 1; transition: 0.2s; }
+    .toast-close:hover { color: var(--sb-danger, #ef4444); }
+
     @media (max-width: 992px) { .nav-links { display: none; } }
     @media (max-width: 768px) {
       .nav-search-wrapper { display: none; }
       .nav-actions .user-name-text { display: none; }
       .mobile-toggle { display: flex; align-items: center; }
       .nav-bottom { display: none; }
+      .toast-container { bottom: 20px; right: 20px; left: 20px; width: auto; max-width: none; }
     }
   `]
 })
 export class NavbarComponent implements OnInit {
   auth = inject(AuthService);
   private catService = inject(CategorieService);
+  private notifService = inject(NotificationService);
+  private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
   private elRef = inject(ElementRef);
 
   menuOpen = false;
   mobileOpen = false;
   megaOpen = false;
+  notifPanelOpen = false;
   megaCategories: any[] = [];
   activeMegaCat: any = null;
+  unreadCount = 0;
+  notifications: any[] = [];
+  activeToast: any = null;
+  toastTimeout: any = null;
 
   ngOnInit() {
     this.catService.getAllActive().subscribe({
@@ -345,6 +477,29 @@ export class NavbarComponent implements OnInit {
       },
       error: () => { }
     });
+    this.notifService.unreadCount$.subscribe(count => {
+      this.unreadCount = count;
+    });
+    this.notifService.notifications$.subscribe(notifs => {
+      this.notifications = notifs;
+    });
+    this.notifService.newNotification$.subscribe(notif => {
+      this.showToast(notif);
+    });
+  }
+
+  showToast(notif: any) {
+    this.activeToast = notif;
+    if (this.toastTimeout) {
+      clearTimeout(this.toastTimeout);
+    }
+    this.toastTimeout = setTimeout(() => {
+      this.closeToast();
+    }, 5000);
+  }
+
+  closeToast() {
+    this.activeToast = null;
   }
 
   toggleMegaMenu(event: Event) {
@@ -358,10 +513,37 @@ export class NavbarComponent implements OnInit {
     if (!this.elRef.nativeElement.contains(event.target)) {
       this.megaOpen = false;
       this.menuOpen = false;
+      this.notifPanelOpen = false;
     }
   }
 
   onNavClick(event: MouseEvent) { /* allow propagation to document */ }
+
+  toggleNotifPanel() {
+    this.notifPanelOpen = !this.notifPanelOpen;
+    this.megaOpen = false;
+    this.menuOpen = false;
+  }
+
+  markRead(notif: any) {
+    if (!notif.notificationLue) {
+      this.notifService.markAsRead(notif.id).subscribe();
+    }
+  }
+
+  getNotifEmoji(type: string): string {
+    switch (type) {
+      case 'VALIDATION': case 'VALIDATION_PAIEMENT': return '✅';
+      case 'ACTIVATION': return '🚀';
+      case 'REFUS': return '❌';
+      case 'NOUVELLE_ANNONCE': return '📢';
+      default: return '🔔';
+    }
+  }
+
+  goToNotifications() {
+    this.router.navigate(['/notifications']);
+  }
 
   getInitials(): string {
     const nom = this.auth.getNomComplet();

@@ -11,4 +11,6 @@ public interface CategorieRepository extends JpaRepository<Categorie, Long> {
     List<Categorie> findByCategorieParenteIsNull(); // Root categories
 
     List<Categorie> findByCategorieActiveTrue();
+
+    List<Categorie> findByCategorieActiveTrueAndCategorieParenteIsNull();
 }
