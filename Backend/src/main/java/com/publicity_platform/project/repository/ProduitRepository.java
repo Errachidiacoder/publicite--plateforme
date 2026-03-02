@@ -16,4 +16,6 @@ public interface ProduitRepository extends JpaRepository<Produit, Long> {
 
     long countByCategorie(Categorie categorie);
 
+    List<Produit> findTop5ByOrderByCompteurVuesDesc();
+
 }

@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface HistoriqueValidationRepository extends JpaRepository<HistoriqueValidation, Long> {
-    List<HistoriqueValidation> findByProduitConcerneIdOrderByDateActionDesc(Long produitId);
+    List<HistoriqueValidation> findByAnonceConcerneIdOrderByDateActionDesc(Long anonceId);
 }

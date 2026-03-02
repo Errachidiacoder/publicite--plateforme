@@ -3,7 +3,6 @@ package com.publicity_platform.project.entity;
 import com.publicity_platform.project.enumm.Disponibilite;
 import com.publicity_platform.project.enumm.TypeAnnonce;
 import com.publicity_platform.project.enumm.TypePrix;
-import com.publicity_platform.project.entity.Anonce;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -56,6 +55,16 @@ public class Produit {
     @Column(name = "nombre_avis", nullable = false)
     private Integer nombreAvis = 0;
 
+    @Column(name = "compteur_vues", nullable = false)
+    private Long compteurVues = 0L;
+
+    @Column(name = "nombre_ventes", nullable = false)
+    private Long nombreVentes = 0L;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "boutique_id")
+    private Boutique boutique;
+
     @JsonIgnore
     @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Anonce> anonces;
@@ -67,26 +76,6 @@ public class Produit {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categorie_id")
     private Categorie categorie;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "produit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<MediaAsset> medias;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "produitConcerne", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<HistoriqueValidation> historiques;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "produitSuivi", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<StatistiqueAnnonce> statistiques;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "produitConsulte", fetch = FetchType.LAZY)
-    private List<HistoriqueNavigation> navigations;
-
-    @JsonIgnore
-    @OneToMany(mappedBy = "produitSource", fetch = FetchType.LAZY)
-    private List<Notification> notifications;
 
     @PrePersist
     protected void onCreate() {
@@ -180,6 +169,30 @@ public class Produit {
 
     public void setNombreAvis(Integer nombreAvis) {
         this.nombreAvis = nombreAvis;
+    }
+
+    public Long getCompteurVues() {
+        return compteurVues;
+    }
+
+    public void setCompteurVues(Long compteurVues) {
+        this.compteurVues = compteurVues;
+    }
+
+    public Long getNombreVentes() {
+        return nombreVentes;
+    }
+
+    public void setNombreVentes(Long nombreVentes) {
+        this.nombreVentes = nombreVentes;
+    }
+
+    public Boutique getBoutique() {
+        return boutique;
+    }
+
+    public void setBoutique(Boutique boutique) {
+        this.boutique = boutique;
     }
 
     public Utilisateur getAnnonceur() {
