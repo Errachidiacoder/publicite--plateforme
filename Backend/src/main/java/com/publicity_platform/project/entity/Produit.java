@@ -61,6 +61,9 @@ public class Produit {
     @Column(name = "nombre_ventes", nullable = false)
     private Long nombreVentes = 0L;
 
+    @Column(name = "quantite_stock")
+    private Integer quantiteStock = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "boutique_id")
     private Boutique boutique;
@@ -185,6 +188,14 @@ public class Produit {
 
     public void setNombreVentes(Long nombreVentes) {
         this.nombreVentes = nombreVentes;
+    }
+
+    public Integer getQuantiteStock() {
+        return quantiteStock;
+    }
+
+    public void setQuantiteStock(Integer quantiteStock) {
+        this.quantiteStock = quantiteStock;
     }
 
     public Boutique getBoutique() {
