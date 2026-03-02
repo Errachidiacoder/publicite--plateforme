@@ -215,6 +215,30 @@ public class Anonce {
         this.dateSoumission = dateSoumission;
     }
 
+    public LocalDateTime getDatePublication() {
+        return datePublication;
+    }
+
+    public void setDatePublication(LocalDateTime datePublication) {
+        this.datePublication = datePublication;
+    }
+
+    public LocalDateTime getDateExpiration() {
+        return dateExpiration;
+    }
+
+    public void setDateExpiration(LocalDateTime dateExpiration) {
+        this.dateExpiration = dateExpiration;
+    }
+
+    public Produit getProduit() {
+        return produit;
+    }
+
+    public void setProduit(Produit produit) {
+        this.produit = produit;
+    }
+
     public String getVilleLocalisation() {
         return villeLocalisation;
     }
