@@ -2,6 +2,7 @@ package com.publicity_platform.project.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.text.Normalizer;
 import java.util.List;
 
 @Entity
@@ -27,6 +28,9 @@ public class Categorie {
     @Column(name = "icone_categorie")
     private String iconeCategorie;
 
+    @Column(name = "slug", unique = true)
+    private String slug;
+
     @Column(name = "categorie_active", nullable = false)
     private Boolean categorieActive = true;
 
@@ -42,6 +46,39 @@ public class Categorie {
     @JsonIgnore
     @OneToMany(mappedBy = "categorie", fetch = FetchType.LAZY)
     private List<Produit> produits;
+
+    @PrePersist
+    protected void onPrePersist() {
+        generateSlug();
+    }
+
+    @PreUpdate
+    protected void onPreUpdate() {
+        generateSlug();
+    }
+
+    private void generateSlug() {
+        if (this.nomCategorie != null) {
+            String normalized = Normalizer.normalize(this.nomCategorie, Normalizer.Form.NFD);
+            this.slug = normalized
+                    .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "")
+                    .toLowerCase()
+                    .replaceAll("[^a-z0-9\\s-]", "")
+                    .replaceAll("[\\s]+", "-")
+                    .replaceAll("-+", "-")
+                    .replaceAll("(^-|-$)", "");
+        }
+    }
+
+    // Getters & Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getNomCategorie() {
         return nomCategorie;
@@ -59,24 +96,12 @@ public class Categorie {
         this.descriptionCategorie = descriptionCategorie;
     }
 
-    public Boolean getCategorieActive() {
-        return categorieActive;
+    public String getUrlImageCouverture() {
+        return urlImageCouverture;
     }
 
-    public void setCategorieActive(Boolean categorieActive) {
-        this.categorieActive = categorieActive;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public static CategorieBuilder builder() {
-        return new CategorieBuilder();
+    public void setUrlImageCouverture(String urlImageCouverture) {
+        this.urlImageCouverture = urlImageCouverture;
     }
 
     public String getIconeCategorie() {
@@ -87,12 +112,48 @@ public class Categorie {
         this.iconeCategorie = iconeCategorie;
     }
 
+    public String getSlug() {
+        return slug;
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public Boolean getCategorieActive() {
+        return categorieActive;
+    }
+
+    public void setCategorieActive(Boolean categorieActive) {
+        this.categorieActive = categorieActive;
+    }
+
+    public Categorie getCategorieParente() {
+        return categorieParente;
+    }
+
+    public void setCategorieParente(Categorie categorieParente) {
+        this.categorieParente = categorieParente;
+    }
+
     public List<Categorie> getSousCategories() {
         return sousCategories;
     }
 
     public void setSousCategories(List<Categorie> sousCategories) {
         this.sousCategories = sousCategories;
+    }
+
+    public List<Produit> getProduits() {
+        return produits;
+    }
+
+    public void setProduits(List<Produit> produits) {
+        this.produits = produits;
+    }
+
+    public static CategorieBuilder builder() {
+        return new CategorieBuilder();
     }
 
     public static class CategorieBuilder {
