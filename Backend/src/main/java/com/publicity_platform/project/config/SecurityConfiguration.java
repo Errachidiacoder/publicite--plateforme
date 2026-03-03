@@ -96,6 +96,16 @@ public class SecurityConfiguration {
                                                 .requestMatchers("/api/v1/admin/**")
                                                 .hasAnyRole("ADJOINTADMIN", "SUPERADMIN")
 
+                                                // Product marketplace (public GET)
+                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                                                "/api/v1/produits",
+                                                                "/api/v1/produits/**",
+                                                                "/api/v1/files/**")
+                                                .permitAll()
+
+                                                // Merchant endpoints (authenticated)
+                                                .requestMatchers("/api/v1/merchant/**").authenticated()
+
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

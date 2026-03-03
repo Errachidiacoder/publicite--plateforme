@@ -191,14 +191,14 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
                 <div class="mega-right">
                   <h3 class="mega-right-title">{{ activeMegaCat.nomCategorie }}</h3>
                   <p class="mega-right-desc">{{ activeMegaCat.descriptionCategorie || 'Explorez toutes les annonces dans cette catégorie' }}</p>
-                  <a routerLink="/home" [queryParams]="{cat: activeMegaCat.nomCategorie}" class="mega-browse-btn" (click)="megaOpen = false">
-                    Voir toutes les annonces
+                  <a routerLink="/marketplace" [queryParams]="{categorieId: activeMegaCat.id}" class="mega-browse-btn" (click)="megaOpen = false">
+                    Voir tous les produits
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                   </a>
                   <div class="mega-sub-grid">
                     @if (activeMegaCat.sousCategories?.length) {
                       @for (sub of activeMegaCat.sousCategories; track sub.id) {
-                        <a routerLink="/home" [queryParams]="{cat: sub.nomCategorie}" class="mega-sub-item" (click)="megaOpen = false">{{ sub.nomCategorie }}</a>
+                        <a routerLink="/marketplace" [queryParams]="{categorieId: sub.id}" class="mega-sub-item" (click)="megaOpen = false">{{ sub.nomCategorie }}</a>
                       }
                     } @else {
                       <span class="mega-empty">Aucune sous-catégorie</span>
@@ -210,7 +210,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           }
 
           <div class="nav-links">
-            <a routerLink="/home" class="nav-link">Marketplace</a>
+            <a routerLink="/marketplace" class="nav-link">Marketplace</a>
             <a routerLink="/home" [queryParams]="{cat: 'Automobile'}" class="nav-link">Véhicules</a>
             <a routerLink="/home" [queryParams]="{cat: 'Immobilier'}" class="nav-link">Immobilier</a>
             <a routerLink="/home" [queryParams]="{cat: 'Emploi'}" class="nav-link">Emploi</a>
