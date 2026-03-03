@@ -213,7 +213,7 @@ import { FormsModule } from '@angular/forms';
     .active .toggle-track { background: var(--primary); border-color: var(--primary-dark); }
     .active .toggle-thumb { left: calc(100% - 21px); }
 
-    .admin-page-container { padding: 30px 20px; background: var(--bg); min-height: 100vh; }
+    .admin-page-container { padding: 40px 50px; background: var(--bg); min-height: 100vh; }
     .admin-compact-wrapper { max-width: 1100px; margin: 0 auto; }
     
     .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }

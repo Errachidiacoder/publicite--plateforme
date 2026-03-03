@@ -62,6 +62,17 @@ public class SecurityConfiguration {
 
                                                 .permitAll()
 
+                                                // Services security mapping
+                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                                                "/api/v1/services/search",
+                                                                "/api/v1/services/*")
+                                                .permitAll()
+                                                .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                                                "/api/v1/services/submit")
+                                                .authenticated()
+                                                .requestMatchers("/api/v1/admin/services/**")
+                                                .hasAnyRole("ADJOINTADMIN", "SUPERADMIN")
+
                                                 // Anonces security mapping
                                                 .requestMatchers(org.springframework.http.HttpMethod.GET,
                                                                 "/api/v1/anonces/active")
@@ -79,6 +90,9 @@ public class SecurityConfiguration {
                                                 .requestMatchers(org.springframework.http.HttpMethod.POST,
                                                                 "/api/v1/anonces/**")
                                                 .authenticated()
+
+                                                // Messages security mapping
+                                                .requestMatchers("/api/v1/conversations/**", "/api/v1/messages/**").authenticated()
 
                                                 // Notifications security mapping
                                                 .requestMatchers("/api/v1/notifications/**").authenticated()
