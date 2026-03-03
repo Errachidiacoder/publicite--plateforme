@@ -6,11 +6,12 @@ import { AuthService } from '../services/auth.service';
 import { CategorieService } from '../services/category.service';
 import { ProduitService } from '../services/product.service';
 import { WishlistService } from '../services/wishlist.service';
+import { RecommendationsComponent } from './recommendations.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, RecommendationsComponent],
   template: `
     <!-- TOP UTILITY BAR (DARK) -->
     <div class="top-utility-bar">
@@ -179,6 +180,12 @@ import { WishlistService } from '../services/wishlist.service';
           <a href="#" class="view-all">Tout voir ></a>
         </div>
       </section>
+
+      <!-- AI RECOMMENDATIONS: PERSONALIZED -->
+      <app-recommendations mode="personalized"></app-recommendations>
+
+      <!-- AI RECOMMENDATIONS: POPULAR -->
+      <app-recommendations mode="popular"></app-recommendations>
 
       <!-- MAIN CONTENT -->
       <section class="products-section">
