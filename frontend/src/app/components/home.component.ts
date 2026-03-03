@@ -21,7 +21,10 @@ import { SuperDealsComponent } from './super-deals.component';
             <h1 class="hero-title">Un futur qui commence <span class="text-primary">aujourd'hui</span></h1>
             <p class="hero-desc">Parce que chaque talent mérite sa place !</p>
             <div class="hero-pro-actions">
-              <button class="btn btn-primary btn-lg btn-pro">Commencer à chercher</button>
+              <button class="btn btn-primary btn-lg btn-pro" (click)="goToServices()">Commencer à chercher</button>
+              <a routerLink="/submit-product" class="btn btn-outline btn-lg btn-pro" style="margin-left: 12px;">
+                Insérer une annonce
+              </a>
             </div>
           </div>
           <div class="hero-pro-image">
@@ -417,6 +420,7 @@ export class HomeComponent implements OnInit {
   }
 
   goToDetail(id: number) { this.router.navigate(['/product', id]); }
+  goToServices() { this.router.navigate(['/services']); }
 
   scrollCats(dir: -1 | 1) {
     if (this.catScrollEl) {
