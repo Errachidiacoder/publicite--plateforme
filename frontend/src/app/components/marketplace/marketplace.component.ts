@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MarketProductService } from '../../services/market-product.service';
 import { CategorieService } from '../../services/category.service';
 import { ProductCardComponent } from '../shared/product-card/product-card.component';
@@ -11,7 +11,7 @@ import { ProduitResponseDto, ProductFilterRequest, PageResponse } from '../../mo
 @Component({
   selector: 'app-marketplace',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ProductCardComponent, SkeletonCardComponent],
+  imports: [CommonModule, FormsModule, ProductCardComponent, SkeletonCardComponent],
   template: `
     <div class="marketplace-page">
       <!-- Hero -->
