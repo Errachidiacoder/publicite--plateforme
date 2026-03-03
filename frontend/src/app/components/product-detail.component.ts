@@ -4,11 +4,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ProduitService } from '../services/product.service';
 import { AuthService } from '../services/auth.service';
 import { HttpClient } from '@angular/common/http';
+import { RecommandationService } from '../services/recommandation.service';
+import { RecommendationsComponent } from './recommendations.component';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, RecommendationsComponent],
   template: `
     <div class="detail-page" *ngIf="product; else loadingTpl">
       <div class="container">
@@ -130,6 +132,9 @@ import { HttpClient } from '@angular/common/http';
         <div class="mobile-price">{{ (product.prixAfiche || 0).toLocaleString() }} DH</div>
         <button class="btn-call-mobile" (click)="showPhone = !showPhone">Appeler</button>
       </div>
+
+      <!-- AI RECOMMENDATIONS -->
+      <app-recommendations mode="similar" [productId]="product.id"></app-recommendations>
     </div>
 
     <ng-template #loadingTpl>
@@ -239,6 +244,7 @@ export class ProductDetailComponent implements OnInit {
   private produitService = inject(ProduitService);
   private authService = inject(AuthService);
   private http = inject(HttpClient);
+  private recommandationService = inject(RecommandationService);
 
   product: any;
   selectedImg = '';
@@ -258,6 +264,7 @@ export class ProductDetailComponent implements OnInit {
             this.selectedImg = res.mediaProduits[0].urlMedia;
           }
           this.checkIfFavorited();
+          this.recommandationService.trackView(res.id);
         },
         error: (err) => console.error(err)
       });
