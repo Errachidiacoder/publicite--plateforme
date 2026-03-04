@@ -10,6 +10,7 @@ export interface LigneCommandeDto {
     quantite: number;
     prixUnitaire: number;
     sousTotal: number;
+    avisDepose: boolean;
 }
 
 export interface CommandeResponseDto {
@@ -31,6 +32,7 @@ export interface CommandeResponseDto {
     dateExpeditionReelle?: string;
     dateLivraisonReelle?: string;
     paiementConfirme?: boolean;
+    datePaiement?: string;
 }
 
 export interface CommandeRequestDto {
@@ -66,5 +68,9 @@ export class CommandeService {
 
     confirmerPaiement(id: number): Observable<any> {
         return this.http.put(`${this.apiUrl}/${id}/confirmer-paiement`, {});
+    }
+
+    signalerPaiementEchoue(id: number, raison: string): Observable<any> {
+        return this.http.put(`${this.apiUrl}/${id}/paiement-echoue`, { raison });
     }
 }
