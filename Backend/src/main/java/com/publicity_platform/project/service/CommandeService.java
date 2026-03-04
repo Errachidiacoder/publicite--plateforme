@@ -9,6 +9,7 @@ import com.publicity_platform.project.repository.ProduitRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,20 +20,25 @@ public class CommandeService {
     private final CommandeRepository commandeRepository;
     private final PanierService panierService;
     private final ProduitRepository produitRepository;
+    private final OrderNotificationHelper orderNotificationHelper;
 
     public CommandeService(CommandeRepository commandeRepository,
             PanierService panierService,
-            ProduitRepository produitRepository) {
+            ProduitRepository produitRepository,
+            OrderNotificationHelper orderNotificationHelper) {
         this.commandeRepository = commandeRepository;
         this.panierService = panierService;
         this.produitRepository = produitRepository;
+        this.orderNotificationHelper = orderNotificationHelper;
     }
 
     /**
-     * Crée une commande à partir du contenu actuel du panier.
+     * Crée une commande PAR BOUTIQUE à partir du contenu actuel du panier.
+     * Si le panier contient des produits de 3 boutiques différentes, 3 commandes
+     * sont créées.
      */
     @Transactional
-    public CommandeResponseDto passerCommande(Utilisateur acheteur, String adresseLivraison,
+    public List<CommandeResponseDto> passerCommande(Utilisateur acheteur, String adresseLivraison,
             String telephoneContact, String notesLivraison,
             String methodePaiement) {
 
@@ -42,71 +48,93 @@ public class CommandeService {
             throw new RuntimeException("Le panier est vide, impossible de passer commande");
         }
 
-        Commande commande = new Commande();
-        commande.setAcheteur(acheteur);
-        commande.setAdresseLivraison(adresseLivraison);
-        commande.setTelephoneContact(telephoneContact);
-        commande.setNotesLivraison(notesLivraison);
+        // Group cart lines by boutique
+        java.util.Map<Long, List<LignePanier>> lignesParBoutique = new java.util.LinkedHashMap<>();
+        for (LignePanier lp : panier.getLignes()) {
+            Produit produit = lp.getProduit();
+            Long boutiqueId = (produit.getBoutique() != null) ? produit.getBoutique().getId() : 0L;
+            lignesParBoutique.computeIfAbsent(boutiqueId, k -> new ArrayList<>()).add(lp);
+        }
 
-        // Déterminer le statut initial selon la méthode de paiement
+        // Determine initial status based on payment method
+        StatutCommande statutInitial;
+        com.publicity_platform.project.enumm.MethodePaiement methode;
         if ("PAIEMENT_A_LIVRAISON".equals(methodePaiement)) {
-            commande.setStatutCommande(StatutCommande.EN_PREPARATION);
-            commande.setMethodePaiement(
-                    com.publicity_platform.project.enumm.MethodePaiement.PAIEMENT_A_LIVRAISON);
+            statutInitial = StatutCommande.EN_PREPARATION;
+            methode = com.publicity_platform.project.enumm.MethodePaiement.PAIEMENT_A_LIVRAISON;
         } else {
-            commande.setStatutCommande(StatutCommande.EN_ATTENTE_PAIEMENT);
+            statutInitial = StatutCommande.EN_ATTENTE_PAIEMENT;
             try {
-                commande.setMethodePaiement(
-                        com.publicity_platform.project.enumm.MethodePaiement.valueOf(methodePaiement));
+                methode = com.publicity_platform.project.enumm.MethodePaiement.valueOf(methodePaiement);
             } catch (IllegalArgumentException e) {
-                commande.setMethodePaiement(
-                        com.publicity_platform.project.enumm.MethodePaiement.PAIEMENT_A_LIVRAISON);
+                methode = com.publicity_platform.project.enumm.MethodePaiement.PAIEMENT_A_LIVRAISON;
             }
         }
 
-        // Convertir les lignes du panier en lignes de commande
-        double totalTTC = 0.0;
-        commande.setLignes(new ArrayList<>());
+        List<CommandeResponseDto> result = new ArrayList<>();
 
-        for (LignePanier lignePanier : panier.getLignes()) {
-            Produit produit = lignePanier.getProduit();
+        for (java.util.Map.Entry<Long, List<LignePanier>> entry : lignesParBoutique.entrySet()) {
+            Commande commande = new Commande();
+            commande.setAcheteur(acheteur);
+            commande.setAdresseLivraison(adresseLivraison);
+            commande.setTelephoneContact(telephoneContact);
+            commande.setNotesLivraison(notesLivraison);
+            commande.setStatutCommande(statutInitial);
+            commande.setMethodePaiement(methode);
+            commande.setLignes(new ArrayList<>());
 
-            // Re-validate stock at checkout time
-            if (produit.getQuantiteStock() != null
-                    && lignePanier.getQuantite() > produit.getQuantiteStock()) {
-                throw new RuntimeException(
-                        "Stock insuffisant pour '" + produit.getTitreProduit()
-                                + "'. Disponible : " + produit.getQuantiteStock());
+            double totalTTC = 0.0;
+
+            for (LignePanier lignePanier : entry.getValue()) {
+                Produit produit = lignePanier.getProduit();
+
+                // Re-validate stock at checkout time
+                if (produit.getQuantiteStock() != null
+                        && lignePanier.getQuantite() > produit.getQuantiteStock()) {
+                    throw new RuntimeException(
+                            "Stock insuffisant pour '" + produit.getTitreProduit()
+                                    + "'. Disponible : " + produit.getQuantiteStock());
+                }
+
+                double prixEffectif = resolvePrix(produit);
+
+                LigneCommande ligneCommande = new LigneCommande();
+                ligneCommande.setProduitCommande(produit);
+                ligneCommande.setQuantiteCommandee(lignePanier.getQuantite());
+                ligneCommande.setPrixUnitaireTTC(prixEffectif);
+                ligneCommande.setCommandeParente(commande);
+                commande.getLignes().add(ligneCommande);
+
+                totalTTC += prixEffectif * lignePanier.getQuantite();
+
+                // Update stock and sales count
+                if (produit.getQuantiteStock() != null && produit.getQuantiteStock() > 0) {
+                    produit.setQuantiteStock(
+                            produit.getQuantiteStock() - lignePanier.getQuantite());
+                }
+                produit.setNombreVentes(
+                        (produit.getNombreVentes() != null ? produit.getNombreVentes() : 0)
+                                + lignePanier.getQuantite());
+                produitRepository.save(produit);
             }
 
-            double prixEffectif = resolvePrix(produit);
+            commande.setMontantTotalTTC(totalTTC);
+            Commande saved = commandeRepository.save(commande);
 
-            LigneCommande ligneCommande = new LigneCommande();
-            ligneCommande.setProduitCommande(produit);
-            ligneCommande.setQuantiteCommandee(lignePanier.getQuantite());
-            ligneCommande.setPrixUnitaireTTC(prixEffectif);
-            ligneCommande.setCommandeParente(commande);
-            commande.getLignes().add(ligneCommande);
-
-            totalTTC += prixEffectif * lignePanier.getQuantite();
-
-            // Mettre à jour le stock et le compteur de ventes
-            if (produit.getQuantiteStock() != null && produit.getQuantiteStock() > 0) {
-                produit.setQuantiteStock(
-                        produit.getQuantiteStock() - lignePanier.getQuantite());
+            // Notify client + merchant for this sub-order
+            try {
+                orderNotificationHelper.notifyOrderPlaced(saved);
+            } catch (Exception e) {
+                // Don't fail the order if notification fails
             }
-            produit.setNombreVentes(
-                    (produit.getNombreVentes() != null ? produit.getNombreVentes() : 0) + lignePanier.getQuantite());
-            produitRepository.save(produit);
+
+            result.add(toDto(saved));
         }
 
-        commande.setMontantTotalTTC(totalTTC);
-        Commande saved = commandeRepository.save(commande);
-
-        // Vider le panier après la commande
+        // Clear the cart after all sub-orders are created
         panierService.viderPanier(acheteur);
 
-        return toDto(saved);
+        return result;
     }
 
     @Transactional(readOnly = true)
@@ -133,14 +161,104 @@ public class CommandeService {
     }
 
     /**
-     * Met à jour le statut d'une commande (livreur ou admin).
+     * Met à jour le statut d'une commande avec business logic per transition.
+     */
+    @Transactional
+    public Commande mettreAJourStatut(Long commandeId, StatutCommande nouveauStatut,
+            String raison, String annulePar, String numeroSuivi, String societeLivraison) {
+        Commande commande = commandeRepository.findById(commandeId)
+                .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
+
+        StatutCommande ancienStatut = commande.getStatutCommande();
+
+        // Cancellation validation: only from EN_PREPARATION or EN_LIVRAISON
+        if (nouveauStatut == StatutCommande.ANNULE) {
+            if (ancienStatut != StatutCommande.EN_PREPARATION && ancienStatut != StatutCommande.EN_LIVRAISON) {
+                throw new RuntimeException(
+                        "L'annulation n'est possible que pour les commandes en préparation ou en livraison.");
+            }
+            if (raison == null || raison.isBlank()) {
+                throw new RuntimeException("Le motif d'annulation est obligatoire.");
+            }
+            commande.setAnnulationRaison(raison);
+            commande.setAnnulePar(annulePar != null ? annulePar : "VENDEUR");
+
+            // Restore stock
+            if (commande.getLignes() != null) {
+                for (LigneCommande ligne : commande.getLignes()) {
+                    Produit produit = ligne.getProduitCommande();
+                    if (produit != null && ligne.getQuantiteCommandee() != null) {
+                        produit.setQuantiteStock(
+                                (produit.getQuantiteStock() != null ? produit.getQuantiteStock() : 0)
+                                        + ligne.getQuantiteCommandee());
+                        produitRepository.save(produit);
+                    }
+                }
+            }
+        }
+
+        // Shipping: save tracking info + date
+        if (nouveauStatut == StatutCommande.EXPEDIEE) {
+            commande.setDateExpeditionReelle(LocalDateTime.now());
+            if (numeroSuivi != null && !numeroSuivi.isBlank()) {
+                commande.setNumeroSuivi(numeroSuivi);
+            }
+            if (societeLivraison != null && !societeLivraison.isBlank()) {
+                commande.setSocieteLivraison(societeLivraison);
+            }
+        }
+
+        // Delivery: save date
+        if (nouveauStatut == StatutCommande.LIVREE) {
+            commande.setDateLivraisonReelle(LocalDateTime.now());
+        }
+
+        commande.setStatutCommande(nouveauStatut);
+        Commande saved = commandeRepository.save(commande);
+
+        // Dispatch notification
+        try {
+            switch (nouveauStatut) {
+                case PAIEMENT_CONFIRME -> orderNotificationHelper.notifyConfirmee(saved);
+                case EN_PREPARATION -> orderNotificationHelper.notifyEnPreparation(saved);
+                case EXPEDIEE -> orderNotificationHelper.notifyExpediee(saved);
+                case LIVREE -> orderNotificationHelper.notifyLivree(saved);
+                case ANNULE -> orderNotificationHelper.notifyAnnulee(saved);
+                default -> {
+                    /* no notification for other transitions */ }
+            }
+        } catch (Exception e) {
+            // Don't fail the status update if notification fails
+        }
+
+        return saved;
+    }
+
+    /**
+     * Backward compatible overload (no extra params).
      */
     @Transactional
     public Commande mettreAJourStatut(Long commandeId, StatutCommande nouveauStatut) {
+        return mettreAJourStatut(commandeId, nouveauStatut, null, null, null, null);
+    }
+
+    /**
+     * Merchant confirms COD payment received — updates chiffre d'affaires.
+     */
+    @Transactional
+    public Commande confirmerPaiement(Long commandeId) {
         Commande commande = commandeRepository.findById(commandeId)
                 .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
-        commande.setStatutCommande(nouveauStatut);
-        return commandeRepository.save(commande);
+        if (commande.getStatutCommande() != StatutCommande.LIVREE) {
+            throw new RuntimeException("Le paiement ne peut être confirmé que pour les commandes livrées.");
+        }
+        commande.setPaiementConfirme(true);
+        Commande saved = commandeRepository.save(commande);
+        try {
+            orderNotificationHelper.notifyPaiementConfirme(saved);
+        } catch (Exception ignored) {
+        }
+        return saved;
     }
 
     /**
@@ -181,6 +299,15 @@ public class CommandeService {
             dto.setNombreArticles(0);
         }
 
+        // Order lifecycle fields
+        dto.setAnnulationRaison(commande.getAnnulationRaison());
+        dto.setAnnulePar(commande.getAnnulePar());
+        dto.setNumeroSuivi(commande.getNumeroSuivi());
+        dto.setSocieteLivraison(commande.getSocieteLivraison());
+        dto.setDateExpeditionReelle(commande.getDateExpeditionReelle());
+        dto.setDateLivraisonReelle(commande.getDateLivraisonReelle());
+        dto.setPaiementConfirme(commande.getPaiementConfirme());
+
         return dto;
     }
 
@@ -217,6 +344,15 @@ public class CommandeService {
                 .mapToDouble(l -> l.getSousTotalLigne() != null ? l.getSousTotalLigne() : 0.0)
                 .sum();
         dto.setMontantTotal(merchantTotal);
+
+        // Order lifecycle fields
+        dto.setAnnulationRaison(commande.getAnnulationRaison());
+        dto.setAnnulePar(commande.getAnnulePar());
+        dto.setNumeroSuivi(commande.getNumeroSuivi());
+        dto.setSocieteLivraison(commande.getSocieteLivraison());
+        dto.setDateExpeditionReelle(commande.getDateExpeditionReelle());
+        dto.setDateLivraisonReelle(commande.getDateLivraisonReelle());
+        dto.setPaiementConfirme(commande.getPaiementConfirme());
 
         return dto;
     }
