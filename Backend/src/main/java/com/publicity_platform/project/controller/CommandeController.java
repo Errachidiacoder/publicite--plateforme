@@ -27,7 +27,7 @@ public class CommandeController {
 
     /** Passer une commande à partir du panier */
     @PostMapping
-    public ResponseEntity<CommandeResponseDto> passerCommande(
+    public ResponseEntity<List<CommandeResponseDto>> passerCommande(
             @AuthenticationPrincipal Utilisateur user,
             @RequestBody Map<String, String> body) {
         String adresse = body.getOrDefault("adresseLivraison", "");
@@ -61,6 +61,7 @@ public class CommandeController {
         List<CommandeResponseDto> commandes = service.getCommandesBoutique(boutiqueId);
         int totalCommandes = commandes.size();
         double chiffreAffaires = commandes.stream()
+                .filter(c -> Boolean.TRUE.equals(c.getPaiementConfirme()))
                 .mapToDouble(c -> c.getMontantTotal() != null ? c.getMontantTotal() : 0).sum();
         long totalProduits = produitRepository.countByBoutiqueId(boutiqueId);
         return ResponseEntity.ok(java.util.Map.of(
@@ -81,7 +82,18 @@ public class CommandeController {
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
         StatutCommande nouveauStatut = StatutCommande.valueOf(body.get("statut"));
-        return ResponseEntity.ok(service.mettreAJourStatut(id, nouveauStatut));
+        String raison = body.getOrDefault("raison", null);
+        String annulePar = body.getOrDefault("annulePar", null);
+        String numeroSuivi = body.getOrDefault("numeroSuivi", null);
+        String societeLivraison = body.getOrDefault("societeLivraison", null);
+        return ResponseEntity
+                .ok(service.mettreAJourStatut(id, nouveauStatut, raison, annulePar, numeroSuivi, societeLivraison));
+    }
+
+    /** Confirmer la réception du paiement (vendeur) */
+    @PutMapping("/{id}/confirmer-paiement")
+    public ResponseEntity<Commande> confirmerPaiement(@PathVariable Long id) {
+        return ResponseEntity.ok(service.confirmerPaiement(id));
     }
 
     /** Assigner un livreur à une commande */
