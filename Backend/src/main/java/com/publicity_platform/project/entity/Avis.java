@@ -48,6 +48,10 @@ public class Avis {
     @JoinColumn(name = "produit_id", nullable = false)
     private Produit produit;
 
+    /** ID de la commande associée (pour empêcher les doublons) */
+    @Column(name = "commande_id")
+    private Long commandeId;
+
     @PrePersist
     protected void onCreate() {
         this.dateAvis = LocalDateTime.now();
@@ -103,5 +107,13 @@ public class Avis {
 
     public void setProduit(Produit produit) {
         this.produit = produit;
+    }
+
+    public Long getCommandeId() {
+        return commandeId;
+    }
+
+    public void setCommandeId(Long commandeId) {
+        this.commandeId = commandeId;
     }
 }

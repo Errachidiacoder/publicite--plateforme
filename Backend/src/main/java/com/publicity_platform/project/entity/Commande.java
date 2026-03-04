@@ -187,6 +187,9 @@ public class Commande {
         @Column(name = "paiement_confirme", nullable = false)
         private Boolean paiementConfirme = false;
 
+        @Column(name = "date_paiement")
+        private LocalDateTime datePaiement;
+
         // Explicit Getters and Setters
         public Long getId() {
                 return id;
@@ -375,5 +378,13 @@ public class Commande {
 
         public void setPaiementConfirme(Boolean paiementConfirme) {
                 this.paiementConfirme = paiementConfirme;
+        }
+
+        public LocalDateTime getDatePaiement() {
+                return datePaiement;
+        }
+
+        public void setDatePaiement(LocalDateTime datePaiement) {
+                this.datePaiement = datePaiement;
         }
 }

@@ -18,4 +18,8 @@ public interface AvisRepository extends JpaRepository<Avis, Long> {
 
     @Query("SELECT AVG(a.note) FROM Avis a WHERE a.produit.id = :produitId")
     Double findAverageNoteByProduitId(Long produitId);
+
+    boolean existsByUtilisateurIdAndProduitIdAndCommandeId(Long utilisateurId, Long produitId, Long commandeId);
+
+    boolean existsByUtilisateurIdAndProduitId(Long utilisateurId, Long produitId);
 }

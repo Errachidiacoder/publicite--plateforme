@@ -10,13 +10,14 @@ public class LigneCommande {
     }
 
     public LigneCommande(Long id, Integer quantiteCommandee, Double prixUnitaireTTC, Double sousTotalLigne,
-            Produit produitCommande, Commande commandeParente) {
+            Produit produitCommande, Commande commandeParente, Boolean avisDepose) {
         this.id = id;
         this.quantiteCommandee = quantiteCommandee;
         this.prixUnitaireTTC = prixUnitaireTTC;
         this.sousTotalLigne = sousTotalLigne;
         this.produitCommande = produitCommande;
         this.commandeParente = commandeParente;
+        this.avisDepose = avisDepose != null ? avisDepose : false;
     }
 
     public static LigneCommandeBuilder builder() {
@@ -30,6 +31,7 @@ public class LigneCommande {
         private Double sousTotalLigne;
         private Produit produitCommande;
         private Commande commandeParente;
+        private Boolean avisDepose = false;
 
         public LigneCommandeBuilder id(Long id) {
             this.id = id;
@@ -61,9 +63,14 @@ public class LigneCommande {
             return this;
         }
 
+        public LigneCommandeBuilder avisDepose(Boolean avisDepose) {
+            this.avisDepose = avisDepose;
+            return this;
+        }
+
         public LigneCommande build() {
             return new LigneCommande(id, quantiteCommandee, prixUnitaireTTC, sousTotalLigne, produitCommande,
-                    commandeParente);
+                    commandeParente, avisDepose);
         }
     }
 
@@ -79,6 +86,9 @@ public class LigneCommande {
 
     @Column(name = "sous_total_ligne")
     private Double sousTotalLigne;
+
+    @Column(name = "avis_depose", nullable = false)
+    private Boolean avisDepose = false;
 
     // ─────────────────────────────────────────────
     // Relations
@@ -142,6 +152,14 @@ public class LigneCommande {
 
     public void setCommandeParente(Commande commandeParente) {
         this.commandeParente = commandeParente;
+    }
+
+    public Boolean getAvisDepose() {
+        return avisDepose;
+    }
+
+    public void setAvisDepose(Boolean avisDepose) {
+        this.avisDepose = avisDepose;
     }
 
     // ─────────────────────────────────────────────

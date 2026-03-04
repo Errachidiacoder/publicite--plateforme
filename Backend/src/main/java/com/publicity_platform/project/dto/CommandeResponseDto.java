@@ -176,4 +176,14 @@ public class CommandeResponseDto {
     public void setPaiementConfirme(Boolean paiementConfirme) {
         this.paiementConfirme = paiementConfirme;
     }
+
+    private LocalDateTime datePaiement;
+
+    public LocalDateTime getDatePaiement() {
+        return datePaiement;
+    }
+
+    public void setDatePaiement(LocalDateTime datePaiement) {
+        this.datePaiement = datePaiement;
+    }
 }

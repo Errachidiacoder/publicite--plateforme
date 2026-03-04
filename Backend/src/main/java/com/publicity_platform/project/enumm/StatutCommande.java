@@ -9,5 +9,6 @@ public enum StatutCommande {
     LIVREE,
     LIVRE,
     RETOURNEE,
-    ANNULE
+    ANNULE,
+    PAIEMENT_ECHOUE
 }

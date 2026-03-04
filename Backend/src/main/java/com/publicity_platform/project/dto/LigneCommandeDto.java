@@ -68,4 +68,14 @@ public class LigneCommandeDto {
     public void setSousTotal(Double sousTotal) {
         this.sousTotal = sousTotal;
     }
+
+    private boolean avisDepose;
+
+    public boolean isAvisDepose() {
+        return avisDepose;
+    }
+
+    public void setAvisDepose(boolean avisDepose) {
+        this.avisDepose = avisDepose;
+    }
 }
