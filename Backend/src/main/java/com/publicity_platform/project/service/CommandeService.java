@@ -6,6 +6,8 @@ import com.publicity_platform.project.entity.*;
 import com.publicity_platform.project.enumm.StatutCommande;
 import com.publicity_platform.project.repository.CommandeRepository;
 import com.publicity_platform.project.repository.ProduitRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @Service
 public class CommandeService {
 
+    private static final Logger log = LoggerFactory.getLogger(CommandeService.class);
     private final CommandeRepository commandeRepository;
     private final PanierService panierService;
     private final ProduitRepository produitRepository;
@@ -125,7 +128,8 @@ public class CommandeService {
             try {
                 orderNotificationHelper.notifyOrderPlaced(saved);
             } catch (Exception e) {
-                // Don't fail the order if notification fails
+                log.error("Failed to send order placed notification for commande {}: {}", saved.getId(), e.getMessage(),
+                        e);
             }
 
             result.add(toDto(saved));
@@ -228,7 +232,7 @@ public class CommandeService {
                     /* no notification for other transitions */ }
             }
         } catch (Exception e) {
-            // Don't fail the status update if notification fails
+            log.error("Failed to send status notification for commande {}: {}", saved.getId(), e.getMessage(), e);
         }
 
         return saved;
