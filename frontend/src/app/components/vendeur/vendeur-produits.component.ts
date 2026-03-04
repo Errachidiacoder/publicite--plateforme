@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AnonceService } from '../../services/anonce.service';
 import { AuthService } from '../../services/auth.service';
 import { MarketProductService } from '../../services/market-product.service';
+import { AvisService, AvisResponseDto } from '../../services/avis.service';
 import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
 
 @Component({
@@ -77,6 +78,9 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
                   @if (p.sku) {
                     <span class="prod-sku">SKU: {{ p.sku }}</span>
                   }
+                  @if (p.noteMoyenne && p.noteMoyenne > 0) {
+                    <span class="prod-rating">⭐ {{ p.noteMoyenne | number:'1.1-1' }}/5 ({{ p.nombreAvis || 0 }})</span>
+                  }
                 </div>
                 <div class="prod-price">{{ p.prix | number:'1.2-2' }} MAD</div>
                 <div class="prod-stock">
@@ -96,6 +100,7 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
                 </div>
                 <div class="prod-actions">
                   <a [routerLink]="['/vendeur/produits', p.id, 'modifier']" class="action-btn" title="Modifier">✏️</a>
+                  <button class="action-btn" title="Avis" (click)="openReviewsPanel(p.id, p.nom); $event.stopPropagation()">⭐</button>
                   @if (p.statutProduit === 'DRAFT') {
                     <button class="action-btn" title="Publier" (click)="changeStatus(p, 'ACTIVE')">🚀</button>
                   }
@@ -152,6 +157,43 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
             }
           </div>
         }
+      }
+      <!-- Reviews Panel Modal -->
+      @if (reviewsPanel.open) {
+        <div class="modal-overlay" (click)="reviewsPanel.open = false">
+          <div class="modal-box reviews-modal" (click)="$event.stopPropagation()">
+            <h3>⭐ Avis — {{ reviewsPanel.produitNom }}</h3>
+            <div class="modal-body">
+              @if (reviewsPanel.loading) {
+                <div class="loading-state"><div class="spinner"></div></div>
+              } @else if (reviewsPanel.reviews.length === 0) {
+                <p class="empty-reviews">Aucun avis pour ce produit.</p>
+              } @else {
+                <div class="reviews-list">
+                  @for (r of reviewsPanel.reviews; track r.id) {
+                    <div class="review-card">
+                      <div class="review-header">
+                        <span class="review-user">👤 {{ r.nomUtilisateur }}</span>
+                        <span class="review-date">{{ r.dateAvis | date:'dd/MM/yyyy' }}</span>
+                      </div>
+                      <div class="review-stars">
+                        @for (s of [1,2,3,4,5]; track s) {
+                          <span class="star" [class.filled]="s <= r.note">★</span>
+                        }
+                      </div>
+                      @if (r.commentaire) {
+                        <p class="review-comment">{{ r.commentaire }}</p>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+            <div class="modal-footer">
+              <button class="action-btn close-btn" (click)="reviewsPanel.open = false">Fermer</button>
+            </div>
+          </div>
+        </div>
       }
     </div>
   `,
@@ -256,6 +298,41 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
     }
     .action-btn:hover { background: var(--sb-border); transform: translateY(-1px); }
 
+    .prod-rating { font-size: 0.72rem; color: #f59e0b; font-weight: 700; }
+
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px); display: flex;
+      align-items: center; justify-content: center; z-index: 2000;
+    }
+    .modal-box {
+      background: #fff; border-radius: 18px; width: 100%; max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+    }
+    .modal-box h3 { padding: 18px 22px; margin: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; }
+    .modal-body { padding: 18px 22px; max-height: 400px; overflow-y: auto; }
+    .modal-footer {
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 14px 22px; border-top: 1px solid #eee;
+    }
+    .close-btn {
+      background: var(--sb-primary); color: white; border: none; padding: 8px 20px;
+      border-radius: 8px; font-weight: 700; cursor: pointer; width: auto; height: auto; font-size: 0.85rem;
+    }
+    .empty-reviews { color: var(--sb-text-muted); text-align: center; padding: 20px 0; }
+    .reviews-list { display: flex; flex-direction: column; gap: 12px; }
+    .review-card {
+      border: 1px solid var(--sb-border); border-radius: 12px; padding: 14px;
+      background: var(--sb-surface);
+    }
+    .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .review-user { font-weight: 700; font-size: 0.85rem; color: var(--sb-text); }
+    .review-date { font-size: 0.75rem; color: var(--sb-text-muted); }
+    .review-stars { margin-bottom: 6px; }
+    .star { color: #d1d5db; font-size: 1rem; }
+    .star.filled { color: #f59e0b; }
+    .review-comment { font-size: 0.85rem; color: var(--sb-text-secondary); margin: 0; line-height: 1.4; }
+
     @media (max-width: 768px) {
       .product-row { flex-wrap: wrap; }
       .prod-stock, .prod-sales, .prod-status, .prod-views { width: auto; }
@@ -269,6 +346,7 @@ export class VendeurProduitsComponent implements OnInit {
   private anonceService = inject(AnonceService);
   private authService = inject(AuthService);
   private marketProductService = inject(MarketProductService);
+  private avisService = inject(AvisService);
   private cdr = inject(ChangeDetectorRef);
 
   produits: any[] = [];
@@ -278,16 +356,16 @@ export class VendeurProduitsComponent implements OnInit {
   activeTab = 'market';
   statusFilter = 'ALL';
 
+  reviewsPanel = { open: false, produitId: 0, produitNom: '', reviews: [] as AvisResponseDto[], loading: false };
+
   ngOnInit() {
     const userId = this.authService.getUserId();
     if (userId) {
-      // Load annonces
       this.anonceService.getByAnnonceur(userId).subscribe({
         next: (data: any[]) => { this.produits = data; this.loading = false; this.cdr.detectChanges(); },
         error: () => { this.produits = []; this.loading = false; this.cdr.detectChanges(); }
       });
 
-      // Load marketplace products
       this.marketProductService.getMerchantProducts(0, 100).subscribe({
         next: (page: PageResponse<ProduitMerchantDto>) => {
           this.marketProducts = page.content;
@@ -325,6 +403,22 @@ export class VendeurProduitsComponent implements OnInit {
       },
       error: (err) => {
         alert(err.error?.message || 'Erreur lors du changement de statut');
+      }
+    });
+  }
+
+  openReviewsPanel(produitId: number, produitNom: string) {
+    this.reviewsPanel = { open: true, produitId, produitNom, reviews: [], loading: true };
+    this.avisService.getProductReviews(produitId).subscribe({
+      next: (reviews) => {
+        this.reviewsPanel.reviews = reviews;
+        this.reviewsPanel.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.reviewsPanel.reviews = [];
+        this.reviewsPanel.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }

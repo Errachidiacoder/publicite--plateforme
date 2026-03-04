@@ -143,9 +143,13 @@ import { CommandeService } from '../../services/commande.service';
                     }
                     @if (c.statutCommande === 'LIVREE' && !c.paiementConfirme) {
                       <button class="action-btn payment" (click)="confirmPayment(c.id)">💰 Confirmer paiement</button>
+                      <button class="action-btn cancel" (click)="openPaymentFailModal(c.id)">❌ Paiement non reçu</button>
                     }
                     @if (c.paiementConfirme) {
                       <span class="payment-badge">✅ Paiement reçu</span>
+                    }
+                    @if (c.statutCommande === 'PAIEMENT_ECHOUE') {
+                      <span class="payment-fail-badge">❌ Paiement échoué</span>
                     }
                   </div>
                 </div>
@@ -186,6 +190,29 @@ import { CommandeService } from '../../services/commande.service';
             <div class="modal-footer">
               <button class="action-btn cancel-outline" (click)="shipModal.open = false">Retour</button>
               <button class="action-btn ship" (click)="confirmShip()">Confirmer l'expédition</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Payment Failure Modal -->
+      @if (paymentFailModal.open) {
+        <div class="modal-overlay" (click)="paymentFailModal.open = false">
+          <div class="modal-box" (click)="$event.stopPropagation()">
+            <h3>❌ Signaler un échec de paiement</h3>
+            <div class="modal-body">
+              <label>Motif <span class="required">*</span></label>
+              <select class="modal-input" [(ngModel)]="paymentFailModal.raison">
+                <option value="">Sélectionnez un motif...</option>
+                <option value="Client a refusé de payer">Client a refusé de payer</option>
+                <option value="Client absent lors de la livraison">Client absent lors de la livraison</option>
+                <option value="Montant insuffisant">Montant insuffisant</option>
+                <option value="Autre">Autre</option>
+              </select>
+            </div>
+            <div class="modal-footer">
+              <button class="action-btn cancel-outline" (click)="paymentFailModal.open = false">Retour</button>
+              <button class="action-btn cancel" [disabled]="!paymentFailModal.raison" (click)="confirmPaymentFail()">Confirmer l'échec</button>
             </div>
           </div>
         </div>
@@ -405,6 +432,7 @@ export class VendeurCommandesComponent implements OnInit {
 
   cancelModal = { open: false, id: 0, raison: '' };
   shipModal = { open: false, id: 0, numeroSuivi: '', societeLivraison: '' };
+  paymentFailModal = { open: false, id: 0, raison: '' };
 
   ngOnInit() {
     this.http.get<any>('http://localhost:8081/api/v1/boutiques/ma-boutique').subscribe({
@@ -476,12 +504,24 @@ export class VendeurCommandesComponent implements OnInit {
     });
   }
 
+  openPaymentFailModal(id: number) {
+    this.paymentFailModal = { open: true, id, raison: '' };
+  }
+
+  confirmPaymentFail() {
+    if (!this.paymentFailModal.raison) return;
+    this.commandeService.signalerPaiementEchoue(this.paymentFailModal.id, this.paymentFailModal.raison).subscribe({
+      next: () => { this.paymentFailModal.open = false; this.loadCommandes(); },
+      error: (err: any) => alert(err?.error?.message || 'Erreur lors du signalement')
+    });
+  }
+
   getStatusClass(statut: string): string {
     switch (statut) {
       case 'EN_ATTENTE_PAIEMENT': case 'EN_ATTENTE': return 'pending';
       case 'EN_PREPARATION': case 'EXPEDIEE': case 'EN_LIVRAISON': return 'processing';
       case 'LIVREE': case 'LIVRE': return 'delivered';
-      case 'ANNULEE': case 'ANNULE': case 'RETOURNEE': return 'cancelled';
+      case 'ANNULEE': case 'ANNULE': case 'RETOURNEE': case 'PAIEMENT_ECHOUE': return 'cancelled';
       default: return 'pending';
     }
   }
@@ -497,7 +537,8 @@ export class VendeurCommandesComponent implements OnInit {
       'LIVRE': 'Livrée',
       'ANNULE': 'Annulée',
       'ANNULEE': 'Annulée',
-      'RETOURNEE': 'Retournée'
+      'RETOURNEE': 'Retournée',
+      'PAIEMENT_ECHOUE': 'Paiement échoué'
     };
     return map[statut] || statut;
   }
