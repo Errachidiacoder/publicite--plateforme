@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommandeService, CommandeResponseDto } from '../../services/commande.service';
+import { AvisService } from '../../services/avis.service';
 
 @Component({
   selector: 'app-mes-commandes',
@@ -87,6 +88,17 @@ import { CommandeService, CommandeResponseDto } from '../../services/commande.se
                           <p class="detail-qty">× {{ ligne.quantite }} — {{ ligne.prixUnitaire | number:'1.2-2' }} MAD/unité</p>
                         </div>
                         <span class="detail-subtotal">{{ ligne.sousTotal | number:'1.2-2' }} MAD</span>
+                        @if (cmd.paiementConfirme && !ligne.avisDepose) {
+                          <button class="review-btn" (click)="openReviewModal(cmd.id, ligne.produitId, ligne.produitNom); $event.stopPropagation()">⭐ Laisser un avis</button>
+                        }
+                        @if (ligne.avisDepose) {
+                          <span class="review-done-badge">✅ Avis déposé</span>
+                        }
+                      </div>
+                    }
+                    @if (cmd.statutCommande === 'LIVREE' && !cmd.paiementConfirme) {
+                      <div class="payment-pending-banner">
+                        ⏳ En attente de confirmation du paiement par le vendeur
                       </div>
                     }
                   </div>
@@ -105,6 +117,16 @@ import { CommandeService, CommandeResponseDto } from '../../services/commande.se
                       <p class="detail-text">🚚 {{ cmd.societeLivraison }}</p>
                     }
                   </div>
+
+                  @if (cmd.statutCommande === 'PAIEMENT_ECHOUE') {
+                    <div class="cancel-banner">
+                      <span>❌ Paiement échoué</span>
+                      @if (cmd.annulationRaison) {
+                        <p>Motif: {{ cmd.annulationRaison }}</p>
+                      }
+                      <p class="refund-info">Les articles ont été remis en stock. Contactez le vendeur pour plus d'informations.</p>
+                    </div>
+                  }
 
                   <!-- Client cancel button -->
                   @if (cmd.statutCommande === 'EN_PREPARATION' || cmd.statutCommande === 'EN_LIVRAISON') {
@@ -131,6 +153,31 @@ import { CommandeService, CommandeResponseDto } from '../../services/commande.se
             <div class="modal-footer">
               <button class="action-btn cancel-outline" (click)="cancelModal.open = false">Retour</button>
               <button class="action-btn cancel" [disabled]="!cancelModal.raison?.trim()" (click)="confirmCancel()">Confirmer l'annulation</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Review Modal -->
+      @if (reviewModal.open) {
+        <div class="modal-overlay" (click)="reviewModal.open = false">
+          <div class="modal-box" (click)="$event.stopPropagation()">
+            <h3>⭐ Laisser un avis</h3>
+            <div class="modal-body">
+              <p class="review-product-name">{{ reviewModal.produitNom }}</p>
+              <label>Note <span class="required">*</span></label>
+              <div class="star-picker">
+                @for (s of [1,2,3,4,5]; track s) {
+                  <button class="star-btn" [class.filled]="s <= reviewModal.note" (click)="reviewModal.note = s"
+                    type="button">★</button>
+                }
+              </div>
+              <label>Commentaire</label>
+              <textarea class="modal-input" [(ngModel)]="reviewModal.commentaire" rows="4" placeholder="Partagez votre expérience avec ce produit..."></textarea>
+            </div>
+            <div class="modal-footer">
+              <button class="action-btn cancel-outline" (click)="reviewModal.open = false">Annuler</button>
+              <button class="action-btn confirm" [disabled]="reviewModal.note === 0 || reviewModal.submitting" (click)="submitReview()">{{ reviewModal.submitting ? 'Envoi...' : 'Envoyer mon avis' }}</button>
             </div>
           </div>
         </div>
@@ -290,11 +337,42 @@ import { CommandeService, CommandeResponseDto } from '../../services/commande.se
       padding: 14px 22px; border-top: 1px solid #eee;
     }
 
+    .review-btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706); color: white;
+      border: none; padding: 6px 14px; border-radius: 8px; cursor: pointer;
+      font-size: 0.78rem; font-weight: 700; transition: all 0.2s;
+      white-space: nowrap; margin-left: 8px;
+    }
+    .review-btn:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(245,158,11,0.3); }
+    .review-done-badge {
+      background: #dcfce7; color: #16a34a; padding: 4px 10px; border-radius: 6px;
+      font-size: 0.75rem; font-weight: 700; white-space: nowrap; margin-left: 8px;
+    }
+    .payment-pending-banner {
+      background: #fef3c7; color: #92400e; padding: 10px 16px; border-radius: 10px;
+      font-size: 0.82rem; font-weight: 600; margin-top: 12px; text-align: center;
+    }
+    .refund-info { font-size: 0.8rem; color: #666; margin-top: 6px; }
+    .star-picker { display: flex; gap: 4px; margin-bottom: 14px; }
+    .star-btn {
+      background: none; border: none; font-size: 1.8rem; cursor: pointer;
+      color: #d1d5db; transition: color 0.15s, transform 0.15s;
+    }
+    .star-btn.filled { color: #f59e0b; }
+    .star-btn:hover { transform: scale(1.2); }
+    .review-product-name { font-weight: 700; font-size: 0.95rem; color: #333; margin: 0 0 14px; }
+    .action-btn.confirm {
+      background: #1aafa5; color: white; border: none; padding: 8px 20px;
+      border-radius: 8px; font-weight: 700; cursor: pointer;
+    }
+    .action-btn.confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
     @media (max-width: 600px) {
       .order-header { flex-wrap: wrap; gap: 8px; }
       .order-ref { flex-basis: 100%; }
       .timeline-step { min-width: 55px; }
       .timeline-step span { font-size: 0.55rem; }
+      .detail-item { flex-wrap: wrap; }
     }
   `]
 })
@@ -303,8 +381,13 @@ export class MesCommandesComponent implements OnInit {
   loading = true;
   expandedId: number | null = null;
   cancelModal = { open: false, id: 0, raison: '' };
+  reviewModal = { open: false, commandeId: 0, produitId: 0, produitNom: '', note: 0, commentaire: '', submitting: false };
 
-  constructor(private commandeService: CommandeService, private cdr: ChangeDetectorRef) { }
+  constructor(
+    private commandeService: CommandeService,
+    private avisService: AvisService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     this.loadCommandes();
@@ -330,8 +413,8 @@ export class MesCommandesComponent implements OnInit {
 
   getTimelineIndex(statut: string): number {
     const order = ['EN_ATTENTE_PAIEMENT', 'PAIEMENT_CONFIRME', 'EN_PREPARATION', 'EXPEDIEE', 'LIVREE'];
-    if (statut === 'ANNULE') return -1;
-    if (statut === 'EN_LIVRAISON') return 3; // same visual step as EXPEDIEE
+    if (statut === 'ANNULE' || statut === 'PAIEMENT_ECHOUE') return -1;
+    if (statut === 'EN_LIVRAISON') return 3;
     if (statut === 'LIVRE') return 4;
     const idx = order.indexOf(statut);
     return idx >= 0 ? idx : 0;
@@ -352,6 +435,31 @@ export class MesCommandesComponent implements OnInit {
     });
   }
 
+  openReviewModal(commandeId: number, produitId: number, produitNom: string) {
+    this.reviewModal = { open: true, commandeId, produitId, produitNom, note: 0, commentaire: '', submitting: false };
+  }
+
+  submitReview() {
+    if (this.reviewModal.note === 0) return;
+    this.reviewModal.submitting = true;
+    this.avisService.submitReview(
+      this.reviewModal.produitId,
+      this.reviewModal.note,
+      this.reviewModal.commentaire,
+      this.reviewModal.commandeId
+    ).subscribe({
+      next: () => {
+        this.reviewModal.open = false;
+        this.reviewModal.submitting = false;
+        this.loadCommandes();
+      },
+      error: (err: any) => {
+        this.reviewModal.submitting = false;
+        alert(err?.error?.message || 'Erreur lors de l\'envoi de l\'avis');
+      }
+    });
+  }
+
   formatStatus(status: string): string {
     const map: Record<string, string> = {
       'EN_ATTENTE_PAIEMENT': 'En attente',
@@ -362,7 +470,8 @@ export class MesCommandesComponent implements OnInit {
       'LIVREE': 'Livrée',
       'LIVRE': 'Livrée',
       'ANNULE': 'Annulée',
-      'RETOURNEE': 'Retournée'
+      'RETOURNEE': 'Retournée',
+      'PAIEMENT_ECHOUE': 'Paiement échoué'
     };
     return map[status] || status;
   }

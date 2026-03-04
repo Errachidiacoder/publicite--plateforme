@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MarketProductService } from '../services/market-product.service';
 import { PanierService } from '../services/panier.service';
+import { AvisService, AvisResponseDto } from '../services/avis.service';
 import { StarRatingComponent } from './shared/star-rating/star-rating.component';
 import { MerchantBadgeComponent } from './shared/merchant-badge/merchant-badge.component';
 import { ProductCardComponent } from './shared/product-card/product-card.component';
@@ -154,6 +155,38 @@ import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
           <div class="mpd-desc-content">{{ product.descriptionDetaillee }}</div>
         </section>
 
+        <!-- Reviews section -->
+        <section class="mpd-reviews">
+          <h2>⭐ Avis clients ({{ reviews.length }})</h2>
+          @if (reviewsLoading) {
+            <div class="reviews-loading"><div class="mpd-loader"></div></div>
+          } @else if (reviews.length === 0) {
+            <p class="reviews-empty">Aucun avis pour ce produit pour le moment.</p>
+          } @else {
+            <div class="reviews-grid">
+              @for (r of reviews; track r.id) {
+                <div class="review-card">
+                  <div class="review-header">
+                    <span class="review-avatar">👤</span>
+                    <div class="review-meta">
+                      <span class="review-user">{{ r.nomUtilisateur }}</span>
+                      <span class="review-date">{{ r.dateAvis | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <div class="review-stars">
+                      @for (s of [1,2,3,4,5]; track s) {
+                        <span class="star" [class.filled]="s <= r.note">★</span>
+                      }
+                    </div>
+                  </div>
+                  @if (r.commentaire) {
+                    <p class="review-comment">{{ r.commentaire }}</p>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </section>
+
         <!-- Similar products -->
         @if (similarProducts.length > 0) {
           <section class="mpd-similar">
@@ -271,11 +304,28 @@ import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
       display: flex; align-items: center; justify-content: center;
     }
     .shop-info { display: flex; flex-direction: column; gap: 4px; }
-    .shop-info strong { font-size: 0.88rem; color: var(--sb-text, #1e293b); }
+    .shop-info strong { display: block; font-size: 0.95rem; color: var(--sb-text, #1e293b); }
+
+    /* Reviews */
+    .mpd-reviews { margin-top: 40px; padding-top: 40px; border-top: 1px solid var(--sb-border-light, #f1f5f9); }
+    .mpd-reviews h2 { font-size: 1.3rem; font-weight: 800; color: var(--sb-text, #1e293b); margin-bottom: 24px; }
+    .reviews-loading { display: flex; justify-content: center; padding: 40px 0; }
+    .reviews-empty { color: var(--sb-text-muted, #94a3b8); font-size: 0.9rem; text-align: center; padding: 32px; background: var(--sb-bg-alt, #f1f5f9); border-radius: 12px; }
+    .reviews-grid { display: flex; flex-direction: column; gap: 16px; }
+    .review-card { padding: 20px; border: 1px solid var(--sb-border-light, #f1f5f9); border-radius: 16px; background: var(--sb-bg-elevated, #fff); transition: 0.2s; }
+    .review-card:hover { border-color: var(--sb-primary, #1aafa5); box-shadow: var(--sb-shadow-sm, 0 4px 6px -1px rgb(0 0 0 / 0.1)); }
+    .review-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+    .review-avatar { width: 32px; height: 32px; background: var(--sb-bg-alt, #f1f5f9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+    .review-meta { flex: 1; display: flex; flex-direction: column; }
+    .review-user { font-size: 0.9rem; font-weight: 700; color: var(--sb-text, #1e293b); }
+    .review-date { font-size: 0.75rem; color: var(--sb-text-muted, #94a3b8); }
+    .review-stars { display: flex; gap: 2px; }
+    .star { color: #cbd5e1; font-size: 0.9rem; }
+    .star.filled { color: #f59e0b; }
+    .review-comment { font-size: 0.9rem; color: var(--sb-text-secondary, #64748b); line-height: 1.5; margin: 0; }
 
     /* Description */
-    .mpd-description {
-      background: var(--sb-bg-elevated, #fff);
+    .mpd-description { margin-top: 40px; }    background: var(--sb-bg-elevated, #fff);
       border: 1px solid var(--sb-border-light, #f1f5f9);
       border-radius: 16px; padding: 24px; margin-bottom: 40px;
     }
@@ -298,6 +348,7 @@ export class MarketProductDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private productService = inject(MarketProductService);
   private panierService = inject(PanierService);
+  private avisService = inject(AvisService);
   private cdr = inject(ChangeDetectorRef);
 
   product: ProduitResponseDto | null = null;
@@ -308,6 +359,8 @@ export class MarketProductDetailComponent implements OnInit {
   addingToCart = false;
   addedToCart = false;
   Math = Math;
+  reviews: AvisResponseDto[] = [];
+  reviewsLoading = false;
 
   ngOnInit() {
     this.route.params.subscribe(params => {
@@ -325,6 +378,7 @@ export class MarketProductDetailComponent implements OnInit {
         this.loading = false;
         this.cdr.detectChanges();
         this.loadSimilar();
+        this.loadReviews(id);
       },
       error: () => {
         this.loading = false;
@@ -342,6 +396,22 @@ export class MarketProductDetailComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => { }
+    });
+  }
+
+  loadReviews(productId: number) {
+    this.reviewsLoading = true;
+    this.avisService.getProductReviews(productId).subscribe({
+      next: (data) => {
+        this.reviews = data;
+        this.reviewsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.reviews = [];
+        this.reviewsLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
