@@ -486,6 +486,7 @@ export class NavbarComponent implements OnInit {
       next: (cats) => {
         this.megaCategories = cats;
         if (cats.length > 0) this.activeMegaCat = cats[0];
+        this.cdr.detectChanges();
       },
       error: () => { }
     });
