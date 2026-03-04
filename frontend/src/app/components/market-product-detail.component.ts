@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MarketProductService } from '../services/market-product.service';
+import { PanierService } from '../services/panier.service';
 import { StarRatingComponent } from './shared/star-rating/star-rating.component';
 import { MerchantBadgeComponent } from './shared/merchant-badge/merchant-badge.component';
 import { ProductCardComponent } from './shared/product-card/product-card.component';
@@ -112,9 +113,15 @@ import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
                   <button (click)="quantity = Math.min(product.quantiteStock, quantity + 1)">+</button>
                 </div>
               </div>
-              <button class="mpd-add-cart">
+              <button class="mpd-add-cart" (click)="addToCart()" [disabled]="addingToCart">
+                @if (addingToCart) {
+                  ⏳ Ajout en cours...
+                } @else if (addedToCart) {
+                  ✅ Ajouté au panier !
+                } @else {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
                 Ajouter au panier
+                }
               </button>
             }
 
@@ -290,6 +297,7 @@ import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
 export class MarketProductDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private productService = inject(MarketProductService);
+  private panierService = inject(PanierService);
   private cdr = inject(ChangeDetectorRef);
 
   product: ProduitResponseDto | null = null;
@@ -297,6 +305,8 @@ export class MarketProductDetailComponent implements OnInit {
   activeImage = '';
   quantity = 1;
   similarProducts: ProduitResponseDto[] = [];
+  addingToCart = false;
+  addedToCart = false;
   Math = Math;
 
   ngOnInit() {
@@ -350,5 +360,23 @@ export class MarketProductDetailComponent implements OnInit {
       'BOTH': '🚚📦 Plusieurs options de livraison'
     };
     return labels[this.product.deliveryOption] || this.product.deliveryOption;
+  }
+
+  addToCart() {
+    if (!this.product || this.addingToCart) return;
+    this.addingToCart = true;
+    this.addedToCart = false;
+    this.panierService.addItem(this.product.id, this.quantity).subscribe({
+      next: () => {
+        this.addingToCart = false;
+        this.addedToCart = true;
+        this.cdr.detectChanges();
+        setTimeout(() => { this.addedToCart = false; this.cdr.detectChanges(); }, 2000);
+      },
+      error: () => {
+        this.addingToCart = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 }
