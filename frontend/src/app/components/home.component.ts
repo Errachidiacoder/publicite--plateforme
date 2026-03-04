@@ -6,7 +6,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService } from '../services/auth.service';
 import { CategorieService } from '../services/category.service';
 import { AnonceService } from '../services/anonce.service';
+import { MarketProductService } from '../services/market-product.service';
 import { SuperDealsComponent } from './super-deals.component';
+import { ProductRecommendationService, Recommendation } from '../services/product-recommendation.service';
 
 @Component({
   selector: 'app-home',
@@ -65,6 +67,51 @@ import { SuperDealsComponent } from './super-deals.component';
 
     <!-- SUPER DEALS -->
     <app-super-deals></app-super-deals>
+
+    <!-- PERSONALIZED RECOMMENDATIONS -->
+    <section class="section rec-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Recommandé pour vous ✨</h2>
+          <p class="section-subtitle">Sélectionné par notre IA SouqBladi</p>
+        </div>
+
+        <!-- Loading skeleton -->
+        <div class="skeleton-grid" *ngIf="recLoading">
+          <div class="skeleton-card" *ngFor="let _ of [1,2,3,4,5,6]"></div>
+        </div>
+
+        <!-- Recommendation cards -->
+        <div class="rec-grid" *ngIf="!recLoading && recommendations.length > 0">
+          <div class="rec-card" *ngFor="let r of recommendations" (click)="goToProductDetail(r.id)">
+            <div class="rec-img-wrap">
+              <img [src]="r.imageUrl || defaultImg" [alt]="r.titre" class="rec-img" loading="lazy">
+              <span class="rec-cat-badge">{{ r.categorie }}</span>
+            </div>
+            <div class="rec-body">
+              <div class="rec-reason">
+                <span class="reason-dot"></span>
+                {{ r.reason }}
+              </div>
+              <h3 class="rec-title">{{ r.titre }}</h3>
+              <div class="rec-meta">
+                <span class="rec-price">{{ (r.prix || 0).toLocaleString() }} DH</span>
+                <span class="rec-stars">{{ getStars(r.noteMoyenne) }} {{ r.noteMoyenne?.toFixed(1) }}</span>
+              </div>
+              <div class="rec-location" *ngIf="r.ville">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ r.ville }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state: popular fallback -->
+        <div class="empty-recs" *ngIf="!recLoading && recommendations.length === 0">
+          <p>🔍 Consultez des produits pour obtenir des recommandations personnalisées</p>
+        </div>
+      </div>
+    </section>
 
     <!-- PRODUCTS -->
     <section class="section">
@@ -275,15 +322,36 @@ import { SuperDealsComponent } from './super-deals.component';
     .card-img-wrapper { height: 200px; }
     .card-img { width: 100%; height: 100%; object-fit: cover; }
     .card-body { padding: 20px; }
-    .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
-    .card-price { color: var(--sb-primary); font-size: 1.2rem; font-weight: 800; }
-    .card-location { font-size: 0.8rem; color: var(--sb-text-muted); margin-top: 10px; }
+    .rec-section { background: var(--sb-bg-subtle, #f1f5f9); border-radius: 40px; margin: 40px 0; padding: 60px 0; }
+    .section-subtitle { font-size: 1rem; color: var(--sb-text-secondary); margin-top: -10px; margin-bottom: 30px; font-weight: 500; }
+    .empty-recs { text-align: center; padding: 40px; color: var(--sb-text-muted); font-style: italic; }
+
+    /* Skeleton loading */
+    .skeleton-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+    .skeleton-card { height: 300px; background: linear-gradient(90deg, #e2e8f0 25%, #f8fafc 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 20px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Recommendation cards */
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; }
+    .rec-card { background: var(--sb-bg-elevated, white); border-radius: 20px; border: 1px solid var(--sb-border, #e2e8f0); overflow: hidden; cursor: pointer; transition: all 0.3s ease; }
+    .rec-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .rec-img-wrap { position: relative; height: 180px; overflow: hidden; }
+    .rec-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+    .rec-card:hover .rec-img { transform: scale(1.05); }
+    .rec-cat-badge { position: absolute; top: 12px; left: 12px; background: rgba(26,175,165,0.9); color: white; font-size: 0.7rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .rec-body { padding: 16px; }
+    .rec-reason { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--sb-primary, #1aafa5); font-weight: 600; margin-bottom: 8px; }
+    .reason-dot { width: 6px; height: 6px; background: var(--sb-primary, #1aafa5); border-radius: 50%; flex-shrink: 0; }
+    .rec-title { font-size: 0.95rem; font-weight: 700; color: var(--sb-text, #1e293b); margin-bottom: 10px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .rec-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .rec-price { font-size: 1.1rem; font-weight: 800; color: var(--sb-primary, #1aafa5); }
+    .rec-stars { font-size: 0.8rem; color: #f59e0b; font-weight: 600; }
+    .rec-location { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--sb-text-muted, #94a3b8); }
 
     @media (max-width: 992px) {
       .hero-pro-grid { grid-template-columns: 1fr; text-align: center; }
       .hero-title { font-size: 2.5rem; }
       .hero-desc { font-size: 1.2rem; }
-      .hero-pro-image { order: -1; }
     }
 
     /* VENDOR CTA */
@@ -336,6 +404,8 @@ export class HomeComponent implements OnInit {
   private authService = inject(AuthService);
   private catService = inject(CategorieService);
   private anonceService = inject(AnonceService);
+  private marketService = inject(MarketProductService);
+  private recService = inject(ProductRecommendationService);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
 
@@ -358,41 +428,104 @@ export class HomeComponent implements OnInit {
   categories: any[] = [...this.mockCategories];
   allProducts: any[] = [];
   filteredProducts: any[] = [];
+  recommendations: Recommendation[] = [];
+  recLoading = true;
   loading = true;
+  defaultImg = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&fit=crop';
 
-  ngOnInit() { this.loadData(); }
+  ngOnInit() {
+    this.loadData();
+    this.loadProductRecommendations();
+  }
 
   loadData() {
     this.loading = true;
     this.catService.getAllActive().subscribe({
       next: (cats) => {
-        console.log('Categories fetched from api:', cats);
-        if (cats && cats.length > 0) {
-          this.categories = cats;
-        }
+        if (cats && cats.length > 0) this.categories = cats;
       },
-      error: (err) => {
-        console.error('Error fetching categories:', err);
-        this.categories = [...this.mockCategories];
-      }
+      error: () => this.categories = [...this.mockCategories]
     });
 
-    this.anonceService.getActive().subscribe({
-      next: (anonces) => {
-        this.allProducts = anonces.map((a: any) => ({
-          id: a.id,
-          name: a.titreAnonce,
-          price: (a.prixAfiche || 0).toLocaleString() + ' DH',
-          location: a.villeLocalisation,
-          categorie: a.categorie?.nomCategorie || 'Divers',
-          img: a.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&fit=crop',
-          badge: a.annoncePremium ? 'TOP' : null
+    // Load produits (ACTIVE) as main listing
+    this.marketService.searchProducts({ page: 0, size: 24 }).subscribe({
+      next: (page) => {
+        const prods = page.content || [];
+        this.allProducts = prods.map((p: any) => ({
+          id: p.id,
+          name: p.nom || p.titreProduit,
+          price: ((p.prix || p.prixAfiche || 0)).toLocaleString() + ' DH',
+          location: p.villeLocalisation || '',
+          categorie: p.categorieNom || p.categorie?.nomCategorie || 'Divers',
+          categorieSlug: p.categorieSlug || '',
+          img: p.primaryImageUrl || p.imageUrl || this.defaultImg,
+          badge: p.nombreVentes >= 50 ? 'TOP' : null,
+          note: p.noteMoyenne
         }));
         this.filteredProducts = [...this.allProducts];
         this.loading = false;
       },
-      error: () => this.loading = false
+      error: () => {
+        // Fallback: try anonces
+        this.anonceService.getActive().subscribe({
+          next: (anonces) => {
+            this.allProducts = anonces.map((a: any) => ({
+              id: a.id, name: a.titreAnonce,
+              price: (a.prixAfiche || 0).toLocaleString() + ' DH',
+              location: a.villeLocalisation, categorie: a.categorie?.nomCategorie || 'Divers',
+              img: a.imageUrl || this.defaultImg, badge: a.annoncePremium ? 'TOP' : null
+            }));
+            this.filteredProducts = [...this.allProducts];
+            this.loading = false;
+          },
+          error: () => this.loading = false
+        });
+      }
     });
+  }
+
+  loadProductRecommendations() {
+    this.recLoading = true;
+    const history = this.recService.getViewHistory();
+    const location = this.getUserLocation();
+
+    const handleRecs = (recs: Recommendation[]) => {
+      this.recommendations = recs;
+      this.recLoading = false;
+    };
+    const fallback = () => {
+      this.recService.getPopular(6).subscribe({
+        next: handleRecs,
+        error: () => { this.recLoading = false; }
+      });
+    };
+
+    if (history.length === 0) {
+      fallback();
+      return;
+    }
+
+    this.recService.getPersonalized(history, location, this.searchQuery || null, 6).subscribe({
+      next: (recs) => { if (recs && recs.length > 0) handleRecs(recs); else fallback(); },
+      error: fallback
+    });
+  }
+
+  goToProductDetail(id: number) {
+    this.recService.trackView(id);
+    this.router.navigate(['/product', id]);
+  }
+
+  private getUserLocation(): string | null {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user?.ville || user?.villeLocalisation || null;
+    } catch { return null; }
+  }
+
+  getStars(note: number): string {
+    const n = Math.round(note || 0);
+    return '⭐'.repeat(Math.min(n, 5));
   }
 
   filterByCategory(catName: string) {
@@ -404,8 +537,13 @@ export class HomeComponent implements OnInit {
 
   applyFilters() {
     this.filteredProducts = this.allProducts.filter(p => {
-      const matchCat = !this.selectedCategory || p.categorie === this.selectedCategory;
-      const matchSearch = !this.searchQuery || p.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+      const matchCat = !this.selectedCategory ||
+        p.categorie === this.selectedCategory ||
+        p.categorieSlug === this.selectedCategory;
+      const matchSearch = !this.searchQuery ||
+        p.name?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        p.location?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+        p.categorie?.toLowerCase().includes(this.searchQuery.toLowerCase());
       return matchCat && matchSearch;
     });
   }
