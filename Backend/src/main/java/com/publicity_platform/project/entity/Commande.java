@@ -164,6 +164,29 @@ public class Commande {
         @JoinColumn(name = "livreur_id")
         private Utilisateur livreur;
 
+        // ─── Order lifecycle fields ──────────────────
+
+        @Column(name = "annulation_raison", columnDefinition = "TEXT")
+        private String annulationRaison;
+
+        @Column(name = "annule_par")
+        private String annulePar; // CLIENT or VENDEUR
+
+        @Column(name = "numero_suivi")
+        private String numeroSuivi;
+
+        @Column(name = "societe_livraison")
+        private String societeLivraison;
+
+        @Column(name = "date_expedition_reelle")
+        private LocalDateTime dateExpeditionReelle;
+
+        @Column(name = "date_livraison_reelle")
+        private LocalDateTime dateLivraisonReelle;
+
+        @Column(name = "paiement_confirme", nullable = false)
+        private Boolean paiementConfirme = false;
+
         // Explicit Getters and Setters
         public Long getId() {
                 return id;
@@ -296,5 +319,61 @@ public class Commande {
 
         public void setLivreur(Utilisateur livreur) {
                 this.livreur = livreur;
+        }
+
+        public String getAnnulationRaison() {
+                return annulationRaison;
+        }
+
+        public void setAnnulationRaison(String annulationRaison) {
+                this.annulationRaison = annulationRaison;
+        }
+
+        public String getAnnulePar() {
+                return annulePar;
+        }
+
+        public void setAnnulePar(String annulePar) {
+                this.annulePar = annulePar;
+        }
+
+        public String getNumeroSuivi() {
+                return numeroSuivi;
+        }
+
+        public void setNumeroSuivi(String numeroSuivi) {
+                this.numeroSuivi = numeroSuivi;
+        }
+
+        public String getSocieteLivraison() {
+                return societeLivraison;
+        }
+
+        public void setSocieteLivraison(String societeLivraison) {
+                this.societeLivraison = societeLivraison;
+        }
+
+        public LocalDateTime getDateExpeditionReelle() {
+                return dateExpeditionReelle;
+        }
+
+        public void setDateExpeditionReelle(LocalDateTime dateExpeditionReelle) {
+                this.dateExpeditionReelle = dateExpeditionReelle;
+        }
+
+        public LocalDateTime getDateLivraisonReelle() {
+                return dateLivraisonReelle;
+        }
+
+        public void setDateLivraisonReelle(LocalDateTime dateLivraisonReelle) {
+                this.dateLivraisonReelle = dateLivraisonReelle;
+        }
+
+        public Boolean getPaiementConfirme() {
+                return paiementConfirme;
+        }
+
+        public void setPaiementConfirme(Boolean paiementConfirme) {
+                this.paiementConfirme = paiementConfirme;
         }
 }

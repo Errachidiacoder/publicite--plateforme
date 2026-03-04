@@ -110,4 +110,70 @@ public class CommandeResponseDto {
     public void setNombreArticles(int nombreArticles) {
         this.nombreArticles = nombreArticles;
     }
+
+    // ─── Order lifecycle fields ──────────────────
+
+    private String annulationRaison;
+    private String annulePar;
+    private String numeroSuivi;
+    private String societeLivraison;
+    private LocalDateTime dateExpeditionReelle;
+    private LocalDateTime dateLivraisonReelle;
+    private Boolean paiementConfirme;
+
+    public String getAnnulationRaison() {
+        return annulationRaison;
+    }
+
+    public void setAnnulationRaison(String annulationRaison) {
+        this.annulationRaison = annulationRaison;
+    }
+
+    public String getAnnulePar() {
+        return annulePar;
+    }
+
+    public void setAnnulePar(String annulePar) {
+        this.annulePar = annulePar;
+    }
+
+    public String getNumeroSuivi() {
+        return numeroSuivi;
+    }
+
+    public void setNumeroSuivi(String numeroSuivi) {
+        this.numeroSuivi = numeroSuivi;
+    }
+
+    public String getSocieteLivraison() {
+        return societeLivraison;
+    }
+
+    public void setSocieteLivraison(String societeLivraison) {
+        this.societeLivraison = societeLivraison;
+    }
+
+    public LocalDateTime getDateExpeditionReelle() {
+        return dateExpeditionReelle;
+    }
+
+    public void setDateExpeditionReelle(LocalDateTime dateExpeditionReelle) {
+        this.dateExpeditionReelle = dateExpeditionReelle;
+    }
+
+    public LocalDateTime getDateLivraisonReelle() {
+        return dateLivraisonReelle;
+    }
+
+    public void setDateLivraisonReelle(LocalDateTime dateLivraisonReelle) {
+        this.dateLivraisonReelle = dateLivraisonReelle;
+    }
+
+    public Boolean getPaiementConfirme() {
+        return paiementConfirme;
+    }
+
+    public void setPaiementConfirme(Boolean paiementConfirme) {
+        this.paiementConfirme = paiementConfirme;
+    }
 }

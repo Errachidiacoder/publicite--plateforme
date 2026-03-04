@@ -13,7 +13,8 @@ public class Notification {
     }
 
     public Notification(Long id, String sujetNotification, String corpsMessage, String typeEvenement,
-            Boolean notificationLue, LocalDateTime dateEnvoi, Utilisateur destinataire, Anonce anonceSource) {
+            Boolean notificationLue, LocalDateTime dateEnvoi, Utilisateur destinataire, Anonce anonceSource,
+            Long commandeId, String lienAction) {
         this.id = id;
         this.sujetNotification = sujetNotification;
         this.corpsMessage = corpsMessage;
@@ -22,6 +23,8 @@ public class Notification {
         this.dateEnvoi = dateEnvoi;
         this.destinataire = destinataire;
         this.anonceSource = anonceSource;
+        this.commandeId = commandeId;
+        this.lienAction = lienAction;
     }
 
     public static NotificationBuilder builder() {
@@ -37,6 +40,8 @@ public class Notification {
         private LocalDateTime dateEnvoi;
         private Utilisateur destinataire;
         private Anonce anonceSource;
+        private Long commandeId;
+        private String lienAction;
 
         public NotificationBuilder id(Long id) {
             this.id = id;
@@ -78,9 +83,19 @@ public class Notification {
             return this;
         }
 
+        public NotificationBuilder commandeId(Long commandeId) {
+            this.commandeId = commandeId;
+            return this;
+        }
+
+        public NotificationBuilder lienAction(String lienAction) {
+            this.lienAction = lienAction;
+            return this;
+        }
+
         public Notification build() {
             return new Notification(id, sujetNotification, corpsMessage, typeEvenement, notificationLue, dateEnvoi,
-                    destinataire, anonceSource);
+                    destinataire, anonceSource, commandeId, lienAction);
         }
     }
 
@@ -118,6 +133,12 @@ public class Notification {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "anonce_source_id")
     private Anonce anonceSource;
+
+    @Column(name = "commande_id")
+    private Long commandeId;
+
+    @Column(name = "lien_action")
+    private String lienAction;
 
     // Explicit Getters and Setters
     public Long getId() {
@@ -182,6 +203,22 @@ public class Notification {
 
     public void setAnonceSource(Anonce anonceSource) {
         this.anonceSource = anonceSource;
+    }
+
+    public Long getCommandeId() {
+        return commandeId;
+    }
+
+    public void setCommandeId(Long commandeId) {
+        this.commandeId = commandeId;
+    }
+
+    public String getLienAction() {
+        return lienAction;
+    }
+
+    public void setLienAction(String lienAction) {
+        this.lienAction = lienAction;
     }
 
     @PrePersist
