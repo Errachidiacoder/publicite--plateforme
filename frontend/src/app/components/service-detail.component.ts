@@ -18,18 +18,19 @@ import { ChangeDetectorRef } from '@angular/core';
       } @else if (service) {
         <div class="detail-grid">
           <div class="left">
+            <h1 class="title">{{ service.titreService }}</h1>
+            <div class="title-deco"></div>
+            <div class="meta">
+              <span>{{ service.dateSoumission | date:'dd-MM-yyyy' }}</span>
+              <span>• {{ service.modeTravail === 'REMOTE' ? 'À distance' : (service.modeTravail === 'SUR_SITE' ? 'Sur site' : 'Hybride') }}</span>
+              <span>• {{ service.villeLocalisation }}</span>
+            </div>
             <div class="media" (click)="openImage()" title="Voir la photo">
               @if (service.imageUrl) {
                 <img [src]="service.imageUrl" alt="service">
               } @else {
                 <div class="media-ph">Aperçu</div>
               }
-            </div>
-            <h1 class="title">{{ service.titreService }}</h1>
-            <div class="meta">
-              <span>{{ service.dateSoumission | date:'dd-MM-yyyy' }}</span>
-              <span>• {{ service.modeTravail === 'REMOTE' ? 'À distance' : (service.modeTravail === 'SUR_SITE' ? 'Sur site' : 'Hybride') }}</span>
-              <span>• {{ service.villeLocalisation }}</span>
             </div>
             <div class="accordion">
               <div class="acc-item">
@@ -156,12 +157,14 @@ import { ChangeDetectorRef } from '@angular/core';
     }
   `,
   styles: [`
-    .detail-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; max-width: 1100px; margin: 0 auto; }
-    .media { border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; background: #f8fafc; height: 200px; display:flex; align-items:center; justify-content:center; cursor: zoom-in; }
-    .media img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; max-width: 1100px; margin: 0 auto; padding-top: 16px; }
+    .left { position: relative; }
+    .title-deco { width: 60px; height: 4px; background: linear-gradient(90deg, #1aafa5, #00ccff); border-radius: 4px; margin-bottom: 12px; }
+    .media { border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; background: #f8fafc; height: 220px; display:flex; align-items:center; justify-content:center; cursor: zoom-in; margin-bottom: 24px; }
+    .media img { width: 100%; height: 100%; object-fit: contain; }
     .media-ph { color: #94a3b8; }
-    .title { margin: 6px 0 4px; font-size: 1.1rem; font-weight: 900; color: #0f172a; }
-    .meta { color: #64748b; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; font-size: 0.85rem; }
+    .title { margin: 0 0 8px; font-size: 1.4rem; font-weight: 900; color: #0f172a; line-height: 1.2; }
+    .meta { color: #64748b; display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; font-size: 0.9rem; align-items: center; }
     .accordion { display: grid; gap: 8px; }
     .acc-item { border: 1px solid #e2e8f0; border-radius: 10px; background: white; overflow: hidden; }
     .acc-header { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 9px 10px; background: var(--sb-surface, #f8fafc); border: none; cursor: pointer; font-weight: 900; color: var(--sb-text, #0f172a); }

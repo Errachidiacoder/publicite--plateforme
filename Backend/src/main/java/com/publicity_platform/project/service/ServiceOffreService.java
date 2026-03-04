@@ -21,8 +21,8 @@ public class ServiceOffreService {
     private final UtilisateurRepository utilisateurRepository;
 
     public ServiceOffreService(ServiceOffreRepository repository,
-                               NotificationService notificationService,
-                               UtilisateurRepository utilisateurRepository) {
+            NotificationService notificationService,
+            UtilisateurRepository utilisateurRepository) {
         this.repository = repository;
         this.notificationService = notificationService;
         this.utilisateurRepository = utilisateurRepository;
@@ -65,6 +65,7 @@ public class ServiceOffreService {
     public List<ServiceOffre> getByDemandeur(@NonNull Long userId) {
         return repository.findByDemandeurId(userId);
     }
+
     @Transactional
     public ServiceOffre validateService(@NonNull Long id, int durationMonths, Utilisateur admin) {
         ServiceOffre s = getById(id);

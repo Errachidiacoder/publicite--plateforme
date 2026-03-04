@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, ElementRef, HostListener } from '@angular/core';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { CategorieService } from '../../services/category.service';
@@ -10,7 +10,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, ThemeToggleComponent, CommonModule],
+  imports: [RouterLink, RouterLinkActive, ThemeToggleComponent, CommonModule],
   template: `
     <nav class="navbar" (click)="onNavClick($event)">
       <!-- TOP NAV -->
@@ -123,10 +123,6 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
                       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                       Mes commandes
                     </a>
-                    <a routerLink="/mes-annonces" class="dropdown-item">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
-                      Mes annonces
-                    </a>
                     @if (isVendeur()) {
                       <a routerLink="/vendeur" class="dropdown-item">
                         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
@@ -164,7 +160,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
       <div class="nav-bottom">
         <div class="nav-container">
           <!-- Mega Menu Trigger -->
-          <div class="nav-categories-btn" (click)="toggleMegaMenu($event)">
+          <div class="nav-categories-btn" (click)="toggleMegaMenu($event)" [class.mega-active]="megaOpen">
             @if (megaOpen) {
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             } @else {
@@ -210,13 +206,13 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           }
 
           <div class="nav-links">
-            <a routerLink="/marketplace" class="nav-link">Marketplace</a>
-            <a routerLink="/home" [queryParams]="{cat: 'Automobile'}" class="nav-link">Véhicules</a>
-            <a routerLink="/home" [queryParams]="{cat: 'Immobilier'}" class="nav-link">Immobilier</a>
-            <a routerLink="/home" [queryParams]="{cat: 'Emploi'}" class="nav-link">Emploi</a>
-            <a routerLink="/services" class="nav-link">Services</a>
-            <a routerLink="/home" [queryParams]="{cat: 'Informatique'}" class="nav-link">Informatique</a>
-            <a routerLink="/home" [queryParams]="{cat: 'Mode'}" class="nav-link">Mode</a>
+            <a routerLink="/marketplace" routerLinkActive="active-link" class="nav-link">Marketplace</a>
+            <a routerLink="/home" [queryParams]="{cat: 'Automobile'}" routerLinkActive="active-link" class="nav-link">Véhicules</a>
+            <a routerLink="/home" [queryParams]="{cat: 'Immobilier'}" routerLinkActive="active-link" class="nav-link">Immobilier</a>
+            <a routerLink="/home" [queryParams]="{cat: 'Emploi'}" routerLinkActive="active-link" class="nav-link">Emploi</a>
+            <a routerLink="/services" routerLinkActive="active-link" class="nav-link">Services</a>
+            <a routerLink="/home" [queryParams]="{cat: 'Informatique'}" routerLinkActive="active-link" class="nav-link">Informatique</a>
+            <a routerLink="/home" [queryParams]="{cat: 'Mode'}" routerLinkActive="active-link" class="nav-link">Mode</a>
           </div>
 
           <a routerLink="/publish-service" class="btn-insert">
@@ -329,11 +325,18 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
     /* BOTTOM ROW */
     .nav-bottom { height: 46px; background: #ffffff; border-bottom: 1px solid var(--sb-border-light); position: relative; }
-    .nav-categories-btn { display: flex; align-items: center; gap: 8px; background: var(--sb-primary); color: white; padding: 0 16px; height: 100%; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; flex-shrink: 0; user-select: none; }
-    .nav-categories-btn:hover { background: #14928a; }
+    .nav-categories-btn { display: flex; align-items: center; gap: 8px; background: transparent; color: var(--sb-text); padding: 0 16px; height: 100%; font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; flex-shrink: 0; user-select: none; border-right: 1px solid var(--sb-border-light); }
+    .nav-categories-btn:hover, .nav-categories-btn.mega-active { background: var(--sb-primary); color: white; }
     .nav-links { display: flex; align-items: center; gap: 20px; flex: 1; overflow: hidden; margin-left: 20px; }
     .nav-link { text-decoration: none; color: #334155; font-weight: 600; font-size: 0.82rem; transition: color 0.2s; white-space: nowrap; opacity: 1; }
     .nav-link:hover { color: var(--sb-primary); }
+    .nav-link.active-link {
+      color: white;
+      background: var(--sb-primary);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
     .btn-insert { display: flex; align-items: center; gap: 6px; border: 1.5px solid var(--sb-primary); color: var(--sb-primary); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; text-decoration: none; transition: var(--sb-transition); white-space: nowrap; flex-shrink: 0; }
     .btn-insert:hover { background: var(--sb-primary); color: white; }
 
