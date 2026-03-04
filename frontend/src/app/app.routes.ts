@@ -29,14 +29,18 @@ import { CategoryProductsComponent } from './components/category-products/catego
 import { MarketProductDetailComponent } from './components/market-product-detail.component';
 import { MarketProductSubmissionComponent } from './components/market-product-submission.component';
 
+// Cart & Checkout
+import { CheckoutComponent } from './components/checkout/checkout.component';
+import { MesCommandesComponent } from './components/mes-commandes/mes-commandes.component';
+
 export const routes: Routes = [
     // Public routes
     { path: '', redirectTo: '/home', pathMatch: 'full' },
     { path: 'home', component: HomeComponent },
-    { path: 'product/:id', component: ProductDetailComponent },          // Existing (Anonce detail)
-    { path: 'marketplace', component: MarketplaceComponent },             // NEW: Marketplace
-    { path: 'categories/:slug', component: CategoryProductsComponent },   // NEW: Category view
-    { path: 'market-products/:id', component: MarketProductDetailComponent }, // NEW: Product detail
+    { path: 'product/:id', component: ProductDetailComponent },
+    { path: 'marketplace', component: MarketplaceComponent },
+    { path: 'categories/:slug', component: CategoryProductsComponent },
+    { path: 'market-products/:id', component: MarketProductDetailComponent },
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
 
@@ -47,7 +51,17 @@ export const routes: Routes = [
         canActivate: [authGuard]
     },
     {
-        path: 'submit-product',         // Existing (Anonce submission)
+        path: 'checkout',
+        component: CheckoutComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'mes-commandes',
+        component: MesCommandesComponent,
+        canActivate: [authGuard]
+    },
+    {
+        path: 'submit-product',
         component: ProductSubmissionComponent,
         canActivate: [authGuard]
     },
@@ -72,8 +86,8 @@ export const routes: Routes = [
             { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
             { path: 'dashboard', component: VendeurDashboardComponent },
             { path: 'produits', component: VendeurProduitsComponent },
-            { path: 'produits/nouveau', component: MarketProductSubmissionComponent },     // NEW
-            { path: 'produits/:id/modifier', component: MarketProductSubmissionComponent }, // NEW
+            { path: 'produits/nouveau', component: MarketProductSubmissionComponent },
+            { path: 'produits/:id/modifier', component: MarketProductSubmissionComponent },
             { path: 'commandes', component: VendeurCommandesComponent },
             { path: 'etude', component: VendeurEtudeComponent }
         ]
