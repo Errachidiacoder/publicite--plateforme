@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ServiceOffre, ServiceOffreService } from '../../services/service-offre.service';
@@ -206,6 +206,7 @@ import { ServiceOffre, ServiceOffreService } from '../../services/service-offre.
 })
 export class AdminServicesComponent {
   private api = inject(ServiceOffreService);
+  private cdr = inject(ChangeDetectorRef);
   services: ServiceOffre[] = [];
   filtered: ServiceOffre[] = [];
   rejectModal = { open: false, id: 0, reason: '' };
@@ -224,6 +225,7 @@ export class AdminServicesComponent {
     this.api.adminAll().subscribe(res => {
       this.services = res;
       this.applyFilter();
+      this.cdr.detectChanges();
     });
   }
   applyFilter() {
