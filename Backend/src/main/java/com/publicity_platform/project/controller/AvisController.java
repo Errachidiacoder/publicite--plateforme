@@ -1,5 +1,6 @@
 package com.publicity_platform.project.controller;
 
+import com.publicity_platform.project.dto.AvisResponseDto;
 import com.publicity_platform.project.entity.Avis;
 import com.publicity_platform.project.entity.Utilisateur;
 import com.publicity_platform.project.service.AvisService;
@@ -20,13 +21,26 @@ public class AvisController {
         this.service = service;
     }
 
-    /** Lister les avis d'un produit (public) */
+    /** Lister les avis d'un produit (public, returns DTOs with user names) */
     @GetMapping("/produit/{produitId}")
-    public ResponseEntity<List<Avis>> getAvisProduit(@PathVariable Long produitId) {
-        return ResponseEntity.ok(service.getAvisProduit(produitId));
+    public ResponseEntity<List<AvisResponseDto>> getAvisProduit(@PathVariable Long produitId) {
+        return ResponseEntity.ok(service.getAvisProduitDto(produitId));
     }
 
-    /** Laisser un avis sur un produit */
+    /** Check if current user can review a product */
+    @GetMapping("/can-review/{produitId}")
+    public ResponseEntity<Map<String, Object>> canReview(
+            @AuthenticationPrincipal Utilisateur user,
+            @PathVariable Long produitId) {
+        Long commandeId = service.canClientReview(user.getId(), produitId);
+        if (commandeId != null) {
+            return ResponseEntity.ok(Map.of("canReview", true, "commandeId", commandeId));
+        } else {
+            return ResponseEntity.ok(Map.of("canReview", false));
+        }
+    }
+
+    /** Laisser un avis sur un produit (with eligibility check) */
     @PostMapping
     public ResponseEntity<Avis> creerAvis(
             @AuthenticationPrincipal Utilisateur user,
@@ -34,7 +48,15 @@ public class AvisController {
         Long produitId = Long.valueOf(body.get("produitId").toString());
         int note = Integer.parseInt(body.get("note").toString());
         String commentaire = body.containsKey("commentaire") ? body.get("commentaire").toString() : "";
-        return ResponseEntity.ok(service.creerAvis(produitId, user, note, commentaire));
+        Long commandeId = body.containsKey("commandeId") ? Long.valueOf(body.get("commandeId").toString()) : null;
+
+        Avis avis;
+        if (commandeId != null) {
+            avis = service.creerAvis(produitId, user, note, commentaire, commandeId);
+        } else {
+            avis = service.creerAvis(produitId, user, note, commentaire);
+        }
+        return ResponseEntity.ok(avis);
     }
 
     /** Mes avis */

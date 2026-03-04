@@ -228,6 +228,7 @@ public class CommandeService {
                 case EXPEDIEE -> orderNotificationHelper.notifyExpediee(saved);
                 case LIVREE -> orderNotificationHelper.notifyLivree(saved);
                 case ANNULE -> orderNotificationHelper.notifyAnnulee(saved);
+                case PAIEMENT_ECHOUE -> orderNotificationHelper.notifyPaiementEchoue(saved);
                 default -> {
                     /* no notification for other transitions */ }
             }
@@ -257,11 +258,55 @@ public class CommandeService {
             throw new RuntimeException("Le paiement ne peut être confirmé que pour les commandes livrées.");
         }
         commande.setPaiementConfirme(true);
+        commande.setDatePaiement(LocalDateTime.now());
         Commande saved = commandeRepository.save(commande);
         try {
             orderNotificationHelper.notifyPaiementConfirme(saved);
+            // Send review-unlocked notification to the client
+            orderNotificationHelper.notifyReviewUnlocked(saved);
         } catch (Exception ignored) {
         }
+        return saved;
+    }
+
+    /**
+     * Merchant reports failed COD payment — restores stock and notifies client.
+     */
+    @Transactional
+    public Commande signalerPaiementEchoue(Long commandeId, String raison) {
+        Commande commande = commandeRepository.findById(commandeId)
+                .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
+        if (commande.getStatutCommande() != StatutCommande.LIVREE) {
+            throw new RuntimeException("Seules les commandes livrées peuvent être signalées comme paiement échoué.");
+        }
+
+        commande.setStatutCommande(StatutCommande.PAIEMENT_ECHOUE);
+        commande.setPaiementConfirme(false);
+        commande.setAnnulationRaison(raison != null ? raison : "Paiement non reçu");
+
+        // Restore stock
+        if (commande.getLignes() != null) {
+            for (LigneCommande ligne : commande.getLignes()) {
+                Produit produit = ligne.getProduitCommande();
+                if (produit != null && ligne.getQuantiteCommandee() != null) {
+                    produit.setQuantiteStock(
+                            (produit.getQuantiteStock() != null ? produit.getQuantiteStock() : 0)
+                                    + ligne.getQuantiteCommandee());
+                    // Revert sales count
+                    produit.setNombreVentes(
+                            Math.max(0, (produit.getNombreVentes() != null ? produit.getNombreVentes() : 0)
+                                    - ligne.getQuantiteCommandee()));
+                    produitRepository.save(produit);
+                }
+            }
+        }
+
+        Commande saved = commandeRepository.save(commande);
+        try {
+            orderNotificationHelper.notifyPaiementEchoue(saved);
+        } catch (Exception ignored) {
+        }
+        log.info("Payment failed for commande {}: {}", commandeId, raison);
         return saved;
     }
 
@@ -311,6 +356,7 @@ public class CommandeService {
         dto.setDateExpeditionReelle(commande.getDateExpeditionReelle());
         dto.setDateLivraisonReelle(commande.getDateLivraisonReelle());
         dto.setPaiementConfirme(commande.getPaiementConfirme());
+        dto.setDatePaiement(commande.getDatePaiement());
 
         return dto;
     }
@@ -357,6 +403,7 @@ public class CommandeService {
         dto.setDateExpeditionReelle(commande.getDateExpeditionReelle());
         dto.setDateLivraisonReelle(commande.getDateLivraisonReelle());
         dto.setPaiementConfirme(commande.getPaiementConfirme());
+        dto.setDatePaiement(commande.getDatePaiement());
 
         return dto;
     }
@@ -367,6 +414,7 @@ public class CommandeService {
         dto.setQuantite(ligne.getQuantiteCommandee());
         dto.setPrixUnitaire(ligne.getPrixUnitaireTTC());
         dto.setSousTotal(ligne.getSousTotalLigne());
+        dto.setAvisDepose(Boolean.TRUE.equals(ligne.getAvisDepose()));
 
         Produit p = ligne.getProduitCommande();
         if (p != null) {

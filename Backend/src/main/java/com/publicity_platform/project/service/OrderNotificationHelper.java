@@ -137,6 +137,41 @@ public class OrderNotificationHelper {
                 "/mes-commandes");
     }
 
+    // ─── Payment Failed (PAIEMENT_ECHOUE) ─────────────────────────
+
+    public void notifyPaiementEchoue(Commande commande) {
+        String raison = commande.getAnnulationRaison() != null ? commande.getAnnulationRaison() : "Paiement non reçu";
+
+        // Notify client
+        notificationService.createOrderNotification(
+                commande.getAcheteur(),
+                "❌ Paiement échoué — Commande " + commande.getReferenceCommande(),
+                "La livraison de votre commande a échoué. Motif: " + raison
+                        + ". Les articles ont été remis en stock. Contactez le vendeur pour plus d'informations.",
+                "PAIEMENT_ECHOUE",
+                commande.getId(),
+                "/mes-commandes");
+
+        // Notify merchant(s) of stock restoration
+        notifyMerchants(commande,
+                "📦 Stock restauré — Commande " + commande.getReferenceCommande(),
+                "Le paiement n'a pas été reçu pour cette commande. Motif: " + raison
+                        + ". Les quantités ont été remises en stock.",
+                "PAIEMENT_ECHOUE");
+    }
+
+    // ─── Review Unlocked ─────────────────────────────────────────
+
+    public void notifyReviewUnlocked(Commande commande) {
+        notificationService.createOrderNotification(
+                commande.getAcheteur(),
+                "⭐ Donnez votre avis — Commande " + commande.getReferenceCommande(),
+                "Le paiement de votre commande a été confirmé. Vous pouvez maintenant laisser un avis sur les produits achetés !",
+                "REVIEW_UNLOCKED",
+                commande.getId(),
+                "/mes-commandes");
+    }
+
     // ─── Helpers ────────────────────────────────────────────────
 
     private void notifyMerchants(Commande commande, String sujet, String message, String type) {

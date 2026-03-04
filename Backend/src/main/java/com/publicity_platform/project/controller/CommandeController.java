@@ -96,6 +96,15 @@ public class CommandeController {
         return ResponseEntity.ok(service.confirmerPaiement(id));
     }
 
+    /** Signaler un échec de paiement COD (vendeur) */
+    @PutMapping("/{id}/paiement-echoue")
+    public ResponseEntity<Commande> signalerPaiementEchoue(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body) {
+        String raison = body.getOrDefault("raison", "Paiement non reçu");
+        return ResponseEntity.ok(service.signalerPaiementEchoue(id, raison));
+    }
+
     /** Assigner un livreur à une commande */
     @PutMapping("/{id}/assigner-livreur")
     public ResponseEntity<Commande> assignerLivreur(
