@@ -2,11 +2,13 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { CommandeService } from '../../services/commande.service';
 
 @Component({
   selector: 'app-vendeur-commandes',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -108,10 +110,84 @@ import { RouterLink } from '@angular/router';
                       <span>{{ c.telephoneContact }}</span>
                     </div>
                   }
+                  @if (c.numeroSuivi) {
+                    <div class="delivery-info">
+                      <span class="info-label">📦 Suivi :</span>
+                      <span>{{ c.numeroSuivi }}</span>
+                    </div>
+                  }
+                  @if (c.annulationRaison) {
+                    <div class="delivery-info cancel-reason">
+                      <span class="info-label">❌ Motif :</span>
+                      <span>{{ c.annulationRaison }}</span>
+                    </div>
+                  }
+
+                  <!-- Action buttons -->
+                  <div class="cmd-actions" (click)="$event.stopPropagation()">
+                    @if (c.statutCommande === 'EN_ATTENTE_PAIEMENT') {
+                      <button class="action-btn confirm" (click)="changeStatus(c.id, 'PAIEMENT_CONFIRME')">✅ Confirmer</button>
+                    }
+                    @if (c.statutCommande === 'PAIEMENT_CONFIRME') {
+                      <button class="action-btn prepare" (click)="changeStatus(c.id, 'EN_PREPARATION')">📦 Préparer</button>
+                    }
+                    @if (c.statutCommande === 'EN_PREPARATION') {
+                      <button class="action-btn ship" (click)="openShipModal(c.id)">🚚 Expédier</button>
+                      <button class="action-btn cancel" (click)="openCancelModal(c.id)">❌ Annuler</button>
+                    }
+                    @if (c.statutCommande === 'EXPEDIEE') {
+                      <button class="action-btn deliver" (click)="changeStatus(c.id, 'LIVREE')">🎉 Marquer livré</button>
+                    }
+                    @if (c.statutCommande === 'EN_LIVRAISON') {
+                      <button class="action-btn cancel" (click)="openCancelModal(c.id)">❌ Annuler</button>
+                    }
+                    @if (c.statutCommande === 'LIVREE' && !c.paiementConfirme) {
+                      <button class="action-btn payment" (click)="confirmPayment(c.id)">💰 Confirmer paiement</button>
+                    }
+                    @if (c.paiementConfirme) {
+                      <span class="payment-badge">✅ Paiement reçu</span>
+                    }
+                  </div>
                 </div>
               }
             </div>
           }
+        </div>
+      }
+
+      <!-- Cancel Modal -->
+      @if (cancelModal.open) {
+        <div class="modal-overlay" (click)="cancelModal.open = false">
+          <div class="modal-box" (click)="$event.stopPropagation()">
+            <h3>❌ Annuler la commande</h3>
+            <div class="modal-body">
+              <label>Motif d'annulation <span class="required">*</span></label>
+              <textarea class="modal-input" [(ngModel)]="cancelModal.raison" rows="4" placeholder="Expliquez le motif d'annulation..."></textarea>
+            </div>
+            <div class="modal-footer">
+              <button class="action-btn cancel-outline" (click)="cancelModal.open = false">Retour</button>
+              <button class="action-btn cancel" [disabled]="!cancelModal.raison?.trim()" (click)="confirmCancel()">Confirmer l'annulation</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Ship Modal -->
+      @if (shipModal.open) {
+        <div class="modal-overlay" (click)="shipModal.open = false">
+          <div class="modal-box" (click)="$event.stopPropagation()">
+            <h3>🚚 Expédier la commande</h3>
+            <div class="modal-body">
+              <label>Numéro de suivi <span class="optional">(optionnel)</span></label>
+              <input class="modal-input" [(ngModel)]="shipModal.numeroSuivi" placeholder="Ex: MA123456789" />
+              <label style="margin-top:12px">Société de livraison <span class="optional">(optionnel)</span></label>
+              <input class="modal-input" [(ngModel)]="shipModal.societeLivraison" placeholder="Ex: Amana, Chronopost..." />
+            </div>
+            <div class="modal-footer">
+              <button class="action-btn cancel-outline" (click)="shipModal.open = false">Retour</button>
+              <button class="action-btn ship" (click)="confirmShip()">Confirmer l'expédition</button>
+            </div>
+          </div>
         </div>
       }
     </div>
@@ -252,6 +328,65 @@ import { RouterLink } from '@angular/router';
     }
     .info-label { font-weight: 700; color: var(--sb-text); }
 
+    .cancel-reason { color: var(--sb-danger, #ef4444); }
+
+    /* Action buttons */
+    .cmd-actions {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      margin-top: 16px; padding-top: 14px;
+      border-top: 1px solid var(--sb-border-light);
+    }
+    .action-btn {
+      padding: 7px 16px; border: none; border-radius: 8px;
+      font-size: 0.8rem; font-weight: 700; cursor: pointer;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .action-btn.confirm { background: rgba(16,185,129,0.12); color: #059669; }
+    .action-btn.confirm:hover { background: rgba(16,185,129,0.25); }
+    .action-btn.prepare { background: rgba(59,130,246,0.12); color: #2563eb; }
+    .action-btn.prepare:hover { background: rgba(59,130,246,0.25); }
+    .action-btn.ship { background: rgba(124,58,237,0.12); color: #7c3aed; }
+    .action-btn.ship:hover { background: rgba(124,58,237,0.25); }
+    .action-btn.deliver { background: rgba(16,185,129,0.12); color: #059669; }
+    .action-btn.deliver:hover { background: rgba(16,185,129,0.25); }
+    .action-btn.cancel { background: rgba(239,68,68,0.12); color: #dc2626; }
+    .action-btn.cancel:hover { background: rgba(239,68,68,0.25); }
+    .action-btn.cancel-outline { background: transparent; border: 1px solid var(--sb-border); color: var(--sb-text-secondary); }
+    .action-btn.payment { background: rgba(245,158,11,0.12); color: #d97706; }
+    .action-btn.payment:hover { background: rgba(245,158,11,0.25); }
+    .payment-badge {
+      padding: 5px 12px; border-radius: 8px;
+      font-size: 0.78rem; font-weight: 700;
+      background: rgba(16,185,129,0.1); color: #059669;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px); display: flex;
+      align-items: center; justify-content: center; z-index: 2000;
+    }
+    .modal-box {
+      background: #fff; border-radius: 18px; width: 100%; max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+    }
+    .modal-box h3 { padding: 18px 22px; margin: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; }
+    .modal-body { padding: 18px 22px; }
+    .modal-body label { display: block; font-size: 0.82rem; font-weight: 700; color: #333; margin-bottom: 6px; }
+    .required { color: #ef4444; }
+    .optional { color: #999; font-weight: 400; }
+    .modal-input {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0;
+      border-radius: 10px; font-size: 0.88rem; font-family: inherit;
+      outline: none; transition: border-color 0.2s; box-sizing: border-box;
+    }
+    .modal-input:focus { border-color: #1aafa5; }
+    .modal-footer {
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 14px 22px; border-top: 1px solid #eee;
+    }
+
     @media (max-width: 768px) {
       .cmd-header { flex-direction: column; align-items: flex-start; gap: 8px; }
       .cmd-right { flex-wrap: wrap; }
@@ -262,18 +397,21 @@ import { RouterLink } from '@angular/router';
 export class VendeurCommandesComponent implements OnInit {
   private http = inject(HttpClient);
   private cdr = inject(ChangeDetectorRef);
+  private commandeService = inject(CommandeService);
   commandes: any[] = [];
   loading = true;
   expandedId: number | null = null;
+  boutiqueId: number | null = null;
+
+  cancelModal = { open: false, id: 0, raison: '' };
+  shipModal = { open: false, id: 0, numeroSuivi: '', societeLivraison: '' };
 
   ngOnInit() {
     this.http.get<any>('http://localhost:8081/api/v1/boutiques/ma-boutique').subscribe({
       next: (boutique: any) => {
         if (boutique?.id) {
-          this.http.get<any[]>(`http://localhost:8081/api/v1/commandes/boutique/${boutique.id}`).subscribe({
-            next: (data: any[]) => { this.commandes = data; this.loading = false; this.cdr.detectChanges(); },
-            error: () => { this.commandes = []; this.loading = false; this.cdr.detectChanges(); }
-          });
+          this.boutiqueId = boutique.id;
+          this.loadCommandes();
         } else {
           this.loading = false;
           this.cdr.detectChanges();
@@ -283,8 +421,59 @@ export class VendeurCommandesComponent implements OnInit {
     });
   }
 
+  loadCommandes() {
+    if (!this.boutiqueId) return;
+    this.http.get<any[]>(`http://localhost:8081/api/v1/commandes/boutique/${this.boutiqueId}`).subscribe({
+      next: (data: any[]) => { this.commandes = data; this.loading = false; this.cdr.detectChanges(); },
+      error: () => { this.commandes = []; this.loading = false; this.cdr.detectChanges(); }
+    });
+  }
+
   toggleExpand(id: number) {
     this.expandedId = this.expandedId === id ? null : id;
+  }
+
+  changeStatus(id: number, statut: string) {
+    this.commandeService.updateStatut(id, statut).subscribe({
+      next: () => this.loadCommandes(),
+      error: (err: any) => alert(err?.error?.message || 'Erreur lors de la mise à jour')
+    });
+  }
+
+  openCancelModal(id: number) {
+    this.cancelModal = { open: true, id, raison: '' };
+  }
+
+  confirmCancel() {
+    if (!this.cancelModal.raison?.trim()) return;
+    this.commandeService.updateStatut(this.cancelModal.id, 'ANNULE', {
+      raison: this.cancelModal.raison,
+      annulePar: 'VENDEUR'
+    }).subscribe({
+      next: () => { this.cancelModal.open = false; this.loadCommandes(); },
+      error: (err: any) => alert(err?.error?.message || 'Erreur lors de l\'annulation')
+    });
+  }
+
+  openShipModal(id: number) {
+    this.shipModal = { open: true, id, numeroSuivi: '', societeLivraison: '' };
+  }
+
+  confirmShip() {
+    this.commandeService.updateStatut(this.shipModal.id, 'EXPEDIEE', {
+      numeroSuivi: this.shipModal.numeroSuivi,
+      societeLivraison: this.shipModal.societeLivraison
+    }).subscribe({
+      next: () => { this.shipModal.open = false; this.loadCommandes(); },
+      error: (err: any) => alert(err?.error?.message || 'Erreur lors de l\'expédition')
+    });
+  }
+
+  confirmPayment(id: number) {
+    this.commandeService.confirmerPaiement(id).subscribe({
+      next: () => this.loadCommandes(),
+      error: (err: any) => alert(err?.error?.message || 'Erreur lors de la confirmation du paiement')
+    });
   }
 
   getStatusClass(statut: string): string {

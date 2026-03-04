@@ -550,6 +550,10 @@ export class NavbarComponent implements OnInit {
     if (!notif.notificationLue) {
       this.notifService.markAsRead(notif.id).subscribe();
     }
+    if (notif.lienAction) {
+      this.notifPanelOpen = false;
+      this.router.navigate([notif.lienAction]);
+    }
   }
 
   getNotifEmoji(type: string): string {
@@ -558,6 +562,13 @@ export class NavbarComponent implements OnInit {
       case 'ACTIVATION': return '🚀';
       case 'REFUS': return '❌';
       case 'NOUVELLE_ANNONCE': return '📢';
+      case 'COMMANDE_PLACEE': return '🛍️';
+      case 'COMMANDE_CONFIRMEE': return '✅';
+      case 'COMMANDE_EN_PREPARATION': return '📦';
+      case 'COMMANDE_EXPEDIEE': return '🚚';
+      case 'COMMANDE_LIVREE': return '🎉';
+      case 'COMMANDE_ANNULEE': return '❌';
+      case 'PAIEMENT_CONFIRME_VENDEUR': return '💰';
       default: return '🔔';
     }
   }
