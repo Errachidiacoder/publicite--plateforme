@@ -11,6 +11,8 @@ export interface Notification {
     notificationLue: boolean;
     dateEnvoi: string;
     produitSource?: any;
+    commandeId?: number;
+    lienAction?: string;
 }
 
 @Injectable({

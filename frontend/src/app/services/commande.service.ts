@@ -24,6 +24,13 @@ export interface CommandeResponseDto {
     notesLivraison: string;
     datePassageCommande: string;
     nombreArticles: number;
+    annulationRaison?: string;
+    annulePar?: string;
+    numeroSuivi?: string;
+    societeLivraison?: string;
+    dateExpeditionReelle?: string;
+    dateLivraisonReelle?: string;
+    paiementConfirme?: boolean;
 }
 
 export interface CommandeRequestDto {
@@ -39,8 +46,8 @@ export class CommandeService {
 
     constructor(private http: HttpClient) { }
 
-    passerCommande(dto: CommandeRequestDto): Observable<CommandeResponseDto> {
-        return this.http.post<CommandeResponseDto>(this.apiUrl, dto);
+    passerCommande(dto: CommandeRequestDto): Observable<CommandeResponseDto[]> {
+        return this.http.post<CommandeResponseDto[]>(this.apiUrl, dto);
     }
 
     getMesCommandes(): Observable<CommandeResponseDto[]> {
@@ -49,5 +56,15 @@ export class CommandeService {
 
     getCommande(id: number): Observable<CommandeResponseDto> {
         return this.http.get<CommandeResponseDto>(`${this.apiUrl}/${id}`);
+    }
+
+    updateStatut(id: number, statut: string, payload?: {
+        raison?: string; annulePar?: string; numeroSuivi?: string; societeLivraison?: string;
+    }): Observable<any> {
+        return this.http.put(`${this.apiUrl}/${id}/statut`, { statut, ...payload });
+    }
+
+    confirmerPaiement(id: number): Observable<any> {
+        return this.http.put(`${this.apiUrl}/${id}/confirmer-paiement`, {});
     }
 }
