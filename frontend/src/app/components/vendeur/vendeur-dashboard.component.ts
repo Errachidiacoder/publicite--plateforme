@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -169,6 +169,7 @@ import { AuthService } from '../../services/auth.service';
 export class VendeurDashboardComponent implements OnInit {
   auth = inject(AuthService);
   private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
 
   stats = {
     totalProduits: 0,
@@ -178,16 +179,25 @@ export class VendeurDashboardComponent implements OnInit {
   };
 
   ngOnInit() {
-    // Fetch user's product count
-    this.http.get<any[]>('http://localhost:8081/api/v1/produits/active').subscribe({
-      next: (produits) => { this.stats.totalProduits = produits.length; },
-      error: () => { }
-    });
-    // Fetch boutique stats
+    // Fetch boutique info, then use boutiqueId to get merchant-specific stats
     this.http.get<any>('http://localhost:8081/api/v1/boutiques/ma-boutique').subscribe({
       next: (boutique) => {
         if (boutique) {
           this.stats.noteMoyenne = boutique.noteMoyenne || 0;
+          this.cdr.detectChanges();
+
+          if (boutique.id) {
+            // Get all stats (commandes, chiffre d'affaires, produits count)
+            this.http.get<any>(`http://localhost:8081/api/v1/commandes/boutique/${boutique.id}/stats`).subscribe({
+              next: (s: any) => {
+                this.stats.totalCommandes = s.totalCommandes || 0;
+                this.stats.chiffreAffaires = s.chiffreAffaires || 0;
+                this.stats.totalProduits = s.totalProduits || 0;
+                this.cdr.detectChanges();
+              },
+              error: () => { }
+            });
+          }
         }
       },
       error: () => { }

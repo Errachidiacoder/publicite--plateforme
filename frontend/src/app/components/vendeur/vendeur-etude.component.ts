@@ -1,12 +1,12 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
-    selector: 'app-vendeur-etude',
-    standalone: true,
-    imports: [CommonModule],
-    template: `
+  selector: 'app-vendeur-etude',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
     <div class="page">
       <div class="page-header">
         <div>
@@ -131,7 +131,7 @@ import { HttpClient } from '@angular/common/http';
       </div>
     </div>
   `,
-    styles: [`
+  styles: [`
     .page { max-width: 1000px; }
     .page-header {
       margin-bottom: 32px;
@@ -201,30 +201,31 @@ import { HttpClient } from '@angular/common/http';
   `]
 })
 export class VendeurEtudeComponent implements OnInit {
-    private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:8081/api/v1/etude';
+  private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
+  private apiUrl = 'http://localhost:8081/api/v1/etude';
 
-    winningProducts: any[] = [];
-    tendances: any[] = [];
-    besoins: any = null;
-    loadingWinning = true;
-    loadingTendances = true;
-    loadingBesoins = true;
+  winningProducts: any[] = [];
+  tendances: any[] = [];
+  besoins: any = null;
+  loadingWinning = true;
+  loadingTendances = true;
+  loadingBesoins = true;
 
-    ngOnInit() {
-        this.http.get<any[]>(`${this.apiUrl}/winning-products`).subscribe({
-            next: (data: any[]) => { this.winningProducts = data; this.loadingWinning = false; },
-            error: () => this.loadingWinning = false
-        });
+  ngOnInit() {
+    this.http.get<any[]>(`${this.apiUrl}/winning-products`).subscribe({
+      next: (data: any[]) => { this.winningProducts = data; this.loadingWinning = false; this.cdr.detectChanges(); },
+      error: () => { this.loadingWinning = false; this.cdr.detectChanges(); }
+    });
 
-        this.http.get<any[]>(`${this.apiUrl}/tendances`).subscribe({
-            next: (data: any[]) => { this.tendances = data; this.loadingTendances = false; },
-            error: () => this.loadingTendances = false
-        });
+    this.http.get<any[]>(`${this.apiUrl}/tendances`).subscribe({
+      next: (data: any[]) => { this.tendances = data; this.loadingTendances = false; this.cdr.detectChanges(); },
+      error: () => { this.loadingTendances = false; this.cdr.detectChanges(); }
+    });
 
-        this.http.get<any>(`${this.apiUrl}/besoins-clients`).subscribe({
-            next: (data: any) => { this.besoins = data; this.loadingBesoins = false; },
-            error: () => this.loadingBesoins = false
-        });
-    }
+    this.http.get<any>(`${this.apiUrl}/besoins-clients`).subscribe({
+      next: (data: any) => { this.besoins = data; this.loadingBesoins = false; this.cdr.detectChanges(); },
+      error: () => { this.loadingBesoins = false; this.cdr.detectChanges(); }
+    });
+  }
 }
