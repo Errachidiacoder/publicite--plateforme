@@ -1,6 +1,6 @@
 package com.publicity_platform.project.controller;
 
-import com.publicity_platform.project.entity.Panier;
+import com.publicity_platform.project.dto.PanierDto;
 import com.publicity_platform.project.entity.Utilisateur;
 import com.publicity_platform.project.service.PanierService;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +20,12 @@ public class PanierController {
     }
 
     @GetMapping
-    public ResponseEntity<Panier> getMonPanier(@AuthenticationPrincipal Utilisateur user) {
-        return ResponseEntity.ok(service.getPanierUtilisateur(user));
+    public ResponseEntity<PanierDto> getMonPanier(@AuthenticationPrincipal Utilisateur user) {
+        return ResponseEntity.ok(service.getPanierDto(user));
     }
 
     @PostMapping("/ajouter")
-    public ResponseEntity<Panier> ajouterAuPanier(
+    public ResponseEntity<PanierDto> ajouterAuPanier(
             @AuthenticationPrincipal Utilisateur user,
             @RequestBody Map<String, Object> body) {
         Long produitId = Long.valueOf(body.get("produitId").toString());
@@ -34,7 +34,7 @@ public class PanierController {
     }
 
     @PutMapping("/modifier")
-    public ResponseEntity<Panier> modifierQuantite(
+    public ResponseEntity<PanierDto> modifierQuantite(
             @AuthenticationPrincipal Utilisateur user,
             @RequestBody Map<String, Object> body) {
         Long produitId = Long.valueOf(body.get("produitId").toString());
@@ -43,14 +43,20 @@ public class PanierController {
     }
 
     @DeleteMapping("/supprimer/{produitId}")
-    public ResponseEntity<Panier> supprimerDuPanier(
+    public ResponseEntity<PanierDto> supprimerDuPanier(
             @AuthenticationPrincipal Utilisateur user,
             @PathVariable Long produitId) {
         return ResponseEntity.ok(service.supprimerDuPanier(user, produitId));
     }
 
     @DeleteMapping("/vider")
-    public ResponseEntity<Panier> viderPanier(@AuthenticationPrincipal Utilisateur user) {
+    public ResponseEntity<PanierDto> viderPanier(@AuthenticationPrincipal Utilisateur user) {
         return ResponseEntity.ok(service.viderPanier(user));
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Map<String, Integer>> getCartCount(@AuthenticationPrincipal Utilisateur user) {
+        int count = service.getCartCount(user);
+        return ResponseEntity.ok(Map.of("count", count));
     }
 }

@@ -1,16 +1,18 @@
-import { Component, OnInit, inject, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, inject, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { CategorieService } from '../../services/category.service';
 import { NotificationService } from '../../services/notification.service';
+import { PanierService } from '../../services/panier.service';
 import { ThemeToggleComponent } from './theme-toggle.component';
+import { MiniCartComponent } from './mini-cart/mini-cart.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, ThemeToggleComponent, CommonModule],
+  imports: [RouterLink, RouterLinkActive, ThemeToggleComponent, CommonModule, MiniCartComponent],
   template: `
     <nav class="navbar" (click)="onNavClick($event)">
       <!-- TOP NAV -->
@@ -96,10 +98,12 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
               </div>
 
               <!-- Cart -->
-              <a routerLink="/panier" class="icon-box" title="Mon panier">
+              <button class="icon-box" title="Mon panier" (click)="miniCartOpen = !miniCartOpen; $event.stopPropagation()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                <span class="badge-count">0</span>
-              </a>
+                @if (cartCount > 0) {
+                  <span class="badge-count">{{ cartCount > 9 ? '9+' : cartCount }}</span>
+                }
+              </button>
 
               <!-- User Profile -->
               <div class="action-item user-profile" (click)="menuOpen = !menuOpen">
@@ -119,7 +123,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
                       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                       Mon profil
                     </a>
-                    <a routerLink="/commandes" class="dropdown-item">
+                    <a routerLink="/mes-commandes" class="dropdown-item">
                       <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                       Mes commandes
                     </a>
@@ -267,6 +271,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         </div>
       }
     </nav>
+    <app-mini-cart [isOpen]="miniCartOpen" (close)="miniCartOpen = false" />
   `,
   styles: [`
     .navbar { position: sticky; top: 0; z-index: 1000; background: var(--sb-bg-elevated); box-shadow: var(--sb-shadow-sm); }
@@ -457,14 +462,18 @@ export class NavbarComponent implements OnInit {
   auth = inject(AuthService);
   private catService = inject(CategorieService);
   private notifService = inject(NotificationService);
+  private panierService = inject(PanierService);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
   private elRef = inject(ElementRef);
+  private cdr = inject(ChangeDetectorRef);
 
   menuOpen = false;
   mobileOpen = false;
   megaOpen = false;
   notifPanelOpen = false;
+  miniCartOpen = false;
+  cartCount = 0;
   megaCategories: any[] = [];
   activeMegaCat: any = null;
   unreadCount = 0;
@@ -489,6 +498,14 @@ export class NavbarComponent implements OnInit {
     this.notifService.newNotification$.subscribe(notif => {
       this.showToast(notif);
     });
+    // Cart count
+    this.panierService.cartCount$.subscribe(count => {
+      this.cartCount = count;
+      this.cdr.detectChanges();
+    });
+    if (this.auth.isLoggedIn()) {
+      this.panierService.init();
+    }
   }
 
   showToast(notif: any) {

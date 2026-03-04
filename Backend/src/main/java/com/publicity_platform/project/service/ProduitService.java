@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -275,9 +276,11 @@ public class ProduitService {
 
     @Transactional(readOnly = true)
     public Page<ProduitMerchantDto> getMerchantProducts(Long merchantId, Pageable pageable) {
-        Boutique boutique = boutiqueRepository.findByProprietaireId(merchantId)
-                .orElseThrow(() -> new RuntimeException("Boutique non trouvée"));
-
+        Optional<Boutique> boutiqueOpt = boutiqueRepository.findByProprietaireId(merchantId);
+        if (boutiqueOpt.isEmpty()) {
+            return Page.empty(pageable);
+        }
+        Boutique boutique = boutiqueOpt.get();
         return repository.findByBoutiqueId(boutique.getId(), pageable)
                 .map(this::toMerchantDto);
     }
