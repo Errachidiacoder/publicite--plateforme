@@ -36,6 +36,23 @@ public class NotificationService {
         notificationRepository.save(java.util.Objects.requireNonNull(notification));
     }
 
+    @Transactional
+    @SuppressWarnings("null")
+    public void createOrderNotification(Utilisateur destinataire, String sujet, String message, String type,
+            Long commandeId, String lienAction) {
+        Notification notification = Notification.builder()
+                .destinataire(destinataire)
+                .sujetNotification(sujet)
+                .corpsMessage(message)
+                .typeEvenement(type)
+                .notificationLue(false)
+                .dateEnvoi(LocalDateTime.now())
+                .commandeId(commandeId)
+                .lienAction(lienAction)
+                .build();
+        notificationRepository.save(java.util.Objects.requireNonNull(notification));
+    }
+
     public List<Notification> getNotificationsForUser(Long userId) {
         return notificationRepository.findByDestinataireIdOrderByDateEnvoiDesc(userId);
     }
