@@ -17,7 +17,6 @@ import { HttpClient } from '@angular/common/http';
           <div class="submit-header">
             <svg class="header-icon-svg" xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             <h1>Publier un service</h1>
-            <p>Décrivez votre service et choisissez contrat et mode de travail</p>
           </div>
 
           @if (errorMsg) {
@@ -84,6 +83,7 @@ import { HttpClient } from '@angular/common/http';
               <div class="input-group">
                 <label>Mode de travail</label>
                 <select class="form-input" [(ngModel)]="model.modeTravail" name="modeTravail" required>
+                  <option value="" disabled>Choisir…</option>
                   <option value="REMOTE">À distance</option>
                   <option value="SUR_SITE">Sur site</option>
                   <option value="HYBRIDE">Hybride</option>
@@ -93,6 +93,7 @@ import { HttpClient } from '@angular/common/http';
               <div class="input-group">
                 <label>Type de contrat</label>
                 <select class="form-input" [(ngModel)]="model.typeContrat" name="typeContrat" required>
+                  <option value="" disabled>Choisir…</option>
                   <option value="CDI">CDI</option>
                   <option value="CDD">CDD</option>
                   <option value="ANAPEC">ANAPEC</option>
@@ -105,6 +106,7 @@ import { HttpClient } from '@angular/common/http';
               <div class="input-group">
                 <label>Catégorie</label>
                 <select class="form-input" [(ngModel)]="selectedCategorieId" name="categorieId" required>
+                  <option [ngValue]="null" disabled>Choisir…</option>
                   @for (c of categories; track c.id) { <option [value]="c.id">{{ c.nomCategorie }}</option> }
                 </select>
               </div>
@@ -148,9 +150,8 @@ import { HttpClient } from '@angular/common/http';
   ,
   styles: [`
     .submit-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 24px; border: 1px solid #E2E8F0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.04), 0 4px 6px -2px rgba(0,0,0,0.02); padding: 30px; }
-    .submit-header { display:flex; align-items:flex-start; gap:14px; margin-bottom: 20px; }
+    .submit-header { display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px; margin-bottom: 20px; }
     .submit-header h1 { margin:0; font-size:1.4rem; font-weight:900; color:#1A202C; }
-    .submit-header p { margin:0; font-size:0.9rem; color:#64748B; }
     .header-icon-svg { color:#0099cc; }
     .upload-section { margin-bottom: 16px; }
     .section-label { font-weight:800; font-size:0.82rem; color:#1A202C; margin-bottom:8px; }
@@ -190,8 +191,8 @@ export class ServicePublishComponent {
     titreService: '',
     descriptionDetaillee: '',
     villeLocalisation: '',
-    modeTravail: 'REMOTE',
-    typeContrat: 'FREELANCE',
+    modeTravail: '' as any,
+    typeContrat: '' as any,
     telephoneContact: ''
   };
   villes = ['Casablanca','Rabat','Marrakech','Fès','Tanger','Agadir','Oujda','Tétouan','Mohammédia','Kenitra','Safi','Salé','Temara','Essaouira','Nador','El Jadida'];
@@ -228,8 +229,8 @@ export class ServicePublishComponent {
       titreService: '',
       descriptionDetaillee: '',
       villeLocalisation: '',
-      modeTravail: 'REMOTE',
-      typeContrat: 'FREELANCE',
+      modeTravail: '' as any,
+      typeContrat: '' as any,
       telephoneContact: ''
     };
     this.selectedCategorieId = null;

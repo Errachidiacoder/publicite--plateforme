@@ -325,9 +325,13 @@ import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
     .review-comment { font-size: 0.9rem; color: var(--sb-text-secondary, #64748b); line-height: 1.5; margin: 0; }
 
     /* Description */
-    .mpd-description { margin-top: 40px; }    background: var(--sb-bg-elevated, #fff);
+    .mpd-description {
+      margin-top: 40px;
+      background: var(--sb-bg-elevated, #fff);
       border: 1px solid var(--sb-border-light, #f1f5f9);
-      border-radius: 16px; padding: 24px; margin-bottom: 40px;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 40px;
     }
     .mpd-description h2 { font-size: 1.1rem; font-weight: 800; margin: 0 0 16px; color: var(--sb-text, #1e293b); }
     .mpd-desc-content { font-size: 0.9rem; color: var(--sb-text-secondary, #64748b); line-height: 1.7; white-space: pre-line; }

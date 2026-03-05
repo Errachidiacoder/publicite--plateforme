@@ -20,7 +20,7 @@ export class App {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       const url = event.urlAfterRedirects || event.url;
-      this.showHeaderFooter = !url.includes('/login') && !url.includes('/register');
+      this.showHeaderFooter = !url.includes('/login') && !url.includes('/register') && !url.includes('/admin');
     });
   }
 }

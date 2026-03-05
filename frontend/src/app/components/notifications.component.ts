@@ -3,12 +3,13 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService, Notification } from '../services/notification.service';
 import { AuthService } from '../services/auth.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
-    selector: 'app-notifications',
-    standalone: true,
-    imports: [CommonModule, DatePipe],
-    template: `
+  selector: 'app-notifications',
+  standalone: true,
+  imports: [CommonModule, DatePipe],
+  template: `
     <div class="container">
       <section class="section">
         <div class="notif-page">
@@ -38,7 +39,7 @@ import { AuthService } from '../services/auth.service';
             </div>
           } @else if (notifications.length === 0) {
             <div class="empty-state">
-              <div class="empty-icon">🔔</div>
+              <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--sb-primary, #1aafa5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
               <h3>Aucune notification</h3>
               <p>Vous n'avez pas encore reçu de notifications. Elles apparaîtront ici après qu'un administrateur ait examiné vos annonces.</p>
             </div>
@@ -47,9 +48,8 @@ import { AuthService } from '../services/auth.service';
               @for (notif of notifications; track notif.id) {
                 <div class="notif-card" [class.unread]="!notif.notificationLue" (click)="markRead(notif)">
                   <div class="notif-icon-wrap" [ngClass]="getTypeClass(notif.typeEvenement)">
-                    <span class="notif-emoji">{{ getTypeEmoji(notif.typeEvenement) }}</span>
+                    <span class="notif-svg" [innerHTML]="getTypeSvg(notif.typeEvenement)"></span>
                   </div>
-
                   <div class="notif-body">
                     <div class="notif-top">
                       <h4 class="notif-subject">{{ notif.sujetNotification }}</h4>
@@ -66,7 +66,8 @@ import { AuthService } from '../services/auth.service';
 
                   @if (notif.typeEvenement === 'VALIDATION_PAIEMENT') {
                     <button class="btn-pay" (click)="goToPayment($event)">
-                      💳 Payer
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                      Payer
                     </button>
                   }
                 </div>
@@ -77,7 +78,7 @@ import { AuthService } from '../services/auth.service';
       </section>
     </div>
   `,
-    styles: [`
+  styles: [`
     .notif-page {
       max-width: 780px;
       margin: 0 auto;
@@ -152,7 +153,9 @@ import { AuthService } from '../services/auth.service';
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .empty-icon { font-size: 3.5rem; margin-bottom: 16px; display: block; }
+    .empty-icon { margin-bottom: 16px; display: flex; justify-content: center; align-items: center; }
+    .notif-svg { display: flex; align-items: center; justify-content: center; }
+    .notif-svg ::ng-deep svg { width: 22px; height: 22px; }
     .empty-state h3 { font-size: 1.1rem; font-weight: 700; color: var(--sb-text); margin-bottom: 8px; }
     .empty-state p { font-size: 0.88rem; max-width: 400px; margin: 0 auto; line-height: 1.5; }
 
@@ -239,68 +242,94 @@ import { AuthService } from '../services/auth.service';
   `]
 })
 export class NotificationsComponent implements OnInit {
-    private notifService = inject(NotificationService);
-    private router = inject(Router);
-    private auth = inject(AuthService);
+  private notifService = inject(NotificationService);
+  private router = inject(Router);
+  private auth = inject(AuthService);
+  private sanitizer = inject(DomSanitizer);
 
-    notifications: Notification[] = [];
-    loading = true;
-    unreadCount = 0;
+  notifications: Notification[] = [];
+  loading = true;
+  unreadCount = 0;
 
-    ngOnInit() {
-        this.notifService.notifications$.subscribe(notifs => {
-            this.notifications = notifs;
-            this.unreadCount = notifs.filter(n => !n.notificationLue).length;
-            this.loading = false;
-        });
+  ngOnInit() {
+    this.notifService.notifications$.subscribe(notifs => {
+      this.notifications = notifs;
+      this.unreadCount = notifs.filter(n => !n.notificationLue).length;
+      this.loading = false;
+    });
+  }
+
+  getTypeClass(type: string): string {
+    switch (type) {
+      case 'VALIDATION':
+      case 'ACTIVATION':
+      case 'VALIDATION_PAIEMENT': return 'type-success';
+      case 'REFUS': return 'type-danger';
+      case 'NOUVELLE_ANNONCE': return 'type-info';
+      default: return 'type-primary';
+    }
+  }
+
+  getTypeSvg(type: string): SafeHtml {
+    const svgs: Record<string, string> = {
+      'VALIDATION': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+      'VALIDATION_PAIEMENT': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+      'ACTIVATION': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1aafa5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>`,
+      'REFUS': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+      'NOUVELLE_ANNONCE': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`,
+    };
+    const fallback = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1aafa5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+    return this.sanitizer.bypassSecurityTrustHtml(svgs[type] ?? fallback);
+  }
+
+  getTypeLabel(type: string): string {
+    switch (type) {
+      case 'VALIDATION': return 'Validée';
+      case 'VALIDATION_PAIEMENT': return 'Validée';
+      case 'ACTIVATION': return 'Activée';
+      case 'REFUS': return 'Refusée';
+      case 'NOUVELLE_ANNONCE': return 'Nouvelle Annonce';
+      default: return type;
+    }
+  }
+
+  markRead(notif: Notification) {
+    if (!notif.notificationLue) {
+      this.notifService.markAsRead(notif.id).subscribe();
+    }
+    this.handleRedirection(notif);
+  }
+
+  private handleRedirection(notif: any) {
+    // If there's a specific link, use it
+    if (notif.lienAction) {
+      this.router.navigate([notif.lienAction]);
+      return;
     }
 
-    getTypeClass(type: string): string {
-        switch (type) {
-            case 'VALIDATION':
-            case 'ACTIVATION':
-            case 'VALIDATION_PAIEMENT': return 'type-success';
-            case 'REFUS': return 'type-danger';
-            case 'NOUVELLE_ANNONCE': return 'type-info';
-            default: return 'type-primary';
-        }
-    }
+    // Otherwise, deduce based on notification content or type
+    const sujet = notif.sujetNotification?.toLowerCase() || '';
+    const msg = notif.corpsMessage?.toLowerCase() || '';
 
-    getTypeEmoji(type: string): string {
-        switch (type) {
-            case 'VALIDATION':
-            case 'VALIDATION_PAIEMENT': return '✅';
-            case 'ACTIVATION': return '🚀';
-            case 'REFUS': return '❌';
-            case 'NOUVELLE_ANNONCE': return '📢';
-            default: return '🔔';
-        }
+    if (sujet.includes('service') || msg.includes('service')) {
+      this.router.navigate(['/vendeur/produits'], { queryParams: { tab: 'services' } });
+    } else if (sujet.includes('produit') || msg.includes('produit')) {
+      this.router.navigate(['/vendeur/produits'], { queryParams: { tab: 'market' } });
+    } else if (sujet.includes('annonce') || msg.includes('annonce')) {
+      this.router.navigate(['/vendeur/produits'], { queryParams: { tab: 'annonces' } });
+    } else {
+      // Default fallback
+      this.router.navigate(['/notifications']);
     }
+  }
 
-    getTypeLabel(type: string): string {
-        switch (type) {
-            case 'VALIDATION': return 'Validée';
-            case 'VALIDATION_PAIEMENT': return 'Validée';
-            case 'ACTIVATION': return 'Activée';
-            case 'REFUS': return 'Refusée';
-            case 'NOUVELLE_ANNONCE': return 'Nouvelle Annonce';
-            default: return type;
-        }
-    }
+  markAllRead() {
+    const unread = this.notifications.filter(n => !n.notificationLue);
+    unread.forEach(n => this.notifService.markAsRead(n.id).subscribe());
+  }
 
-    markRead(notif: Notification) {
-        if (!notif.notificationLue) {
-            this.notifService.markAsRead(notif.id).subscribe();
-        }
-    }
-
-    markAllRead() {
-        const unread = this.notifications.filter(n => !n.notificationLue);
-        unread.forEach(n => this.notifService.markAsRead(n.id).subscribe());
-    }
-
-    goToPayment(event: Event) {
-        event.stopPropagation();
-        this.router.navigate(['/my-ads']);
-    }
+  goToPayment(event: Event) {
+    event.stopPropagation();
+    this.router.navigate(['/my-ads']);
+  }
 }

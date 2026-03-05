@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { CategorieService } from '../services/category.service';
@@ -342,6 +342,8 @@ export class ProductSubmissionComponent implements OnInit {
   private notifService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
 
+  @ViewChild('anonceForm') form?: NgForm;
+
   private apiUrl = 'http://localhost:8081/api/v1';
 
   private getAuthHeaders(): HttpHeaders {
@@ -510,6 +512,7 @@ export class ProductSubmissionComponent implements OnInit {
       typeAnnonce: 'PRODUIT_PHYSIQUE',
       disponibilite: 'DISPONIBLE_IMMEDIATEMENT'
     };
+    this.form?.resetForm();
     this.errorMsg = '';
   }
 

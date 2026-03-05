@@ -34,6 +34,8 @@ export class NotificationService {
 
     private audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
+    private firstLoad = true;
+
     constructor() {
         // Start polling if user is logged in
         interval(30000).pipe(
@@ -50,13 +52,17 @@ export class NotificationService {
             if (notifs.length > current.length) {
                 const newUnread = notifs.filter(n => !n.notificationLue && !current.find(c => c.id === n.id));
                 if (newUnread.length > 0) {
-                    this.playSound();
-                    // Emit the first new unread notification for the toast
-                    this.newNotificationSub.next(newUnread[0]);
+                    // Only play sound and show toast if it's not the initial load
+                    if (!this.firstLoad) {
+                        this.playSound();
+                        // Emit the first new unread notification for the toast
+                        this.newNotificationSub.next(newUnread[0]);
+                    }
                 }
             }
             this.notificationsSub.next(notifs);
             this.unreadCountSub.next(notifs.filter(n => !n.notificationLue).length);
+            this.firstLoad = false;
         });
     }
 

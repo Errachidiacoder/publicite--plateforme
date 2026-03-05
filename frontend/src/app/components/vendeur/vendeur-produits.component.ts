@@ -1,12 +1,13 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute, Params } from '@angular/router';
 import { AnonceService } from '../../services/anonce.service';
 import { AuthService } from '../../services/auth.service';
 import { MarketProductService } from '../../services/market-product.service';
 import { AvisService, AvisResponseDto } from '../../services/avis.service';
 import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
+import { ServiceOffre, ServiceOffreService } from '../../services/service-offre.service';
 
 @Component({
   selector: 'app-vendeur-produits',
@@ -22,6 +23,7 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
         <div class="header-actions">
           <a routerLink="/vendeur/produits/nouveau" class="btn btn-primary">+ Nouveau produit</a>
           <a routerLink="/submit-product" class="btn btn-outline">+ Nouvelle annonce</a>
+          <a routerLink="/publish-service" class="btn btn-outline">+ Nouveau service</a>
         </div>
       </div>
 
@@ -37,6 +39,12 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
           📢 Annonces
           @if (produits.length > 0) {
             <span class="tab-count">{{ produits.length }}</span>
+          }
+        </button>
+        <button class="tab" [class.active]="activeTab === 'services'" (click)="activeTab = 'services'">
+          🧰 Services
+          @if (services.length > 0) {
+            <span class="tab-count">{{ services.length }}</span>
           }
         </button>
       </div>
@@ -116,6 +124,47 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
           </div>
         }
       }
+      <!-- Services Tab -->
+      @if (activeTab === 'services') {
+        @if (loadingServices) {
+          <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+        } @else if (services.length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">🧰</span>
+            <h3>Aucun service</h3>
+            <p>Ajoutez votre premier service pour être visible.</p>
+            <a routerLink="/publish-service" class="btn btn-primary btn-lg">Ajouter un service</a>
+          </div>
+        } @else {
+          <div class="products-list">
+            @for (s of services; track s.id) {
+              <div class="product-row">
+                <div class="prod-img">
+                  @if (s.imageUrl) { <img [src]="s.imageUrl" [alt]="s.titreService"> }
+                  @else { <div class="prod-img-placeholder">🧰</div> }
+                </div>
+                <div class="prod-info">
+                  <h3>{{ s.titreService }}</h3>
+                  <span class="prod-category">{{ s.categorie?.nomCategorie || 'Non classé' }}</span>
+                </div>
+                <div class="prod-price">{{ (s.prixAfiche || 0) | number:'1.0-0' }} DH</div>
+                <div class="prod-views">{{ s.compteurVues || 0 }} vues</div>
+                <div class="prod-status">
+                  <span class="status-pill"
+                        [class.status-active]="s.statutService === 'ACTIVEE' || s.statutService === 'VALIDE'"
+                        [class.status-draft]="s.statutService === 'EN_ATTENTE'"
+                        [class.status-archived]="s.statutService === 'ARCHIVE'">
+                    {{ s.statutService || 'EN_ATTENTE' }}
+                  </span>
+                </div>
+                <div class="prod-actions">
+                  <a [routerLink]="['/service', s.id]" class="action-btn" title="Voir">👁️</a>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
 
       <!-- Annonces Tab (original behavior) -->
       @if (activeTab === 'annonces') {
@@ -133,7 +182,7 @@ import { ProduitMerchantDto, PageResponse } from '../../models/produit.model';
             @for (p of produits; track p.id) {
               <div class="product-row">
                 <div class="prod-img">
-                  <img [src]="p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&fit=crop'" [alt]="p.titreAnonce">
+                  <img [src]="p.imageUrl || ''" [alt]="p.titreAnonce">
                 </div>
                 <div class="prod-info">
                   <h3>{{ p.titreAnonce }}</h3>
@@ -347,6 +396,7 @@ export class VendeurProduitsComponent implements OnInit {
   private authService = inject(AuthService);
   private marketProductService = inject(MarketProductService);
   private avisService = inject(AvisService);
+  private serviceOffreService = inject(ServiceOffreService);
   private cdr = inject(ChangeDetectorRef);
 
   produits: any[] = [];
@@ -355,10 +405,20 @@ export class VendeurProduitsComponent implements OnInit {
   loadingMarket = true;
   activeTab = 'market';
   statusFilter = 'ALL';
+  services: ServiceOffre[] = [];
+  loadingServices = true;
 
   reviewsPanel = { open: false, produitId: 0, produitNom: '', reviews: [] as AvisResponseDto[], loading: false };
 
+  private route = inject(ActivatedRoute);
+
   ngOnInit() {
+    this.route.queryParams.subscribe((params: Params) => {
+      if (params['tab']) {
+        this.activeTab = params['tab'];
+      }
+    });
+
     const userId = this.authService.getUserId();
     if (userId) {
       this.anonceService.getByAnnonceur(userId).subscribe({
@@ -374,9 +434,15 @@ export class VendeurProduitsComponent implements OnInit {
         },
         error: () => { this.marketProducts = []; this.loadingMarket = false; this.cdr.detectChanges(); }
       });
+
+      this.serviceOffreService.myServices().subscribe({
+        next: (res) => { this.services = res || []; this.loadingServices = false; this.cdr.detectChanges(); },
+        error: () => { this.services = []; this.loadingServices = false; this.cdr.detectChanges(); }
+      });
     } else {
       this.loading = false;
       this.loadingMarket = false;
+      this.loadingServices = false;
     }
   }
 

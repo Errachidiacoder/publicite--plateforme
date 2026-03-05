@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
   imports: [CommonModule],
   template: `
     <div class="notification-overlay" *ngIf="latestNotification && show">
-      <div class="notification-toast" [class.new]="isNew">
+      <div class="notification-toast" [class.new]="isNew" (click)="markRead(latestNotification)">
         <div class="notif-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
         </div>
@@ -91,10 +91,38 @@ export class NotificationDisplayComponent implements OnInit {
     });
   }
 
-  close() {
-    if (this.latestNotification) {
-      this.notifService.markAsRead(this.latestNotification.id).subscribe();
+  markRead(notif: Notification) {
+    if (!notif.notificationLue) {
+      this.notifService.markAsRead(notif.id).subscribe();
     }
+    this.handleRedirection(notif);
+    this.show = false;
+  }
+
+  private handleRedirection(notif: any) {
+    // If there's a specific link, use it
+    if (notif.lienAction) {
+      this.router.navigate([notif.lienAction]);
+      return;
+    }
+
+    // Otherwise, deduce based on notification content or type
+    const sujet = notif.sujetNotification?.toLowerCase() || '';
+    const msg = notif.corpsMessage?.toLowerCase() || '';
+
+    if (sujet.includes('service') || msg.includes('service')) {
+      this.router.navigate(['/vendeur/produits'], { queryParams: { tab: 'services' } });
+    } else if (sujet.includes('produit') || msg.includes('produit')) {
+      this.router.navigate(['/vendeur/produits'], { queryParams: { tab: 'market' } });
+    } else if (sujet.includes('annonce') || msg.includes('annonce')) {
+      this.router.navigate(['/vendeur/produits'], { queryParams: { tab: 'annonces' } });
+    } else {
+      // Default fallback
+      this.router.navigate(['/notifications']);
+    }
+  }
+
+  close() {
     this.show = false;
   }
 

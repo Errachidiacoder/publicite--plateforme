@@ -18,7 +18,7 @@ import { CategorieService } from '../services/category.service';
           <p class="mp-hero-sub">Trouvez les meilleurs prestataires et freelances pour vos projets</p>
           <div class="mp-search-bar">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" placeholder="Rechercher par ville..." [(ngModel)]="searchVille" (keyup.enter)="onSearch()" />
+            <input type="text" placeholder="Rechercher par services..." [(ngModel)]="searchKeyword" (keyup.enter)="onSearch()" />
             <button class="mp-search-btn" (click)="onSearch()">Rechercher</button>
           </div>
         </div>
@@ -32,7 +32,7 @@ import { CategorieService } from '../services/category.service';
             <h3 class="filter-title">Catégories</h3>
             <label class="filter-radio" [class.active]="activeCat === 'ALL'">
               <input type="radio" name="category" value="ALL" [(ngModel)]="activeCat" (change)="applyFilters()" />
-              Toutes
+              Toutes les catégories
             </label>
             @for (c of categories; track c.id) {
               <label class="filter-radio" [class.active]="activeCat === c.nomCategorie">
@@ -47,7 +47,7 @@ import { CategorieService } from '../services/category.service';
             <h3 class="filter-title">Type de contrat</h3>
             <label class="filter-radio" [class.active]="selectedContract === ''">
               <input type="radio" name="contract" value="" [(ngModel)]="selectedContract" (change)="applyFilters()" />
-              Tous
+              Tous les contrats
             </label>
             @for (type of contractTypes; track type.value) {
               <label class="filter-radio" [class.active]="selectedContract === type.value">
@@ -62,7 +62,7 @@ import { CategorieService } from '../services/category.service';
             <h3 class="filter-title">Mode de travail</h3>
             <label class="filter-radio" [class.active]="selectedWorkMode === ''">
               <input type="radio" name="workMode" value="" [(ngModel)]="selectedWorkMode" (change)="applyFilters()" />
-              Tous
+              Tous les modes
             </label>
             @for (mode of workModes; track mode.value) {
               <label class="filter-radio" [class.active]="selectedWorkMode === mode.value">
@@ -72,7 +72,7 @@ import { CategorieService } from '../services/category.service';
             }
           </div>
           
-          <button class="filter-clear-btn" (click)="resetFilters()" *ngIf="activeCat !== 'ALL' || selectedContract !== '' || selectedWorkMode !== '' || searchVille !== ''">
+          <button class="filter-clear-btn" (click)="resetFilters()" *ngIf="activeCat !== 'ALL' || selectedContract !== '' || selectedWorkMode !== '' || searchKeyword !== ''">
             ✕ Réinitialiser tout
           </button>
         </aside>
@@ -189,16 +189,18 @@ import { CategorieService } from '../services/category.service';
       background: white; border-radius: 12px;
       padding: 4px 4px 4px 16px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      max-width: 420px;
+      margin: 0 auto;
     }
     .mp-search-bar svg { color: #94a3b8; flex-shrink: 0; }
     .mp-search-bar input {
-      flex: 1; border: none; outline: none; padding: 12px;
-      font-size: 0.95rem; background: transparent; color: #1e293b;
+      flex: 1; border: none; outline: none; padding: 6px 10px;
+      font-size: 0.88rem; background: transparent; color: #1e293b;
     }
     .mp-search-btn {
       background: var(--sb-primary, #1aafa5); color: white;
-      border: none; padding: 10px 24px; border-radius: 10px;
-      font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      border: none; padding: 6px 16px; border-radius: 9px;
+      font-weight: 700; font-size: 0.82rem; cursor: pointer;
       transition: background 0.2s;
     }
     .mp-search-btn:hover { background: #0f766e; }
@@ -372,10 +374,10 @@ export class ServicesListComponent implements OnInit {
   allServices: ServiceOffre[] = [];
   filteredServices: ServiceOffre[] = [];
   categories: any[] = [];
-  
+
   // Filters
   activeCat: string = 'ALL';
-  searchVille: string = '';
+  searchKeyword: string = '';
   selectedContract: string = '';
   selectedWorkMode: string = '';
   sortBy: string = 'newest';
@@ -408,9 +410,8 @@ export class ServicesListComponent implements OnInit {
   }
 
   onSearch() {
-    // We fetch based on ville first (server side filter supported)
-    // Note: If ville is empty, search({}) returns all services usually.
-    this.api.search({ ville: this.searchVille || undefined }).subscribe({
+    // Fetch all for now as the backend /search only supports vile/dates
+    this.api.search({}).subscribe({
       next: (res) => {
         // Filter only active services
         this.allServices = (res || []).filter(s => s.statutService === 'ACTIVEE');
@@ -426,6 +427,16 @@ export class ServicesListComponent implements OnInit {
 
   applyFilters() {
     let temp = [...this.allServices];
+
+    // Keyword Filter
+    if (this.searchKeyword) {
+      const kw = this.searchKeyword.toLowerCase().trim();
+      temp = temp.filter(s =>
+        s.titreService?.toLowerCase().includes(kw) ||
+        s.descriptionDetaillee?.toLowerCase().includes(kw) ||
+        s.villeLocalisation?.toLowerCase().includes(kw)
+      );
+    }
 
     // Category Filter
     if (this.activeCat !== 'ALL') {
@@ -459,7 +470,7 @@ export class ServicesListComponent implements OnInit {
 
   resetFilters() {
     this.activeCat = 'ALL';
-    this.searchVille = '';
+    this.searchKeyword = '';
     this.selectedContract = '';
     this.selectedWorkMode = '';
     this.sortBy = 'newest';

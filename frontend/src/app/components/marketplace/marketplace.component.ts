@@ -155,17 +155,17 @@ import { ProduitResponseDto, ProductFilterRequest, PageResponse } from '../../mo
       display: flex; align-items: center;
       background: white; border-radius: 12px;
       padding: 4px 4px 4px 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      max-width: 420px; margin: 0 auto;
     }
     .mp-search-bar svg { color: #94a3b8; flex-shrink: 0; }
     .mp-search-bar input {
-      flex: 1; border: none; outline: none; padding: 12px;
-      font-size: 0.95rem; background: transparent; color: #1e293b;
+      flex: 1; border: none; outline: none; padding: 6px 10px;
+      font-size: 0.88rem; background: transparent; color: #1e293b;
     }
     .mp-search-btn {
       background: var(--sb-primary, #1aafa5); color: white;
-      border: none; padding: 10px 24px; border-radius: 10px;
-      font-weight: 700; font-size: 0.88rem; cursor: pointer;
+      border: none; padding: 6px 16px; border-radius: 9px;
+      font-weight: 700; font-size: 0.82rem; cursor: pointer;
       transition: background 0.2s;
     }
     .mp-search-btn:hover { background: #0f766e; }

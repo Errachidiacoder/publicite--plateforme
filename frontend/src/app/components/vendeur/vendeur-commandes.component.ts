@@ -170,7 +170,7 @@ import { CommandeService } from '../../services/commande.service';
             </div>
             <div class="modal-footer">
               <button class="action-btn cancel-outline" (click)="cancelModal.open = false">Retour</button>
-              <button class="action-btn cancel" [disabled]="!cancelModal.raison?.trim()" (click)="confirmCancel()">Confirmer l'annulation</button>
+              <button class="action-btn cancel" [disabled]="!(cancelModal.raison || '').trim()" (click)="confirmCancel()">Confirmer l'annulation</button>
             </div>
           </div>
         </div>

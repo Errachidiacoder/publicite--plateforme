@@ -169,6 +169,7 @@ import { AdminService } from '../../services/admin.service';
           </div>
         </div>
         </div>
+
     </div>
   `,
   styles: [`
@@ -377,19 +378,41 @@ export class ProductValidationComponent implements OnInit {
   onValidate(id: number) {
     this.confirmDialog = {
       visible: true,
-      message: 'Valider cette annonce ? L\'annonceur sera notifié pour procéder au paiement.',
+      message: 'Valider cette annonce sans paiement ? Elle sera activée immédiatement.',
       type: 'primary',
       callback: () => {
         this.loadingId = id;
-        this.adminService.validateProduct(id).subscribe({
+        this.adminService.activateProduct(id).subscribe({
           next: () => {
             this.loadingId = null;
-            this.showSuccess("Annonce validée. En attente du paiement de l'annonceur.");
+            this.showSuccess("Annonce activée sans paiement.");
             this.loadProducts();
           },
           error: () => {
             this.loadingId = null;
-            this.showError("Erreur lors de la validation.");
+            this.showError("Erreur lors de l’activation sans paiement.");
+          }
+        });
+      }
+    };
+  }
+  
+  onValidateWithoutPayment(id: number) {
+    this.confirmDialog = {
+      visible: true,
+      message: 'Valider sans paiement ? L\'annonce sera activée immédiatement.',
+      type: 'primary',
+      callback: () => {
+        this.loadingId = id;
+        this.adminService.activateProduct(id).subscribe({
+          next: () => {
+            this.loadingId = null;
+            this.showSuccess("Annonce activée sans paiement.");
+            this.loadProducts();
+          },
+          error: () => {
+            this.loadingId = null;
+            this.showError("Erreur lors de l’activation sans paiement.");
           }
         });
       }

@@ -7,8 +7,12 @@ import com.publicity_platform.project.enumm.TypePrix;
 import com.publicity_platform.project.dto.UtilisateurDto;
 import com.publicity_platform.project.dto.CategorieDto;
 import com.publicity_platform.project.dto.ProduitDto;
+import com.publicity_platform.project.entity.MediaAsset;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class AnonceDto {
     private Long id;
@@ -25,7 +29,6 @@ public class AnonceDto {
     private String motifRefusAdmin;
     private UtilisateurDto annonceur;
     private CategorieDto categorie;
-    private ProduitDto produit;
     private Long compteurVues;
 
     public AnonceDto() {
@@ -143,14 +146,6 @@ public class AnonceDto {
         this.categorie = categorie;
     }
 
-    public ProduitDto getProduit() {
-        return produit;
-    }
-
-    public void setProduit(ProduitDto produit) {
-        this.produit = produit;
-    }
-
     public Long getCompteurVues() {
         return compteurVues;
     }
@@ -183,10 +178,6 @@ public class AnonceDto {
 
         if (entity.getCategorie() != null) {
             dto.setCategorie(CategorieDto.fromEntity(entity.getCategorie()));
-        }
-
-        if (entity.getProduit() != null) {
-            dto.setProduit(ProduitDto.fromEntity(entity.getProduit()));
         }
 
         return dto;

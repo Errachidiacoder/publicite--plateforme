@@ -22,8 +22,12 @@ public class NotificationService {
     @Transactional
     @SuppressWarnings("null")
     public void createNotification(Utilisateur destinataire, String sujet, String message, String type,
-
             Anonce source) {
+        String lienAction = null;
+        if (source != null && source.getId() != null) {
+            lienAction = "/product/" + source.getId();
+        }
+
         Notification notification = Notification.builder()
                 .destinataire(destinataire)
                 .sujetNotification(sujet)
@@ -32,6 +36,7 @@ public class NotificationService {
                 .notificationLue(false)
                 .dateEnvoi(LocalDateTime.now())
                 .anonceSource(source)
+                .lienAction(lienAction)
                 .build();
         notificationRepository.save(java.util.Objects.requireNonNull(notification));
     }

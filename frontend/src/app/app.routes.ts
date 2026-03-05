@@ -28,6 +28,7 @@ import { AdminServicesComponent } from './components/admin/admin-services.compon
 import { ServiceDetailComponent } from './components/service-detail.component';
 import { MessagesComponent } from './components/messages.component';
 import { MesServicesComponent } from './components/mes-services.component';
+import { AnnoncesComponent } from './components/annonces/annonces.component';
 
 // Marketplace components
 import { MarketplaceComponent } from './components/marketplace/marketplace.component';
@@ -45,6 +46,7 @@ export const routes: Routes = [
     { path: 'home', component: HomeComponent },
     { path: 'product/:id', component: ProductDetailComponent },
     { path: 'marketplace', component: MarketplaceComponent },
+    { path: 'annonces', component: AnnoncesComponent },
     { path: 'categories/:slug', component: CategoryProductsComponent },
     { path: 'market-products/:id', component: MarketProductDetailComponent },
     { path: 'login', component: LoginComponent },
