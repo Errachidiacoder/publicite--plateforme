@@ -31,22 +31,18 @@ public class Anonce {
     @Column(name = "description_detaillee", columnDefinition = "TEXT", nullable = false)
     private String descriptionDetaillee;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "type_annonce", nullable = false)
     private TypeAnnonce typeAnnonce;
 
     @Column(name = "prix_affiche")
     private Double prixAfiche;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "type_prix")
     private TypePrix typePrix;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "disponibilite")
     private Disponibilite disponibilite;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "statut_validation", nullable = false)
     private StatutValidation statutValidation = StatutValidation.EN_ATTENTE;
 

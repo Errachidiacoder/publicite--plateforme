@@ -31,6 +31,18 @@
 		<java.version>17</java.version>
 		<project.refresh>true</project.refresh>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>ai.djl</groupId>
+				<artifactId>bom</artifactId>
+				<version>0.31.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -100,6 +112,23 @@
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
 			<optional>true</optional>
+		</dependency>
+
+		<!-- ═══ DJL — all-MiniLM-L6-v2 local inference ═══ -->
+		<dependency>
+			<groupId>ai.djl</groupId>
+			<artifactId>api</artifactId>
+			<version>0.31.0</version>
+		</dependency>
+		<dependency>
+			<groupId>ai.djl.huggingface</groupId>
+			<artifactId>tokenizers</artifactId>
+			<version>0.31.0</version>
+		</dependency>
+		<dependency>
+			<groupId>ai.djl.onnxruntime</groupId>
+			<artifactId>onnxruntime-engine</artifactId>
+			<version>0.31.0</version>
 		</dependency>
 	</dependencies>
 

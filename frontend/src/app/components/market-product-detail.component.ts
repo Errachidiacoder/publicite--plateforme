@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MarketProductService } from '../services/market-product.service';
@@ -8,6 +8,7 @@ import { StarRatingComponent } from './shared/star-rating/star-rating.component'
 import { MerchantBadgeComponent } from './shared/merchant-badge/merchant-badge.component';
 import { ProductCardComponent } from './shared/product-card/product-card.component';
 import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
+import { RecommendationService } from '../services/recommendation.service';
 
 @Component({
   selector: 'app-market-product-detail',
@@ -325,7 +326,9 @@ import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
     .review-comment { font-size: 0.9rem; color: var(--sb-text-secondary, #64748b); line-height: 1.5; margin: 0; }
 
     /* Description */
-    .mpd-description { margin-top: 40px; }    background: var(--sb-bg-elevated, #fff);
+    .mpd-description {
+      margin-top: 40px;
+      background: var(--sb-bg-elevated, #fff);
       border: 1px solid var(--sb-border-light, #f1f5f9);
       border-radius: 16px; padding: 24px; margin-bottom: 40px;
     }
@@ -344,12 +347,13 @@ import { ProduitResponseDto, ProductImageDto } from '../models/produit.model';
     }
   `]
 })
-export class MarketProductDetailComponent implements OnInit {
+export class MarketProductDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private productService = inject(MarketProductService);
   private panierService = inject(PanierService);
   private avisService = inject(AvisService);
   private cdr = inject(ChangeDetectorRef);
+  private recService = inject(RecommendationService);
 
   product: ProduitResponseDto | null = null;
   loading = true;
@@ -365,8 +369,13 @@ export class MarketProductDetailComponent implements OnInit {
   ngOnInit() {
     this.route.params.subscribe(params => {
       const id = +params['id'];
+      this.recService.startTimer(id);  // Start view-time tracking
       this.loadProduct(id);
     });
+  }
+
+  ngOnDestroy() {
+    this.recService.stopAndSend();  // Send duration to recommendation engine
   }
 
   loadProduct(id: number) {

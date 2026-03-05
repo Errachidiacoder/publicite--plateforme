@@ -35,18 +35,15 @@ public class Produit {
     @Column(name = "description_detaillee", columnDefinition = "TEXT", nullable = false)
     private String descriptionDetaillee;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "type_annonce", nullable = false)
     private TypeAnnonce typeAnnonce;
 
     @Column(name = "prix_affiche")
     private Double prixAfiche;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "type_prix")
     private TypePrix typePrix;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "disponibilite")
     private Disponibilite disponibilite;
 
@@ -73,7 +70,6 @@ public class Produit {
     @Column(name = "sku", unique = true)
     private String sku;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "statut_produit")
     private StatutProduit statutProduit = StatutProduit.DRAFT;
 

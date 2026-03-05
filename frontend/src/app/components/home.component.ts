@@ -7,6 +7,7 @@ import { AuthService } from '../services/auth.service';
 import { CategorieService } from '../services/category.service';
 import { AnonceService } from '../services/anonce.service';
 import { SuperDealsComponent } from './super-deals.component';
+import { RecommendationService, RecommendedProduct } from '../services/recommendation.service';
 
 @Component({
   selector: 'app-home',
@@ -68,6 +69,41 @@ import { SuperDealsComponent } from './super-deals.component';
 
     <!-- SUPER DEALS -->
     <app-super-deals></app-super-deals>
+
+    <!-- ══ AI PERSONALIZED RECOMMENDATIONS ══ -->
+    <section class="home-rec-section">
+      <div class="container">
+        <div class="home-rec-header">
+          <div class="home-rec-title-group">
+            <span class="home-rec-badge">✨ IA</span>
+            <h2 class="home-rec-title">{{ homeRecTitle }}</h2>
+          </div>
+          <a routerLink="/marketplace" class="home-rec-more">Voir tout →</a>
+        </div>
+        @if (homeRecsLoading) {
+          <div class="home-rec-track">
+            @for (i of [1,2,3,4,5,6]; track $index) {
+              <div class="home-rec-skeleton"></div>
+            }
+          </div>
+        } @else if (homeRecommendations.length > 0) {
+          <div class="home-rec-track">
+            @for (p of homeRecommendations; track p.id) {
+              <a class="home-rec-card" [routerLink]="['/market-product', p.id]">
+                <div class="home-rec-img-wrap">
+                  <img [src]="p.primaryImageUrl || 'assets/images/placeholder.png'" [alt]="p.nom" />
+                </div>
+                <div class="home-rec-info">
+                  <span class="home-rec-cat">{{ p.categorieNom }}</span>
+                  <p class="home-rec-name">{{ p.nom }}</p>
+                  <span class="home-rec-price">{{ (p.prixPromo || p.prix) | number:'1.0-0' }} MAD</span>
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </div>
+    </section>
 
     <!-- PRODUCTS -->
     <section class="section">
@@ -282,6 +318,59 @@ import { SuperDealsComponent } from './super-deals.component';
     .card-price { color: var(--sb-primary); font-size: 1.2rem; font-weight: 800; }
     .card-location { font-size: 0.8rem; color: var(--sb-text-muted); margin-top: 10px; }
 
+    /* HOME RECOMMENDATIONS */
+    .home-rec-section { padding: 32px 0 8px; }
+    .home-rec-header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .home-rec-title-group { display: flex; align-items: center; gap: 10px; }
+    .home-rec-badge {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white; font-size: 0.65rem; font-weight: 800;
+      padding: 3px 8px; border-radius: 20px;
+    }
+    .home-rec-title { font-size: 1.3rem; font-weight: 800; color: var(--sb-text); margin: 0; }
+    .home-rec-more {
+      font-size: 0.82rem; font-weight: 700; color: var(--sb-primary);
+      text-decoration: none;
+    }
+    .home-rec-track {
+      display: flex; gap: 14px;
+      overflow-x: auto; padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .home-rec-track::-webkit-scrollbar { display: none; }
+    .home-rec-card {
+      min-width: 175px; flex-shrink: 0;
+      scroll-snap-align: start;
+      background: var(--sb-bg-elevated);
+      border: 1px solid var(--sb-border);
+      border-radius: 14px; overflow: hidden;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .home-rec-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+    .home-rec-img-wrap { height: 130px; overflow: hidden; }
+    .home-rec-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .home-rec-card:hover img { transform: scale(1.05); }
+    .home-rec-info { padding: 10px 12px; }
+    .home-rec-cat { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; color: var(--sb-primary); }
+    .home-rec-name {
+      font-size: 0.8rem; font-weight: 700; color: var(--sb-text);
+      margin: 3px 0 5px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .home-rec-price { font-size: 0.88rem; font-weight: 800; color: var(--sb-text); }
+    .home-rec-skeleton {
+      min-width: 175px; height: 210px; flex-shrink: 0;
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%; animation: shimmer 1.5s infinite;
+      border-radius: 14px;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
     @media (max-width: 992px) {
       .hero-pro-grid { grid-template-columns: 1fr; text-align: center; }
       .hero-title { font-size: 2.5rem; }
@@ -341,9 +430,13 @@ export class HomeComponent implements OnInit {
   private anonceService = inject(AnonceService);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
+  private recService = inject(RecommendationService);
 
   @ViewChild('catScroll') catScrollEl?: ElementRef<HTMLDivElement>;
 
+  homeRecommendations: RecommendedProduct[] = [];
+  homeRecsLoading = true;
+  homeRecTitle = 'Sélection populaire';
   searchQuery = '';
   selectedCategory = '';
 
@@ -363,7 +456,16 @@ export class HomeComponent implements OnInit {
   filteredProducts: any[] = [];
   loading = true;
 
-  ngOnInit() { this.loadData(); }
+  ngOnInit() {
+    // Load personalized/popular recommendations
+    const loggedIn = this.authService.isLoggedIn();
+    this.homeRecTitle = loggedIn ? 'Sélection personnalisée pour vous' : 'Sélection populaire';
+    this.recService.getSmart(8).subscribe(recs => {
+      this.homeRecommendations = recs;
+      this.homeRecsLoading = false;
+    });
+    this.loadData();
+  }
 
   loadData() {
     this.loading = true;

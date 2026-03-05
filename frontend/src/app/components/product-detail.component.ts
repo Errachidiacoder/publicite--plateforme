@@ -267,7 +267,7 @@ export class ProductDetailComponent implements OnInit {
   checkIfFavorited() {
     if (!this.authService.isLoggedIn()) return;
     const userId = this.authService.getUserId();
-    this.http.get<boolean>(`http://localhost:8080/api/v1/favoris/check?userId=${userId}&productId=${this.product.id}`)
+    this.http.get<boolean>(`http://localhost:8081/api/v1/favoris/check?userId=${userId}&productId=${this.product.id}`)
       .subscribe(res => this.isFavorited = res);
   }
 
@@ -277,7 +277,7 @@ export class ProductDetailComponent implements OnInit {
       return;
     }
     const userId = this.authService.getUserId();
-    this.http.post<boolean>(`http://localhost:8080/api/v1/favoris/toggle?userId=${userId}&productId=${this.product.id}`, {})
+    this.http.post<boolean>(`http://localhost:8081/api/v1/favoris/toggle?userId=${userId}&productId=${this.product.id}`, {})
       .subscribe(res => {
         this.isFavorited = res;
         // Optionnel : déclencher une notification visuelle

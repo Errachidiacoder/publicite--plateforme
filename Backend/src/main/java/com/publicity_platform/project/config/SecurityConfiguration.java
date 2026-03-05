@@ -92,7 +92,8 @@ public class SecurityConfiguration {
                                                 .authenticated()
 
                                                 // Messages security mapping
-                                                .requestMatchers("/api/v1/conversations/**", "/api/v1/messages/**").authenticated()
+                                                .requestMatchers("/api/v1/conversations/**", "/api/v1/messages/**")
+                                                .authenticated()
 
                                                 // Notifications security mapping
                                                 .requestMatchers("/api/v1/notifications/**").authenticated()
@@ -116,6 +117,13 @@ public class SecurityConfiguration {
                                                                 "/api/v1/produits/**",
                                                                 "/api/v1/files/**")
                                                 .permitAll()
+
+                                                // Recommendations — popular is public, others need auth
+                                                .requestMatchers(org.springframework.http.HttpMethod.GET,
+                                                                "/api/v1/recommendations/popular")
+                                                .permitAll()
+                                                .requestMatchers("/api/v1/recommendations/**")
+                                                .authenticated()
 
                                                 // Merchant endpoints (authenticated)
                                                 .requestMatchers("/api/v1/merchant/**").authenticated()

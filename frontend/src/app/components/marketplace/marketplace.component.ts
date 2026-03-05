@@ -1,17 +1,19 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MarketProductService } from '../../services/market-product.service';
 import { CategorieService } from '../../services/category.service';
 import { ProductCardComponent } from '../shared/product-card/product-card.component';
 import { SkeletonCardComponent } from '../shared/skeleton-card/skeleton-card.component';
 import { ProduitResponseDto, ProductFilterRequest, PageResponse } from '../../models/produit.model';
+import { RecommendationService, RecommendedProduct } from '../../services/recommendation.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-marketplace',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductCardComponent, SkeletonCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ProductCardComponent, SkeletonCardComponent],
   template: `
     <div class="marketplace-page">
       <!-- Hero -->
@@ -26,6 +28,54 @@ import { ProduitResponseDto, ProductFilterRequest, PageResponse } from '../../mo
           </div>
         </div>
       </div>
+
+      <!-- ══ AI Recommendations ══ -->
+      <section class="rec-section">
+        <div class="rec-header">
+          <div class="rec-title-group">
+            <span class="rec-badge">✨ IA</span>
+            <h2 class="rec-title">{{ isLoggedIn ? 'Produits recommandés pour vous' : 'Produits populaires' }}</h2>
+          </div>
+          <p class="rec-sub">{{ isLoggedIn ? 'Basé sur vos préférences' : 'Les plus appréciés en ce moment' }}</p>
+        </div>
+        @if (recsLoading) {
+          <div class="rec-track">
+            @for (i of recSkeletons; track $index) {
+              <div class="rec-skeleton"></div>
+            }
+          </div>
+        } @else if (recommendations.length > 0) {
+          <div class="rec-track">
+            @for (p of recommendations; track p.id) {
+              <a class="rec-card" [routerLink]="['/market-product', p.id]">
+                <div class="rec-img-wrap">
+                  <img [src]="p.primaryImageUrl || 'assets/placeholder.png'" [alt]="p.nom" class="rec-img" />
+                  @if (p.prixPromo && p.prixPromo < p.prix!) {
+                    <span class="rec-promo-badge">PROMO</span>
+                  }
+                </div>
+                <div class="rec-info">
+                  <span class="rec-cat">{{ p.categorieNom }}</span>
+                  <p class="rec-name">{{ p.nom }}</p>
+                  <div class="rec-price-row">
+                    @if (p.prixPromo && p.prixPromo < p.prix!) {
+                      <span class="rec-price-promo">{{ p.prixPromo | number:'1.0-0' }} MAD</span>
+                      <span class="rec-price-orig">{{ p.prix | number:'1.0-0' }}</span>
+                    } @else {
+                      <span class="rec-price">{{ (p.prixPromo || p.prix) | number:'1.0-0' }} MAD</span>
+                    }
+                  </div>
+                  @if (p.noteMoyenne && p.noteMoyenne > 0) {
+                    <div class="rec-rating">
+                      <span class="rec-stars">★</span> {{ p.noteMoyenne | number:'1.1-1' }}
+                    </div>
+                  }
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </section>
 
       <div class="mp-container">
         <!-- Sidebar filters -->
@@ -302,12 +352,84 @@ import { ProduitResponseDto, ProductFilterRequest, PageResponse } from '../../mo
       color: white; border-color: var(--sb-primary, #1aafa5);
     }
 
+    /* ── Recommendations Section ── */
+    .rec-section {
+      max-width: 1320px; margin: 0 auto; padding: 32px 24px 8px;
+    }
+    .rec-header { margin-bottom: 16px; }
+    .rec-title-group { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .rec-badge {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white; font-size: 0.65rem; font-weight: 800;
+      padding: 3px 8px; border-radius: 20px; letter-spacing: 0.05em;
+    }
+    .rec-title {
+      font-size: 1.25rem; font-weight: 800;
+      color: var(--sb-text, #1e293b); margin: 0;
+    }
+    .rec-sub { font-size: 0.8rem; color: var(--sb-text-muted, #94a3b8); margin: 0; }
+    .rec-track {
+      display: flex; gap: 14px;
+      overflow-x: auto; padding-bottom: 12px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .rec-track::-webkit-scrollbar { display: none; }
+    .rec-card {
+      min-width: 190px; max-width: 190px; flex-shrink: 0;
+      scroll-snap-align: start;
+      background: var(--sb-bg-elevated, #fff);
+      border: 1px solid var(--sb-border-light, #f1f5f9);
+      border-radius: 14px; overflow: hidden;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .rec-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    }
+    .rec-img-wrap { position: relative; height: 140px; overflow: hidden; }
+    .rec-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+    .rec-card:hover .rec-img { transform: scale(1.05); }
+    .rec-promo-badge {
+      position: absolute; top: 8px; left: 8px;
+      background: #ef4444; color: white;
+      font-size: 0.6rem; font-weight: 800;
+      padding: 2px 6px; border-radius: 6px;
+    }
+    .rec-info { padding: 10px 12px 12px; }
+    .rec-cat {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      color: var(--sb-primary, #1aafa5); letter-spacing: 0.05em;
+    }
+    .rec-name {
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--sb-text, #1e293b); margin: 4px 0 6px;
+      display: -webkit-box; -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .rec-price-row { display: flex; align-items: baseline; gap: 6px; }
+    .rec-price { font-size: 0.9rem; font-weight: 800; color: var(--sb-text, #1e293b); }
+    .rec-price-promo { font-size: 0.9rem; font-weight: 800; color: #ef4444; }
+    .rec-price-orig { font-size: 0.7rem; color: #94a3b8; text-decoration: line-through; }
+    .rec-rating { font-size: 0.72rem; color: #94a3b8; margin-top: 4px; }
+    .rec-stars { color: #f59e0b; }
+    .rec-skeleton {
+      min-width: 190px; height: 240px; flex-shrink: 0;
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 14px;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
     @media (max-width: 768px) {
       .mp-container { flex-direction: column; }
       .mp-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; gap: 12px; }
       .filter-section { flex: 1; min-width: 200px; }
       .mp-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
       .mp-hero-title { font-size: 1.5rem; }
+      .rec-section { padding: 24px 16px 0; }
     }
   `]
 })
@@ -317,11 +439,17 @@ export class MarketplaceComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private recService = inject(RecommendationService);
+  private authService = inject(AuthService);
 
   products: ProduitResponseDto[] = [];
   categories: { id: number; nomCategorie: string }[] = [];
+  recommendations: RecommendedProduct[] = [];
   loading = true;
+  recsLoading = true;
   skeletons = Array(8).fill(0);
+  recSkeletons = Array(5).fill(0);
+  isLoggedIn = false;
 
   // Filters
   keyword = '';
@@ -345,6 +473,14 @@ export class MarketplaceComponent implements OnInit {
   ];
 
   ngOnInit() {
+    this.isLoggedIn = this.authService.isLoggedIn();
+    // Load recommendations
+    this.recService.getSmart(8).subscribe(recs => {
+      this.recommendations = recs;
+      this.recsLoading = false;
+      this.cdr.detectChanges();
+    });
+
     // Load categories for sidebar
     this.categoryService.getAllActive().subscribe({
       next: (cats) => { this.categories = cats; this.cdr.detectChanges(); },
